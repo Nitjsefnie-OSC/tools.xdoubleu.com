@@ -337,6 +337,23 @@ func (h *booksConnectHandler) UpdateProgress(
 			errors.New("invalid book ID"),
 		)
 	}
+	readAt := time.Now()
+	if req.Msg.ReadAt != "" {
+		readAt, err = time.Parse(time.RFC3339Nano, req.Msg.ReadAt)
+		if err != nil {
+			return nil, connect.NewError(
+				connect.CodeInvalidArgument,
+				errors.New("read_at must be RFC3339"),
+			)
+		}
+	}
+	// An unchanged page isn't a new physical read: syncing it would move a
+	// newer, finer digital position back to the page's start.
+	pageChanged := req.Msg.ProgressMode == models.ProgressModePages
+	if pageChanged {
+		ub, getErr := h.app.Services.Books.GetUserBook(ctx, user.ID, bookID)
+		pageChanged = getErr != nil || ub.CurrentPage != int(req.Msg.CurrentPage)
+	}
 	err = h.app.Services.Books.UpdateProgress(
 		ctx,
 		user.ID,
@@ -345,6 +362,11 @@ func (h *booksConnectHandler) UpdateProgress(
 		int(req.Msg.CurrentPage),
 		int(req.Msg.ProgressPercent),
 	)
+	if err == nil && pageChanged {
+		err = h.app.Services.Physical.SyncPage(
+			ctx, user.ID, bookID, int(req.Msg.CurrentPage), readAt,
+		)
+	}
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
