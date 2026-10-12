@@ -199,6 +199,10 @@ func NewIssueSignalCollectorJob(
 	automatedAction automatedActionGetter,
 	latencyTrends latencyTrendsGetter,
 ) *IssueSignalCollectorJob {
+	// Seed the fetch-ok gauge to 1: a fresh process has no fetch to have
+	// failed yet, and the gauge's zero value would otherwise pend
+	// SecurityAlertsUnreadable on every deploy until the first run.
+	githubSecurityAlertsFetchOK.Set(1)
 	return &IssueSignalCollectorJob{
 		gh:              gh,
 		sentry:          sentry,
