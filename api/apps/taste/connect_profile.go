@@ -3,10 +3,9 @@ package taste
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"tools.xdoubleu.com/apps/taste/internal/jobs"
 	"tools.xdoubleu.com/apps/taste/internal/models"
@@ -17,8 +16,8 @@ import (
 
 func (h *tasteConnectHandler) GetProfile(
 	ctx context.Context,
-	_ *connect.Request[tastev1.GetProfileRequest],
-) (*connect.Response[tastev1.GetProfileResponse], error) {
+	_ *tastev1.GetProfileRequest,
+) (*tastev1.GetProfileResponse, error) {
 	uid, err := userID(ctx)
 	if err != nil {
 		return nil, err
@@ -26,7 +25,7 @@ func (h *tasteConnectHandler) GetProfile(
 
 	out := &tastev1.GetProfileResponse{Configured: h.app.profiles.Configured()}
 	if !out.Configured {
-		return connect.NewResponse(out), nil
+		return out, nil
 	}
 	p, err := h.app.profiles.Get(ctx, uid)
 	if err != nil {
@@ -35,7 +34,7 @@ func (h *tasteConnectHandler) GetProfile(
 	if p != nil {
 		fillProfile(out, p)
 	}
-	return connect.NewResponse(out), nil
+	return out, nil
 }
 
 func fillProfile(out *tastev1.GetProfileResponse, p *models.Profile) {
@@ -61,28 +60,29 @@ func fillProfile(out *tastev1.GetProfileResponse, p *models.Profile) {
 
 func (h *tasteConnectHandler) RefreshProfile(
 	ctx context.Context,
-	_ *connect.Request[tastev1.RefreshProfileRequest],
-) (*connect.Response[tastev1.RefreshProfileResponse], error) {
+	_ *tastev1.RefreshProfileRequest,
+) (*tastev1.RefreshProfileResponse, error) {
 	uid, err := userID(ctx)
 	if err != nil {
 		return nil, err
 	}
 	accepted, err := h.app.profiles.Request(ctx, uid)
 	if errors.Is(err, services.ErrNotConfigured) {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, err)
+		return nil, connect.NewError(connect.CodeFailedPrecondition, err.Error()).
+			WithCause(err)
 	}
 	if err != nil {
 		return nil, connecttools.MapError(err)
 	}
 	if !accepted {
-		return nil, connect.NewError(
+		return nil, connect.Errorf(
 			connect.CodeResourceExhausted,
-			fmt.Errorf("the profile was refreshed in the last %s",
-				services.RefreshCooldown),
+			"the profile was refreshed in the last %s",
+			services.RefreshCooldown,
 		)
 	}
 	h.app.jobQueue.ForceRun(jobs.GenerateProfilesID)
-	return connect.NewResponse(&tastev1.RefreshProfileResponse{}), nil
+	return &tastev1.RefreshProfileResponse{}, nil
 }
 
 func formatTimePtr(t *time.Time) string {

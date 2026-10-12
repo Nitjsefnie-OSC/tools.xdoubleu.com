@@ -8,7 +8,7 @@ import (
 	"sort"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	observabilityv1 "tools.xdoubleu.com/gen/observability/v1"
 	"tools.xdoubleu.com/internal/github"
@@ -25,8 +25,8 @@ const currentSlowTransactionsLimit = 20
 
 func (h *obsConnectHandler) GetFailingPullRequests(
 	ctx context.Context,
-	_ *connect.Request[observabilityv1.GetFailingPullRequestsRequest],
-) (*connect.Response[observabilityv1.GetFailingPullRequestsResponse], error) {
+	_ *observabilityv1.GetFailingPullRequestsRequest,
+) (*observabilityv1.GetFailingPullRequestsResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (h *obsConnectHandler) GetFailingPullRequests(
 		h.app.logger.WarnContext(ctx, "failing pull requests unavailable",
 			slog.Any("error", err))
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 // failingPullRequests returns an upstream failure alongside the empty
@@ -84,12 +84,12 @@ func (h *obsConnectHandler) failingPullRequests(
 
 func (h *obsConnectHandler) GetWorkflowRuns(
 	ctx context.Context,
-	_ *connect.Request[observabilityv1.GetWorkflowRunsRequest],
-) (*connect.Response[observabilityv1.GetWorkflowRunsResponse], error) {
+	_ *observabilityv1.GetWorkflowRunsRequest,
+) (*observabilityv1.GetWorkflowRunsResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(h.workflowRuns(ctx)), nil
+	return h.workflowRuns(ctx), nil
 }
 
 func (h *obsConnectHandler) workflowRuns(
@@ -163,12 +163,12 @@ func (h *obsConnectHandler) failedJobNames(
 
 func (h *obsConnectHandler) GetSecurityAlerts(
 	ctx context.Context,
-	_ *connect.Request[observabilityv1.GetSecurityAlertsRequest],
-) (*connect.Response[observabilityv1.GetSecurityAlertsResponse], error) {
+	_ *observabilityv1.GetSecurityAlertsRequest,
+) (*observabilityv1.GetSecurityAlertsResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(h.securityAlerts(ctx)), nil
+	return h.securityAlerts(ctx), nil
 }
 
 func (h *obsConnectHandler) securityAlerts(
@@ -235,21 +235,21 @@ func securityAlertTypeToProto(
 
 func (h *obsConnectHandler) DismissSecurityAlert(
 	ctx context.Context,
-	req *connect.Request[observabilityv1.DismissSecurityAlertRequest],
-) (*connect.Response[observabilityv1.DismissSecurityAlertResponse], error) {
+	req *observabilityv1.DismissSecurityAlertRequest,
+) (*observabilityv1.DismissSecurityAlertResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
 	resp, err := h.dismissSecurityAlert(
 		ctx,
-		securityAlertTypeFromProto(req.Msg.GetAlertType()),
-		req.Msg.GetAlertNumber(),
-		req.Msg.GetReason(),
+		securityAlertTypeFromProto(req.GetAlertType()),
+		req.GetAlertNumber(),
+		req.GetReason(),
 	)
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 // dismissSecurityAlert is one of the deliberate mutations on the observability
@@ -264,12 +264,13 @@ func (h *obsConnectHandler) dismissSecurityAlert(
 	err := h.app.githubClient.DismissSecurityAlert(ctx, alertType, alertNumber, reason)
 	if err != nil {
 		if errors.Is(err, github.ErrInvalidDismissReason) {
-			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+			return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 		}
 		if errors.Is(err, github.ErrNotConfigured) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
+			return nil, connect.NewError(connect.CodeFailedPrecondition, err.Error()).
+				WithCause(err)
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
 	return &observabilityv1.DismissSecurityAlertResponse{}, nil
 }
@@ -294,12 +295,12 @@ func securityAlertTypeFromProto(
 
 func (h *obsConnectHandler) GetSentryIssues(
 	ctx context.Context,
-	_ *connect.Request[observabilityv1.GetSentryIssuesRequest],
-) (*connect.Response[observabilityv1.GetSentryIssuesResponse], error) {
+	_ *observabilityv1.GetSentryIssuesRequest,
+) (*observabilityv1.GetSentryIssuesResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(h.sentryIssues(ctx)), nil
+	return h.sentryIssues(ctx), nil
 }
 
 func (h *obsConnectHandler) sentryIssues(
@@ -342,16 +343,16 @@ func (h *obsConnectHandler) sentryIssues(
 
 func (h *obsConnectHandler) ResolveSentryIssue(
 	ctx context.Context,
-	req *connect.Request[observabilityv1.ResolveSentryIssueRequest],
-) (*connect.Response[observabilityv1.ResolveSentryIssueResponse], error) {
+	req *observabilityv1.ResolveSentryIssueRequest,
+) (*observabilityv1.ResolveSentryIssueResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	resp, err := h.resolveSentryIssue(ctx, req.Msg.GetIssueId())
+	resp, err := h.resolveSentryIssue(ctx, req.GetIssueId())
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 func (h *obsConnectHandler) resolveSentryIssue(
@@ -361,28 +362,29 @@ func (h *obsConnectHandler) resolveSentryIssue(
 		if errors.Is(err, sentryapi.ErrReauthRequired) {
 			// CodeUnauthenticated (not FailedPrecondition) makes the UI prompt a
 			// reconnect.
-			return nil, connect.NewError(connect.CodeUnauthenticated, err)
+			return nil, connect.NewError(connect.CodeUnauthenticated, err.Error()).WithCause(err)
 		}
 		if errors.Is(err, sentryapi.ErrNotConfigured) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
+			return nil, connect.NewError(connect.CodeFailedPrecondition, err.Error()).
+				WithCause(err)
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
 	return &observabilityv1.ResolveSentryIssueResponse{}, nil
 }
 
 func (h *obsConnectHandler) GetSlowTransactions(
 	ctx context.Context,
-	_ *connect.Request[observabilityv1.GetSlowTransactionsRequest],
-) (*connect.Response[observabilityv1.GetSlowTransactionsResponse], error) {
+	_ *observabilityv1.GetSlowTransactionsRequest,
+) (*observabilityv1.GetSlowTransactionsResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
 	resp, err := h.slowTransactions(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 // slowTransactions combines current (live from Sentry, guarded like the other
@@ -456,17 +458,17 @@ func protoSlowTransactions(
 
 func (h *obsConnectHandler) GetLogs(
 	ctx context.Context,
-	req *connect.Request[observabilityv1.GetLogsRequest],
-) (*connect.Response[observabilityv1.GetLogsResponse], error) {
+	req *observabilityv1.GetLogsRequest,
+) (*observabilityv1.GetLogsResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
 
-	resp, err := h.logs(ctx, req.Msg)
+	resp, err := h.logs(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 // maxLogEntries caps one GetLogs response.
@@ -501,15 +503,15 @@ func (h *obsConnectHandler) logs(
 ) (*observabilityv1.GetLogsResponse, error) {
 	filter, err := logsFilter(req)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	}
 
 	entries, err := h.app.logsRepo.Query(ctx, filter)
 	if errors.Is(err, repositories.ErrUnknownLogLevel) {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	}
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
 
 	protoEntries := make([]*observabilityv1.LogEntry, len(entries))
@@ -527,13 +529,13 @@ func (h *obsConnectHandler) logs(
 
 func (h *obsConnectHandler) GetHealthOverview(
 	ctx context.Context,
-	_ *connect.Request[observabilityv1.GetHealthOverviewRequest],
-) (*connect.Response[observabilityv1.GetHealthOverviewResponse], error) {
+	_ *observabilityv1.GetHealthOverviewRequest,
+) (*observabilityv1.GetHealthOverviewResponse, error) {
 	if err := requireAdmin(ctx); err != nil {
 		return nil, err
 	}
 
-	return connect.NewResponse(&observabilityv1.GetHealthOverviewResponse{
+	return &observabilityv1.GetHealthOverviewResponse{
 		Sentry: h.sentryIssues(ctx),
-	}), nil
+	}, nil
 }

@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"testing"
 
-	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -109,10 +108,10 @@ func TestWantTitle(t *testing.T) {
 	require.NoError(t, a.WantTitle(ctx, uid, "movie:129"))
 	add(t, c, "movie", 603, "watched")
 	require.NoError(t, a.WantTitle(ctx, uid, "movie:603"))
-	resp, err := c.ListBacklog(ctx, connect.NewRequest(&moviesv1.ListBacklogRequest{}))
+	resp, err := c.ListBacklog(ctx, &moviesv1.ListBacklogRequest{})
 	require.NoError(t, err)
 	statuses := map[string]string{}
-	for _, e := range resp.Msg.Entries {
+	for _, e := range resp.Entries {
 		statuses[e.Title] = e.Status
 	}
 	assert.Equal(t, map[string]string{

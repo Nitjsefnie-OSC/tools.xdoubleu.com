@@ -7,7 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -103,7 +104,15 @@ func recsApp(
 	)
 	ts := httptest.NewServer(testhelper.BuildMux(a))
 	t.Cleanup(ts.Close)
-	return a, tastev1connect.NewTasteServiceClient(http.DefaultClient, ts.URL)
+	return a, tastev1connect.NewTasteServiceClient(
+		connect.NewClient(
+			connecthttp.NewTransport(
+				http.DefaultClient,
+				ts.URL,
+				connecthttp.WithReadMaxBytes(0),
+			),
+		),
+	)
 }
 
 func listRecs(
@@ -112,21 +121,23 @@ func listRecs(
 	domain, track string,
 ) *tastev1.ListRecommendationsResponse {
 	t.Helper()
-	resp, err := c.ListRecommendations(context.Background(), connect.NewRequest(
+	resp, err := c.ListRecommendations(
+		context.Background(),
 		&tastev1.ListRecommendationsRequest{Domain: domain, Track: track, SavedOnly: false},
-	))
+	)
 	require.NoError(t, err)
-	return resp.Msg
+	return resp
 }
 
 func savedTitles(t *testing.T, c tastev1connect.TasteServiceClient) []string {
 	t.Helper()
-	resp, err := c.ListRecommendations(context.Background(), connect.NewRequest(
+	resp, err := c.ListRecommendations(
+		context.Background(),
 		&tastev1.ListRecommendationsRequest{Domain: "", Track: "", SavedOnly: true},
-	))
+	)
 	require.NoError(t, err)
 	var out []string
-	for _, r := range resp.Msg.Recommendations {
+	for _, r := range resp.Recommendations {
 		out = append(out, r.Title)
 	}
 	return out
@@ -176,17 +187,15 @@ func TestRecommendations_HiddenWithoutAppAccess(t *testing.T) {
 	assert.Empty(t, listRecs(t, c, "", "").Recommendations)
 
 	ctx := context.Background()
-	_, err := c.SetSaved(ctx, connect.NewRequest(
-		&tastev1.SetSavedRequest{Id: id, Saved: true},
-	))
+	_, err := c.SetSaved(ctx, &tastev1.SetSavedRequest{Id: id, Saved: true})
 	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err))
 
 	_, err = testDB.Exec(ctx,
 		"UPDATE taste.recommendations SET feedback = 'hit' WHERE id = $1", id)
 	require.NoError(t, err)
-	stats, err := c.GetStats(ctx, connect.NewRequest(&tastev1.GetStatsRequest{}))
+	stats, err := c.GetStats(ctx, &tastev1.GetStatsRequest{})
 	require.NoError(t, err)
-	assert.Empty(t, stats.Msg.HitRates, "books hit rates need books access")
+	assert.Empty(t, stats.HitRates, "books hit rates need books access")
 }
 
 // insertPick stores a books pick as the latest run and returns its id.
@@ -218,25 +227,24 @@ func TestRecommendations_FeedbackSaveAccept(t *testing.T) {
 	assert.True(t, hyperion.CanAccept, "a book with a ref")
 	assert.False(t, radiolab.CanAccept, "podcasts have no backlog")
 
-	fb, err := c.SetFeedback(ctx, connect.NewRequest(
+	fb, err := c.SetFeedback(
+		ctx,
 		&tastev1.SetFeedbackRequest{Id: hyperion.Id, Feedback: "hit"},
-	))
+	)
 	require.NoError(t, err)
-	assert.Equal(t, "hit", fb.Msg.Recommendation.Feedback)
-	saved, err := c.SetSaved(ctx, connect.NewRequest(
-		&tastev1.SetSavedRequest{Id: hyperion.Id, Saved: true},
-	))
+	assert.Equal(t, "hit", fb.Recommendation.Feedback)
+	saved, err := c.SetSaved(ctx, &tastev1.SetSavedRequest{Id: hyperion.Id, Saved: true})
 	require.NoError(t, err)
-	assert.True(t, saved.Msg.Recommendation.Saved)
+	assert.True(t, saved.Recommendation.Saved)
 	assert.Equal(t, []string{"Hyperion"}, savedTitles(t, c))
 
-	stats, err := c.GetStats(ctx, connect.NewRequest(&tastev1.GetStatsRequest{}))
+	stats, err := c.GetStats(ctx, &tastev1.GetStatsRequest{})
 	require.NoError(t, err)
-	require.Len(t, stats.Msg.HitRates, 1)
-	assert.Equal(t, "books", stats.Msg.HitRates[0].Domain)
-	assert.Equal(t, "more", stats.Msg.HitRates[0].Track)
-	assert.Equal(t, int32(1), stats.Msg.HitRates[0].Hits)
-	assert.Zero(t, stats.Msg.HitRates[0].Misses)
+	require.Len(t, stats.HitRates, 1)
+	assert.Equal(t, "books", stats.HitRates[0].Domain)
+	assert.Equal(t, "more", stats.HitRates[0].Track)
+	assert.Equal(t, int32(1), stats.HitRates[0].Hits)
+	assert.Zero(t, stats.HitRates[0].Misses)
 
 	// The next run drops Hyperion as a candidate, keeps the touched pick and
 	// replaces the untouched Radiolab.
@@ -251,19 +259,21 @@ func TestRecommendations_FeedbackSaveAccept(t *testing.T) {
 	assert.Equal(t, []string{"Hyperion"}, savedTitles(t, c))
 
 	wantedRefs = nil
-	acc, err := c.AcceptRecommendation(ctx, connect.NewRequest(
+	acc, err := c.AcceptRecommendation(
+		ctx,
 		&tastev1.AcceptRecommendationRequest{Id: hyperion.Id},
-	))
+	)
 	require.NoError(t, err)
-	assert.True(t, acc.Msg.Recommendation.Accepted)
+	assert.True(t, acc.Recommendation.Accepted)
 	assert.Equal(t, []string{"ref-Hyperion"}, wantedRefs)
 
-	acc, err = c.AcceptRecommendation(ctx, connect.NewRequest(
+	acc, err = c.AcceptRecommendation(
+		ctx,
 		&tastev1.AcceptRecommendationRequest{Id: second[0].Id},
-	))
+	)
 	require.NoError(t, err)
-	assert.True(t, acc.Msg.Recommendation.Saved, "no podcasts backlog: saved")
-	assert.False(t, acc.Msg.Recommendation.Accepted)
+	assert.True(t, acc.Recommendation.Saved, "no podcasts backlog: saved")
+	assert.False(t, acc.Recommendation.Accepted)
 	assert.Equal(t, []string{"Hyperion", "Radiolab"}, savedTitles(t, c))
 }
 
@@ -272,24 +282,19 @@ func TestRecommendations_MutationErrors(t *testing.T) {
 	ctx := context.Background()
 	id := insertPick(t, "Known")
 
-	_, err := c.SetFeedback(ctx, connect.NewRequest(
-		&tastev1.SetFeedbackRequest{Id: id, Feedback: "meh"},
-	))
+	_, err := c.SetFeedback(ctx, &tastev1.SetFeedbackRequest{Id: id, Feedback: "meh"})
 	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
-	_, err = c.SetSaved(ctx, connect.NewRequest(
-		&tastev1.SetSavedRequest{Id: "nope", Saved: true},
-	))
+	_, err = c.SetSaved(ctx, &tastev1.SetSavedRequest{Id: "nope", Saved: true})
 	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
-	_, err = c.AcceptRecommendation(ctx, connect.NewRequest(
+	_, err = c.AcceptRecommendation(
+		ctx,
 		&tastev1.AcceptRecommendationRequest{Id: "00000000-0000-0000-0000-000000000000"},
-	))
+	)
 	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err))
 
-	cleared, err := c.SetFeedback(ctx, connect.NewRequest(
-		&tastev1.SetFeedbackRequest{Id: id, Feedback: ""},
-	))
+	cleared, err := c.SetFeedback(ctx, &tastev1.SetFeedbackRequest{Id: id, Feedback: ""})
 	require.NoError(t, err)
-	assert.Empty(t, cleared.Msg.Recommendation.Feedback)
+	assert.Empty(t, cleared.Recommendation.Feedback)
 }
 
 func TestRecommendations_InvalidArguments(t *testing.T) {
@@ -298,7 +303,7 @@ func TestRecommendations_InvalidArguments(t *testing.T) {
 		{Domain: "music", Track: ""},
 		{Domain: "", Track: "sideways"},
 	} {
-		_, err := c.ListRecommendations(context.Background(), connect.NewRequest(req))
+		_, err := c.ListRecommendations(context.Background(), req)
 		assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
 	}
 }
@@ -311,10 +316,18 @@ func TestGetStats_HitRateReadFails(t *testing.T) {
 	)
 	ts := httptest.NewServer(testhelper.BuildMux(a))
 	t.Cleanup(ts.Close)
-	c := tastev1connect.NewTasteServiceClient(http.DefaultClient, ts.URL)
+	c := tastev1connect.NewTasteServiceClient(
+		connect.NewClient(
+			connecthttp.NewTransport(
+				http.DefaultClient,
+				ts.URL,
+				connecthttp.WithReadMaxBytes(0),
+			),
+		),
+	)
 	pool.Close()
 
 	_, err := c.GetStats(context.Background(),
-		connect.NewRequest(&tastev1.GetStatsRequest{}))
+		&tastev1.GetStatsRequest{})
 	assert.Error(t, err)
 }

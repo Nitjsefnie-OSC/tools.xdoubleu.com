@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,6 +15,7 @@ import (
 	"tools.xdoubleu.com/apps/books/internal/models"
 	booksv1 "tools.xdoubleu.com/gen/books/v1"
 	"tools.xdoubleu.com/internal/database"
+	"tools.xdoubleu.com/internal/testhelper"
 )
 
 // setupPhysicalBook adds mocks.PhysicalEPUB to owner's library, tagged
@@ -37,21 +38,17 @@ func setupPhysicalBook(
 	return bookID
 }
 
-func authed[T any](msg *T) *connect.Request[T] {
-	req := connect.NewRequest(msg)
-	req.Header().Set("Cookie", accessToken.String())
-	return req
-}
-
 func savePage(t *testing.T, client booksTestClient, bookID uuid.UUID, page int32,
 	readAt time.Time,
 ) {
 	t.Helper()
-	_, err := client.UpdateProgress(context.Background(),
-		authed(&booksv1.UpdateProgressRequest{
+	_, err := client.UpdateProgress(
+		testhelper.WithCookie(context.Background(), accessToken.String()),
+		&booksv1.UpdateProgressRequest{
 			BookId: bookID.String(), ProgressMode: models.ProgressModePages,
 			CurrentPage: page, ReadAt: readAt.Format(time.RFC3339Nano),
-		}))
+		},
+	)
 	require.NoError(t, err)
 }
 
@@ -68,12 +65,14 @@ func TestPhysical_PageSaveWritesPhysicalReadingState(t *testing.T) {
 	require.NotNil(t, state.ReadAt)
 	assert.WithinDuration(t, readAt, *state.ReadAt, time.Second)
 
-	resp, err := client.GetReadingState(context.Background(),
-		authed(&booksv1.GetReadingStateRequest{BookId: bookID.String()}))
+	resp, err := client.GetReadingState(
+		testhelper.WithCookie(context.Background(), accessToken.String()),
+		&booksv1.GetReadingStateRequest{BookId: bookID.String()},
+	)
 	require.NoError(t, err)
-	assert.Equal(t, int32(3), resp.Msg.State.PhysicalPage)
+	assert.Equal(t, int32(3), resp.State.PhysicalPage)
 	assert.Equal(t, "Epigraph. Two Chapter 2 sentence 01 is right here.",
-		resp.Msg.State.PhysicalExcerpt, "blocks are spaced apart")
+		resp.State.PhysicalExcerpt, "blocks are spaced apart")
 
 	// An older page entry (an offline replay) loses to the newer one.
 	savePage(t, client, bookID, 5, readAt.Add(-time.Hour))
@@ -107,11 +106,13 @@ func TestPhysical_PageSaveWithoutPhysicalCopyWritesNoState(t *testing.T) {
 	)
 	require.ErrorIs(t, err, database.ErrResourceNotFound)
 
-	_, err = client.UpdateProgress(context.Background(),
-		authed(&booksv1.UpdateProgressRequest{
+	_, err = client.UpdateProgress(
+		testhelper.WithCookie(context.Background(), accessToken.String()),
+		&booksv1.UpdateProgressRequest{
 			BookId: bookID.String(), ProgressMode: models.ProgressModePages,
 			CurrentPage: 3, ReadAt: "yesterday",
-		}))
+		},
+	)
 	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
 }
 
@@ -131,13 +132,15 @@ func TestPhysical_DigitalPositionFollowsCurrentPage(t *testing.T) {
 		return err == nil && ub.CurrentPage == 4
 	}, 5*time.Second, 20*time.Millisecond)
 
-	resp, err := client.TranslateReadingPosition(context.Background(),
-		authed(&booksv1.TranslateReadingPositionRequest{
+	resp, err := client.TranslateReadingPosition(
+		testhelper.WithCookie(context.Background(), accessToken.String()),
+		&booksv1.TranslateReadingPositionRequest{
 			BookId:   bookID.String(),
 			Position: &booksv1.ReadingPosition{Href: mocks.PhysicalCh3Href, Offset: 0},
-		}))
+		},
+	)
 	require.NoError(t, err)
-	assert.Equal(t, int32(5), resp.Msg.PhysicalPage)
+	assert.Equal(t, int32(5), resp.PhysicalPage)
 }
 
 func TestPhysical_SetCurrentPageOnlyForTheLatestDigitalState(t *testing.T) {
@@ -170,33 +173,36 @@ func TestPhysical_CopyDetailsRoundTrip(t *testing.T) {
 	ctx := context.Background()
 	bookID := setupPhysicalBook(t, userID, false, true)
 
-	got, err := client.GetPhysicalCopy(ctx,
-		authed(&booksv1.GetPhysicalCopyRequest{BookId: bookID.String()}))
+	got, err := client.GetPhysicalCopy(testhelper.WithCookie(ctx, accessToken.String()),
+		&booksv1.GetPhysicalCopyRequest{BookId: bookID.String()})
 	require.NoError(t, err)
-	assert.True(t, got.Msg.Syncable)
-	assert.False(t, got.Msg.HasPrintPages)
-	assert.Equal(t, int32(1), got.Msg.Copy.TextStartPage)
-	require.Len(t, got.Msg.Chapters, 3)
-	chapterTwo := got.Msg.Chapters[1]
+	assert.True(t, got.Syncable)
+	assert.False(t, got.HasPrintPages)
+	assert.Equal(t, int32(1), got.Copy.TextStartPage)
+	require.Len(t, got.Chapters, 3)
+	chapterTwo := got.Chapters[1]
 	assert.Equal(t, "Chapter Two", chapterTwo.Title)
 
-	_, err = client.UpdatePhysicalCopy(ctx, authed(&booksv1.UpdatePhysicalCopyRequest{
-		BookId: bookID.String(),
-		Copy: &booksv1.PhysicalCopy{
-			PageCount: 320, TextStartPage: 9,
-			Anchors: []*booksv1.PhysicalAnchor{{Page: 87, Position: chapterTwo.Position}},
+	_, err = client.UpdatePhysicalCopy(
+		testhelper.WithCookie(ctx, accessToken.String()),
+		&booksv1.UpdatePhysicalCopyRequest{
+			BookId: bookID.String(),
+			Copy: &booksv1.PhysicalCopy{
+				PageCount: 320, TextStartPage: 9,
+				Anchors: []*booksv1.PhysicalAnchor{{Page: 87, Position: chapterTwo.Position}},
+			},
 		},
-	}))
+	)
 	require.NoError(t, err)
 
-	got, err = client.GetPhysicalCopy(ctx,
-		authed(&booksv1.GetPhysicalCopyRequest{BookId: bookID.String()}))
+	got, err = client.GetPhysicalCopy(testhelper.WithCookie(ctx, accessToken.String()),
+		&booksv1.GetPhysicalCopyRequest{BookId: bookID.String()})
 	require.NoError(t, err)
-	assert.Equal(t, int32(320), got.Msg.Copy.PageCount)
-	assert.Equal(t, int32(9), got.Msg.Copy.TextStartPage)
-	require.Len(t, got.Msg.Copy.Anchors, 1)
-	assert.Equal(t, int32(87), got.Msg.Copy.Anchors[0].Page)
-	assert.Equal(t, chapterTwo.Position.Href, got.Msg.Copy.Anchors[0].Position.Href)
+	assert.Equal(t, int32(320), got.Copy.PageCount)
+	assert.Equal(t, int32(9), got.Copy.TextStartPage)
+	require.Len(t, got.Copy.Anchors, 1)
+	assert.Equal(t, int32(87), got.Copy.Anchors[0].Page)
+	assert.Equal(t, chapterTwo.Position.Href, got.Copy.Anchors[0].Position.Href)
 
 	ub, err := testApp.Services.Books.GetUserBook(ctx, userID, bookID)
 	require.NoError(t, err)
@@ -213,23 +219,29 @@ func TestPhysical_CopyErrors(t *testing.T) {
 	ctx := context.Background()
 	bookID := setupPhysicalBook(t, userID, false, true)
 
-	_, err := client.UpdatePhysicalCopy(ctx, authed(&booksv1.UpdatePhysicalCopyRequest{
-		BookId: bookID.String(), Copy: &booksv1.PhysicalCopy{PageCount: -3},
-	}))
+	_, err := client.UpdatePhysicalCopy(
+		testhelper.WithCookie(ctx, accessToken.String()),
+		&booksv1.UpdatePhysicalCopyRequest{
+			BookId: bookID.String(), Copy: &booksv1.PhysicalCopy{PageCount: -3},
+		},
+	)
 	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
 
-	_, err = client.UpdatePhysicalCopy(ctx, authed(&booksv1.UpdatePhysicalCopyRequest{
-		BookId: uuid.NewString(), Copy: &booksv1.PhysicalCopy{PageCount: 3},
-	}))
+	_, err = client.UpdatePhysicalCopy(
+		testhelper.WithCookie(ctx, accessToken.String()),
+		&booksv1.UpdatePhysicalCopyRequest{
+			BookId: uuid.NewString(), Copy: &booksv1.PhysicalCopy{PageCount: 3},
+		},
+	)
 	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err))
 
-	_, err = client.GetPhysicalCopy(ctx,
-		authed(&booksv1.GetPhysicalCopyRequest{BookId: uuid.NewString()}))
+	_, err = client.GetPhysicalCopy(testhelper.WithCookie(ctx, accessToken.String()),
+		&booksv1.GetPhysicalCopyRequest{BookId: uuid.NewString()})
 	assert.Equal(t, connect.CodeNotFound, connect.CodeOf(err))
 
 	_, err = client.GetPhysicalCopy(
-		ctx,
-		authed(&booksv1.GetPhysicalCopyRequest{BookId: "x"}),
+		testhelper.WithCookie(ctx, accessToken.String()),
+		&booksv1.GetPhysicalCopyRequest{BookId: "x"},
 	)
 	assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
 }

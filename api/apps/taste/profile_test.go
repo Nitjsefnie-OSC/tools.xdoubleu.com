@@ -8,7 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -55,7 +56,15 @@ func profileApp(
 	)
 	ts := httptest.NewServer(testhelper.BuildMux(a))
 	t.Cleanup(ts.Close)
-	return a, tastev1connect.NewTasteServiceClient(http.DefaultClient, ts.URL)
+	return a, tastev1connect.NewTasteServiceClient(
+		connect.NewClient(
+			connecthttp.NewTransport(
+				http.DefaultClient,
+				ts.URL,
+				connecthttp.WithReadMaxBytes(0),
+			),
+		),
+	)
 }
 
 func getProfile(
@@ -63,17 +72,13 @@ func getProfile(
 	c tastev1connect.TasteServiceClient,
 ) *tastev1.GetProfileResponse {
 	t.Helper()
-	resp, err := c.GetProfile(context.Background(), connect.NewRequest(
-		&tastev1.GetProfileRequest{},
-	))
+	resp, err := c.GetProfile(context.Background(), &tastev1.GetProfileRequest{})
 	require.NoError(t, err)
-	return resp.Msg
+	return resp
 }
 
 func refresh(c tastev1connect.TasteServiceClient) error {
-	_, err := c.RefreshProfile(context.Background(), connect.NewRequest(
-		&tastev1.RefreshProfileRequest{},
-	))
+	_, err := c.RefreshProfile(context.Background(), &tastev1.RefreshProfileRequest{})
 	return err
 }
 
@@ -214,7 +219,15 @@ func TestProfile_NothingConsumedClearsTheProfile(t *testing.T) {
 
 	ts := httptest.NewServer(testhelper.BuildMux(empty))
 	t.Cleanup(ts.Close)
-	c := tastev1connect.NewTasteServiceClient(http.DefaultClient, ts.URL)
+	c := tastev1connect.NewTasteServiceClient(
+		connect.NewClient(
+			connecthttp.NewTransport(
+				http.DefaultClient,
+				ts.URL,
+				connecthttp.WithReadMaxBytes(0),
+			),
+		),
+	)
 	p := getProfile(t, c)
 	assert.Nil(t, p.Sections, "no profile outlives the data it came from")
 	assert.Empty(t, p.GeneratedAt)

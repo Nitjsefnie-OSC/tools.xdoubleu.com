@@ -2,10 +2,9 @@ package taste
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 
 	"tools.xdoubleu.com/apps/taste/internal/services"
 	tastev1 "tools.xdoubleu.com/gen/taste/v1"
@@ -29,7 +28,7 @@ func userID(ctx context.Context) (string, error) {
 	user := contexttools.GetValue[sharedmodels.User](ctx, constants.UserContextKey)
 	if user == nil {
 		return "", connect.NewError(
-			connect.CodeUnauthenticated, errors.New("user not authenticated"),
+			connect.CodeUnauthenticated, "user not authenticated",
 		)
 	}
 	return user.ID, nil
@@ -45,8 +44,8 @@ func canAccess(ctx context.Context) func(appName string) bool {
 
 func (h *tasteConnectHandler) GetStats(
 	ctx context.Context,
-	_ *connect.Request[tastev1.GetStatsRequest],
-) (*connect.Response[tastev1.GetStatsResponse], error) {
+	_ *tastev1.GetStatsRequest,
+) (*tastev1.GetStatsResponse, error) {
 	uid, err := userID(ctx)
 	if err != nil {
 		return nil, err
@@ -69,26 +68,26 @@ func (h *tasteConnectHandler) GetStats(
 			})
 		}
 	}
-	return connect.NewResponse(out), nil
+	return out, nil
 }
 
 func (h *tasteConnectHandler) ListEvents(
 	ctx context.Context,
-	req *connect.Request[tastev1.ListEventsRequest],
-) (*connect.Response[tastev1.ListEventsResponse], error) {
+	req *tastev1.ListEventsRequest,
+) (*tastev1.ListEventsResponse, error) {
 	uid, err := userID(ctx)
 	if err != nil {
 		return nil, err
 	}
-	domain := consumption.Domain(req.Msg.Domain)
+	domain := consumption.Domain(req.Domain)
 	if domain != "" && !services.IsDomain(domain) {
 		return nil, connect.NewError(
-			connect.CodeInvalidArgument, errors.New("unknown domain"),
+			connect.CodeInvalidArgument, "unknown domain",
 		)
 	}
-	if req.Msg.Offset < 0 {
+	if req.Offset < 0 {
 		return nil, connect.NewError(
-			connect.CodeInvalidArgument, errors.New("offset must not be negative"),
+			connect.CodeInvalidArgument, "offset must not be negative",
 		)
 	}
 	events, err := h.app.log.Events(ctx, uid, canAccess(ctx))
@@ -97,17 +96,17 @@ func (h *tasteConnectHandler) ListEvents(
 	}
 	events = services.Filter(events, domain)
 
-	limit, _ := pagination.Clamp(req.Msg.Limit)
-	start := min(int(req.Msg.Offset), len(events))
+	limit, _ := pagination.Clamp(req.Limit)
+	start := min(int(req.Offset), len(events))
 	end := min(start+limit, len(events))
 	page := events[start:end]
 	out := make([]*tastev1.Event, 0, len(page))
 	for _, e := range page {
 		out = append(out, protoEvent(e))
 	}
-	return connect.NewResponse(&tastev1.ListEventsResponse{
+	return &tastev1.ListEventsResponse{
 		Events: out, HasMore: end < len(events),
-	}), nil
+	}, nil
 }
 
 func protoEvent(e consumption.Event) *tastev1.Event {

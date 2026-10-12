@@ -2,10 +2,9 @@ package taste
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/google/uuid"
 
 	"tools.xdoubleu.com/apps/taste/internal/models"
@@ -17,24 +16,24 @@ import (
 
 func (h *tasteConnectHandler) ListRecommendations(
 	ctx context.Context,
-	req *connect.Request[tastev1.ListRecommendationsRequest],
-) (*connect.Response[tastev1.ListRecommendationsResponse], error) {
+	req *tastev1.ListRecommendationsRequest,
+) (*tastev1.ListRecommendationsResponse, error) {
 	uid, err := userID(ctx)
 	if err != nil {
 		return nil, err
 	}
-	domain, track := req.Msg.Domain, req.Msg.Track
+	domain, track := req.Domain, req.Track
 	if domain != "" && !services.IsDomain(consumption.Domain(domain)) {
 		return nil, connect.NewError(
-			connect.CodeInvalidArgument, errors.New("unknown domain"),
+			connect.CodeInvalidArgument, "unknown domain",
 		)
 	}
 	if track != "" && !models.IsTrack(track) {
 		return nil, connect.NewError(
-			connect.CodeInvalidArgument, errors.New("track must be more or broaden"),
+			connect.CodeInvalidArgument, "track must be more or broaden",
 		)
 	}
-	recs, at, note, err := h.app.picks.List(ctx, uid, domain, track, req.Msg.SavedOnly)
+	recs, at, note, err := h.app.picks.List(ctx, uid, domain, track, req.SavedOnly)
 	if err != nil {
 		return nil, connecttools.MapError(err)
 	}
@@ -45,58 +44,58 @@ func (h *tasteConnectHandler) ListRecommendations(
 			out = append(out, protoRecommendation(r))
 		}
 	}
-	return connect.NewResponse(&tastev1.ListRecommendationsResponse{
+	return &tastev1.ListRecommendationsResponse{
 		Recommendations: out,
 		GeneratedAt:     formatTimePtr(at),
 		LastError:       note,
-	}), nil
+	}, nil
 }
 
 func (h *tasteConnectHandler) SetFeedback(
 	ctx context.Context,
-	req *connect.Request[tastev1.SetFeedbackRequest],
-) (*connect.Response[tastev1.SetFeedbackResponse], error) {
-	if !models.IsFeedback(req.Msg.Feedback) {
+	req *tastev1.SetFeedbackRequest,
+) (*tastev1.SetFeedbackResponse, error) {
+	if !models.IsFeedback(req.Feedback) {
 		return nil, connect.NewError(
 			connect.CodeInvalidArgument,
-			errors.New("feedback must be hit, miss, not_interested, known or empty"),
+			"feedback must be hit, miss, not_interested, known or empty",
 		)
 	}
-	uid, rec, err := h.ownPick(ctx, req.Msg.Id)
+	uid, rec, err := h.ownPick(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	rec, err = h.app.picks.SetFeedback(ctx, uid, rec.ID, req.Msg.Feedback)
+	rec, err = h.app.picks.SetFeedback(ctx, uid, rec.ID, req.Feedback)
 	if err != nil {
 		return nil, connecttools.MapError(err)
 	}
-	return connect.NewResponse(&tastev1.SetFeedbackResponse{
+	return &tastev1.SetFeedbackResponse{
 		Recommendation: protoRecommendation(*rec),
-	}), nil
+	}, nil
 }
 
 func (h *tasteConnectHandler) SetSaved(
 	ctx context.Context,
-	req *connect.Request[tastev1.SetSavedRequest],
-) (*connect.Response[tastev1.SetSavedResponse], error) {
-	uid, rec, err := h.ownPick(ctx, req.Msg.Id)
+	req *tastev1.SetSavedRequest,
+) (*tastev1.SetSavedResponse, error) {
+	uid, rec, err := h.ownPick(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	rec, err = h.app.picks.SetSaved(ctx, uid, rec.ID, req.Msg.Saved)
+	rec, err = h.app.picks.SetSaved(ctx, uid, rec.ID, req.Saved)
 	if err != nil {
 		return nil, connecttools.MapError(err)
 	}
-	return connect.NewResponse(&tastev1.SetSavedResponse{
+	return &tastev1.SetSavedResponse{
 		Recommendation: protoRecommendation(*rec),
-	}), nil
+	}, nil
 }
 
 func (h *tasteConnectHandler) AcceptRecommendation(
 	ctx context.Context,
-	req *connect.Request[tastev1.AcceptRecommendationRequest],
-) (*connect.Response[tastev1.AcceptRecommendationResponse], error) {
-	uid, rec, err := h.ownPick(ctx, req.Msg.Id)
+	req *tastev1.AcceptRecommendationRequest,
+) (*tastev1.AcceptRecommendationResponse, error) {
+	uid, rec, err := h.ownPick(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -104,9 +103,9 @@ func (h *tasteConnectHandler) AcceptRecommendation(
 	if err != nil {
 		return nil, connecttools.MapError(err)
 	}
-	return connect.NewResponse(&tastev1.AcceptRecommendationResponse{
+	return &tastev1.AcceptRecommendationResponse{
 		Recommendation: protoRecommendation(*rec),
-	}), nil
+	}, nil
 }
 
 // ownPick returns the caller's pick id, as not found when they can't open
@@ -121,7 +120,7 @@ func (h *tasteConnectHandler) ownPick(
 	}
 	if _, err = uuid.Parse(id); err != nil {
 		return "", nil, connect.NewError(
-			connect.CodeInvalidArgument, errors.New("invalid id"),
+			connect.CodeInvalidArgument, "invalid id",
 		)
 	}
 	rec, err := h.app.picks.Get(ctx, uid, id)
@@ -130,7 +129,7 @@ func (h *tasteConnectHandler) ownPick(
 	}
 	if !canAccess(ctx)(services.AppOf(consumption.Domain(rec.Domain))) {
 		return "", nil, connect.NewError(
-			connect.CodeNotFound, errors.New("recommendation not found"),
+			connect.CodeNotFound, "recommendation not found",
 		)
 	}
 	return uid, rec, nil

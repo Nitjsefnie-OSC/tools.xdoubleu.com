@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/google/uuid"
 
 	"tools.xdoubleu.com/apps/books/internal/models"
@@ -19,18 +19,18 @@ import (
 // GetPhysicalCopy returns the details of the user's physical copy.
 func (h *booksConnectHandler) GetPhysicalCopy(
 	ctx context.Context,
-	req *connect.Request[booksv1.GetPhysicalCopyRequest],
-) (*connect.Response[booksv1.GetPhysicalCopyResponse], error) {
-	userID, bookID, err := physicalCopyCaller(ctx, req.Msg.BookId)
+	req *booksv1.GetPhysicalCopyRequest,
+) (*booksv1.GetPhysicalCopyResponse, error) {
+	userID, bookID, err := physicalCopyCaller(ctx, req.BookId)
 	if err != nil {
 		return nil, err
 	}
 	view, err := h.app.Services.Physical.Copy(ctx, userID, bookID)
 	if errors.Is(err, database.ErrResourceNotFound) {
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeNotFound, err.Error()).WithCause(err)
 	}
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
 	out := &booksv1.GetPhysicalCopyResponse{
 		Copy:          physicalCopyToProto(view.Copy),
@@ -43,25 +43,25 @@ func (h *booksConnectHandler) GetPhysicalCopy(
 			Title: ch.Title, Position: readingPositionToProto(ch.Position),
 		})
 	}
-	return connect.NewResponse(out), nil
+	return out, nil
 }
 
 // UpdatePhysicalCopy stores the details of the user's physical copy.
 func (h *booksConnectHandler) UpdatePhysicalCopy(
 	ctx context.Context,
-	req *connect.Request[booksv1.UpdatePhysicalCopyRequest],
-) (*connect.Response[booksv1.UpdatePhysicalCopyResponse], error) {
-	userID, bookID, err := physicalCopyCaller(ctx, req.Msg.BookId)
+	req *booksv1.UpdatePhysicalCopyRequest,
+) (*booksv1.UpdatePhysicalCopyResponse, error) {
+	userID, bookID, err := physicalCopyCaller(ctx, req.BookId)
 	if err != nil {
 		return nil, err
 	}
 	c := models.PhysicalCopy{
-		PageCount:     int(req.Msg.GetCopy().GetPageCount()),
-		TextStartPage: int(req.Msg.GetCopy().GetTextStartPage()),
+		PageCount:     int(req.GetCopy().GetPageCount()),
+		TextStartPage: int(req.GetCopy().GetTextStartPage()),
 		Anchors:       nil,
 		Syncable:      false,
 	}
-	for _, a := range req.Msg.GetCopy().GetAnchors() {
+	for _, a := range req.GetCopy().GetAnchors() {
 		c.Anchors = append(c.Anchors, models.PhysicalAnchor{
 			Page:   int(a.GetPage()),
 			Href:   a.GetPosition().GetHref(),
@@ -71,13 +71,13 @@ func (h *booksConnectHandler) UpdatePhysicalCopy(
 	err = h.app.Services.Physical.UpdateCopy(ctx, userID, bookID, c)
 	switch {
 	case errors.Is(err, services.ErrInvalidPhysicalCopy):
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	case errors.Is(err, database.ErrResourceNotFound):
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodeNotFound, err.Error()).WithCause(err)
 	case err != nil:
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, connect.NewError(connect.CodeInternal, err.Error()).WithCause(err)
 	}
-	return connect.NewResponse(&booksv1.UpdatePhysicalCopyResponse{}), nil
+	return &booksv1.UpdatePhysicalCopyResponse{}, nil
 }
 
 func physicalCopyCaller(
@@ -87,13 +87,13 @@ func physicalCopyCaller(
 	user := contexttools.GetValue[sharedmodels.User](ctx, constants.UserContextKey)
 	if user == nil {
 		return "", uuid.Nil, connect.NewError(
-			connect.CodeUnauthenticated, errors.New("unauthorized"),
+			connect.CodeUnauthenticated, "unauthorized",
 		)
 	}
 	bookID, err := uuid.Parse(rawBookID)
 	if err != nil {
 		return "", uuid.Nil, connect.NewError(
-			connect.CodeInvalidArgument, errors.New("invalid book ID"),
+			connect.CodeInvalidArgument, "invalid book ID",
 		)
 	}
 	return user.ID, bookID, nil

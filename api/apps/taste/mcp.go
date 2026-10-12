@@ -3,7 +3,6 @@ package taste
 import (
 	"context"
 
-	"connectrpc.com/connect"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"google.golang.org/protobuf/proto"
 
@@ -59,37 +58,29 @@ func (a *Taste) RegisterMCPTools(srv *mcp.Server) {
 func (h *tasteConnectHandler) mcpListRecommendations(
 	ctx context.Context, args mcpListRecommendationsArgs,
 ) (proto.Message, error) {
-	return mcptools.Unwrap(h.ListRecommendations(ctx, connect.NewRequest(
-		&tastev1.ListRecommendationsRequest{
-			Domain: args.Domain, Track: args.Track, SavedOnly: args.SavedOnly,
-		},
-	)))
+	return mcptools.Unwrap(h.ListRecommendations(ctx, &tastev1.ListRecommendationsRequest{
+		Domain: args.Domain, Track: args.Track, SavedOnly: args.SavedOnly,
+	}))
 }
 
 func (h *tasteConnectHandler) mcpGetProfile(
 	ctx context.Context, _ mcptools.NoArgs,
 ) (proto.Message, error) {
-	return mcptools.Unwrap(h.GetProfile(ctx, connect.NewRequest(
-		&tastev1.GetProfileRequest{},
-	)))
+	return mcptools.Unwrap(h.GetProfile(ctx, &tastev1.GetProfileRequest{}))
 }
 
 func (h *tasteConnectHandler) mcpGetStats(
 	ctx context.Context, _ mcptools.NoArgs,
 ) (proto.Message, error) {
-	return mcptools.Unwrap(h.GetStats(ctx, connect.NewRequest(
-		&tastev1.GetStatsRequest{},
-	)))
+	return mcptools.Unwrap(h.GetStats(ctx, &tastev1.GetStatsRequest{}))
 }
 
 func (h *tasteConnectHandler) mcpListEvents(
 	ctx context.Context, args mcpListEventsArgs,
 ) (proto.Message, error) {
-	return mcptools.Unwrap(h.ListEvents(ctx, connect.NewRequest(
-		&tastev1.ListEventsRequest{
-			Domain: args.Domain,
-			Limit:  args.Limit,
-			Offset: args.Offset,
-		},
-	)))
+	return mcptools.Unwrap(h.ListEvents(ctx, &tastev1.ListEventsRequest{
+		Domain: args.Domain,
+		Limit:  args.Limit,
+		Offset: args.Offset,
+	}))
 }
