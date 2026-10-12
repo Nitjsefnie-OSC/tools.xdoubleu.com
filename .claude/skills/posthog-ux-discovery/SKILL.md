@@ -34,7 +34,7 @@ create a PR, or edit a repo file.
      whatever the setting says. If the count is 0, skip `$dead_click` and
      report it as a gap. Mention in the summary when the setting and the
      events disagree. Then `$rageclick` and `$dead_click` grouped by
-     element/page.
+     element/page by `elements_chain`.
    - **Mis-navigation:** a detail page (`$pageview`, SPA navigations
      included) reached from a list page, then left within **8s** — the
      user tapped the wrong thing.
