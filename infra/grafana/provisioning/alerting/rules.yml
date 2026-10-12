@@ -454,8 +454,9 @@ groups:
                     params: [0]
 
       # IssueSecurityAlerts can't tell "no alerts" from "can't read alerts";
-      # this fires on the latter. The gauge starts at 0 until the collector's
-      # first run, which the 15m hold absorbs.
+      # this fires on the latter. The gauge is seeded to 1 at process start
+      # and drops to 0 only on a real fetch failure, so the 15m hold absorbs
+      # transient 4xx/5xx spikes.
       - uid: security-alerts-unreadable
         title: SecurityAlertsUnreadable
         condition: C
