@@ -794,3 +794,20 @@ func feedItemHTML(item *gofeed.Item) string {
 	}
 	return item.Custom["encoded"]
 }
+
+// probeMaxBytes caps the page fetched to confirm a suggested source exists.
+const probeMaxBytes = int64(1 << 20)
+
+// Probe fetches rawURL through the SSRF-safe client and returns where it
+// landed, confirming a suggested source exists; a page over the cap exists
+// too, at rawURL.
+func (s *FeedService) Probe(ctx context.Context, rawURL string) (string, error) {
+	res, err := s.webFetch.Get(ctx, rawURL, fetchOptions(probeMaxBytes, ""))
+	if errors.Is(err, webfetch.ErrTooLarge) {
+		return rawURL, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return res.FinalURL, nil
+}

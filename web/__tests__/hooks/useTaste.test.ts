@@ -9,6 +9,7 @@ jest.mock('swr', () => ({
 }))
 const mockClient = {
   getProfile: jest.fn().mockResolvedValue({}),
+  listRecommendations: jest.fn().mockResolvedValue({}),
   refreshProfile: jest.fn().mockResolvedValue({}),
   getStats: jest.fn().mockResolvedValue({}),
   listEvents: jest.fn().mockResolvedValue({ events: [{ itemId: 'b1' }], hasMore: true })
@@ -23,11 +24,14 @@ import useSWR from 'swr'
 import { GetProfileResponseSchema } from '@/lib/gen/taste/v1/taste_pb'
 import {
   PROFILE_POLL_MS,
+  isRecommendationsKey,
   profileRefreshInterval,
   useFetchTasteEventsPage,
   useRefreshTasteProfile,
+  useRevalidatePicksWhenDone,
   useTasteEvents,
   useTasteProfile,
+  useTasteRecommendations,
   useTasteStats
 } from '@/hooks/useTaste'
 
@@ -126,6 +130,7 @@ describe('useRefreshTasteProfile', () => {
     await result.current()
     expect(mockClient.refreshProfile).toHaveBeenCalledWith({})
     expect(mockMutate).toHaveBeenCalledWith('/taste/profile')
+    expect(mockMutate).toHaveBeenCalledWith(isRecommendationsKey)
   })
 
   it('uses the current SWR mutate', async () => {
@@ -143,5 +148,43 @@ describe('useRefreshTasteProfile', () => {
     const { result } = renderHook(() => useRefreshTasteProfile())
     await expect(result.current()).rejects.toThrow('too soon')
     expect(mockMutate).not.toHaveBeenCalled()
+  })
+})
+
+describe('useTasteRecommendations', () => {
+  it('fetches a domain and track', () => {
+    renderHook(() => useTasteRecommendations('books', 'broaden'))
+    expect(mockUseSWR).toHaveBeenCalledWith(
+      ['/taste/recommendations', 'books', 'broaden'],
+      expect.any(Function)
+    )
+    expect(mockClient.listRecommendations).toHaveBeenCalledWith({
+      domain: 'books',
+      track: 'broaden'
+    })
+  })
+})
+
+describe('isRecommendationsKey', () => {
+  it('matches every recommendations key only', () => {
+    expect(isRecommendationsKey(['/taste/recommendations', 'books', 'more'])).toBe(true)
+    expect(isRecommendationsKey(['/taste/events', ''])).toBe(false)
+    expect(isRecommendationsKey('/taste/recommendations')).toBe(false)
+  })
+})
+
+describe('useRevalidatePicksWhenDone', () => {
+  it('re-reads the picks only when a pending run finishes', () => {
+    const { rerender } = renderHook(({ pending }) => useRevalidatePicksWhenDone(pending), {
+      initialProps: { pending: false }
+    })
+    expect(mockMutate).not.toHaveBeenCalled()
+    rerender({ pending: true })
+    expect(mockMutate).not.toHaveBeenCalled()
+    rerender({ pending: false })
+    expect(mockMutate).toHaveBeenCalledTimes(1)
+    expect(mockMutate).toHaveBeenCalledWith(isRecommendationsKey)
+    rerender({ pending: false })
+    expect(mockMutate).toHaveBeenCalledTimes(1)
   })
 })
