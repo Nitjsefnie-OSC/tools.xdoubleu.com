@@ -1,10 +1,14 @@
 package taste_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,13 +20,72 @@ import (
 	tastev1 "tools.xdoubleu.com/gen/taste/v1"
 	"tools.xdoubleu.com/gen/taste/v1/tastev1connect"
 	"tools.xdoubleu.com/internal/auth"
+	"tools.xdoubleu.com/internal/config"
 	"tools.xdoubleu.com/internal/consumption"
+	"tools.xdoubleu.com/internal/database/postgres"
 	"tools.xdoubleu.com/internal/logging"
 	sharedmocks "tools.xdoubleu.com/internal/mocks"
+	"tools.xdoubleu.com/internal/openrouter"
 	"tools.xdoubleu.com/internal/testhelper"
 )
 
 const userID = "taste-test-user"
+
+//nolint:gochecknoglobals //needed for tests
+var (
+	testDB  postgres.DB
+	testCfg config.Config
+)
+
+func TestMain(m *testing.M) {
+	testCfg = testhelper.NewTestConfig()
+	pool := testhelper.ConnectTestDB(testCfg.DBDsn)
+	testDB = pool
+
+	ctx := context.Background()
+	if _, err := testDB.Exec(ctx, "DROP SCHEMA IF EXISTS taste CASCADE"); err != nil {
+		panic(err)
+	}
+	a := taste.New(
+		sharedmocks.NewMockedAuthService(userID), logging.NewNopLogger(), testCfg, testDB,
+	)
+	if err := a.ApplyMigrations(ctx, pool); err != nil {
+		panic(err)
+	}
+	os.Exit(m.Run())
+}
+
+// newLLM answers every completion with content.
+func newLLM(content string) *fakeLLM {
+	//nolint:exhaustruct // the rest start empty
+	return &fakeLLM{content: content}
+}
+
+// fakeLLM answers every completion with content, or fails with err; during
+// runs while the completion is in flight.
+type fakeLLM struct {
+	mu       sync.Mutex
+	content  string
+	err      error
+	during   func()
+	requests []openrouter.Request
+}
+
+func (f *fakeLLM) Complete(
+	_ context.Context, req openrouter.Request,
+) (*openrouter.Response, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.requests = append(f.requests, req)
+	if f.during != nil {
+		f.during()
+	}
+	if f.err != nil {
+		return nil, f.err
+	}
+	//nolint:exhaustruct // usage is irrelevant here
+	return &openrouter.Response{Model: "served/model", Content: f.content}, nil
+}
 
 // userSource is app name's fixed events for userID only.
 type userSource struct {
@@ -57,8 +120,8 @@ func newClientAs(
 	sources ...taste.Source,
 ) tastev1connect.TasteServiceClient {
 	t.Helper()
-	a := taste.New(
-		authService, logging.NewNopLogger(), testhelper.NewTestConfig(), sources...,
+	a := taste.NewInner(
+		authService, logging.NewNopLogger(), testCfg, testDB, newLLM(""), sources...,
 	)
 	ts := httptest.NewServer(testhelper.BuildMux(a))
 	t.Cleanup(ts.Close)
@@ -82,13 +145,11 @@ var (
 
 func TestAppMetadata(t *testing.T) {
 	a := taste.New(
-		sharedmocks.NewMockedAuthService(userID), logging.NewNopLogger(),
-		testhelper.NewTestConfig(),
+		sharedmocks.NewMockedAuthService(userID), logging.NewNopLogger(), testCfg, testDB,
 	)
 	assert.Equal(t, "taste", a.GetName())
 	assert.Equal(t, "Taste", a.GetDisplayName())
 	require.NoError(t, a.Start())
-	require.NoError(t, a.ApplyMigrations(context.Background(), nil))
 }
 
 func TestGetStats(t *testing.T) {
@@ -220,4 +281,17 @@ func TestSourcesNeedAppAccess(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.Msg.Events, 1)
 	assert.Equal(t, "Outer Wilds", resp.Msg.Events[0].Title)
+}
+
+func TestNew_WarnsOnlyWithoutKey(t *testing.T) {
+	var logs bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&logs, nil))
+	taste.New(sharedmocks.NewMockedAuthService(userID), logger, testCfg, testDB)
+	assert.Contains(t, logs.String(), "OPENROUTER_API_KEY not set")
+
+	logs.Reset()
+	cfg := testCfg
+	cfg.OpenRouterAPIKey = "key"
+	taste.New(sharedmocks.NewMockedAuthService(userID), logger, cfg, testDB)
+	assert.Empty(t, logs.String())
 }
