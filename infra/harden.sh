@@ -104,6 +104,34 @@ EOF
 systemctl daemon-reload
 systemctl enable --now release-upgrade-check.timer
 
+# --- disk-cleanup timer ------------------------------------------------------------
+# Every deploy leaves a superseded image behind, and Kamal never prunes them.
+cat >/etc/systemd/system/disk-cleanup.service <<'EOF'
+[Unit]
+Description=Prune old Docker images/build cache and vacuum the journal
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker image prune -af --filter until=168h
+ExecStart=/usr/bin/docker builder prune -af --filter until=168h
+ExecStart=/usr/bin/journalctl --vacuum-size=200M
+EOF
+
+cat >/etc/systemd/system/disk-cleanup.timer <<'EOF'
+[Unit]
+Description=Weekly disk cleanup
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now disk-cleanup.timer
+
 # --- sshd hardening ------------------------------------------------------------
 # Validate before reloading and confirm sshd still listens: a bad reload
 # locks out every SSH path.
