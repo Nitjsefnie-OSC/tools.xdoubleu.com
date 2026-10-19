@@ -73,6 +73,7 @@
       groupName: 'proto',
       matchDepNames: [
         'google.golang.org/protobuf',
+        'google.golang.org/protobuf/cmd/protoc-gen-go',
         'protocolbuffers/protobuf-go',
       ],
     },
@@ -81,6 +82,7 @@
       matchDepNames: [
         'connectrpc.com/connect',
         'connectrpc.com/connect/v2',
+        'connectrpc.com/connect/v2/cmd/protoc-gen-connect-go',
         'connectrpc/connect-go',
       ],
     },

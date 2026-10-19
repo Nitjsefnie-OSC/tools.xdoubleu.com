@@ -69,6 +69,8 @@ jobs:
               - 'proto/**'
               - 'api/buf.gen.yaml'
               - 'web/buf.gen.yaml'
+              - 'api/Makefile'
+              - 'web/package.json'
             workflows:
               - '.github/workflows/**'
             # Rebuilds the Grafana wrapper image when its Dockerfile or baked-in
