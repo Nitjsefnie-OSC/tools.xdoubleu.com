@@ -3,14 +3,10 @@ import { openPdf, pageOf, pdfOutline, renderPage, tocLabelForPage } from '@/lib/
 const mockGetDocument = vi.fn()
 const workerOptions = { workerSrc: '' }
 
-vi.mock(
-  'pdfjs-dist/legacy/build/pdf.mjs',
-  () => ({
-    GlobalWorkerOptions: workerOptions,
-    getDocument: (...a: unknown[]) => mockGetDocument(...a)
-  }),
-  { virtual: true }
-)
+vi.mock('pdfjs-dist/legacy/build/pdf.mjs', () => ({
+  GlobalWorkerOptions: workerOptions,
+  getDocument: (...a: unknown[]) => mockGetDocument(...a)
+}))
 
 describe('pageOf', () => {
   it('reads #page=N links only', () => {

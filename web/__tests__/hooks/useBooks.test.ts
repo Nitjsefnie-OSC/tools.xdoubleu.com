@@ -801,9 +801,7 @@ describe('useRegisterKoboDevice', () => {
   })
 
   it('calls client.registerKoboDevice with name and serial', async () => {
-    const mockRegister = vi
-      .fn()
-      .mockResolvedValue({ device: { id: 'dev-1' }, rawToken: 'tok123' })
+    const mockRegister = vi.fn().mockResolvedValue({ device: { id: 'dev-1' }, rawToken: 'tok123' })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ registerKoboDevice: mockRegister })
     const { result } = renderHook(() => useRegisterKoboDevice())

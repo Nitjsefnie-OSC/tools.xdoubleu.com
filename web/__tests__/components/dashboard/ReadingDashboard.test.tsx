@@ -12,20 +12,26 @@ vi.mock('@/hooks/useBooks', () => ({
 }))
 
 vi.mock('@/components/books/BookSearchBar', () => {
-  return function MockBookSearchBar() {
-    return <div data-testid="book-search-bar" />
+  return {
+    default: function MockBookSearchBar() {
+      return <div data-testid="book-search-bar" />
+    }
   }
 })
 
 vi.mock('@/components/books/BooksProgressChart', () => {
-  return function MockBooksProgressChart() {
-    return <div data-testid="books-progress-chart" />
+  return {
+    default: function MockBooksProgressChart() {
+      return <div data-testid="books-progress-chart" />
+    }
   }
 })
 
 vi.mock('@/components/dashboard/DashboardShareButton', () => {
-  return function MockDashboardShareButton() {
-    return <div data-testid="dashboard-share-button" />
+  return {
+    default: function MockDashboardShareButton() {
+      return <div data-testid="dashboard-share-button" />
+    }
   }
 })
 

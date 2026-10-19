@@ -5,26 +5,34 @@ import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 import BooksTable from '@/components/books/BooksTable'
 
 vi.mock('@/components/books/BookRatingStars', () => {
-  return function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
-    return <div data-testid="rating-stars" data-rating={userBook.rating} />
+  return {
+    default: function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
+      return <div data-testid="rating-stars" data-rating={userBook.rating} />
+    }
   }
 })
 
 vi.mock('@/components/books/BookFavouriteButton', () => {
-  return function MockFavButton() {
-    return <div data-testid="favourite-button" />
+  return {
+    default: function MockFavButton() {
+      return <div data-testid="favourite-button" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookOwnershipToggles', () => {
-  return function MockOwnershipToggles() {
-    return <div data-testid="ownership-toggles" />
+  return {
+    default: function MockOwnershipToggles() {
+      return <div data-testid="ownership-toggles" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookRemoveAction', () => {
-  return function MockRemoveAction() {
-    return <div data-testid="remove-action" />
+  return {
+    default: function MockRemoveAction() {
+      return <div data-testid="remove-action" />
+    }
   }
 })
 
@@ -119,8 +127,10 @@ describe('BooksTable', () => {
   it('title links to the book detail page', () => {
     const books = [makeBook('abc', 'Dune')]
     render(<BooksTable books={books} knownShelves={[]} knownTags={[]} />)
-    const link = screen.getByRole('link', { name: 'Dune' })
-    expect(link).toHaveAttribute('href', '/books/abc')
+    // The cover and the title both link to the book.
+    for (const link of screen.getAllByRole('link', { name: 'Dune' })) {
+      expect(link).toHaveAttribute('href', '/books/abc')
+    }
   })
 
   it('author links to the author page', () => {

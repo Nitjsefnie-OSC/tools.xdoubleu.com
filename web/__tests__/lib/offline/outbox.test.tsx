@@ -75,14 +75,14 @@ vi.mock('@/lib/offline/store', () => {
   }
 })
 
-const storeMock = (await import('@/lib/offline/store')) as unknown as {
+const storeMock: {
   mockReset: () => void
   mockMemoryOnly: { on: boolean }
-}
+} = await vi.importMock('@/lib/offline/store')
 
 const write: OfflineWrite = shoppingListWrites[0]
 const send = vi.mocked(write.send)
-const fetcher = vi.fn<Promise<string[]>, []>()
+const fetcher = vi.fn<() => Promise<string[]>>()
 
 // A fresh key per test, so no test joins another's in-flight refetch.
 let listKey = '/list'

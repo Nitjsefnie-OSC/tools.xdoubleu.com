@@ -25,17 +25,13 @@ function makeProposal() {
 
 describe('SourceCompare', () => {
   it('renders a cover image for a source that has one', () => {
-    render(
-      <SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />
-    )
+    render(<SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />)
     const img = screen.getByRole('img')
     expect(img).toHaveAttribute('alt', 'Dune (UC)')
   })
 
   it('does not render cover_url as a text field', () => {
-    render(
-      <SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />
-    )
+    render(<SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />)
     expect(screen.queryByText('cover url')).not.toBeInTheDocument()
   })
 
@@ -70,9 +66,7 @@ describe('SourceCompare', () => {
   })
 
   it('renders no search fields without onSearch', () => {
-    render(
-      <SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />
-    )
+    render(<SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />)
     expect(screen.queryByPlaceholderText('Title')).not.toBeInTheDocument()
   })
 

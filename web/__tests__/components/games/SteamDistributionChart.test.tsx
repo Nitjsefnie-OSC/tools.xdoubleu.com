@@ -1,4 +1,4 @@
-import React, { Children, cloneElement } from 'react'
+import React, { Children, cloneElement, isValidElement } from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import SteamDistributionChart from '@/components/games/SteamDistributionChart'
 
@@ -14,8 +14,10 @@ vi.mock('recharts', () => {
   return {
     BarChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
       <div data-testid="bar-chart">
-        {Children.map(children, (child: React.ReactElement) =>
-          child && child.type === Bar ? cloneElement(child, { data }) : child
+        {Children.map(children, (child) =>
+          isValidElement<{ data?: unknown[] }>(child) && child.type === Bar
+            ? cloneElement(child, { data })
+            : child
         )}
       </div>
     ),

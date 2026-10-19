@@ -45,27 +45,19 @@ class FakeNavigator {
   }
 }
 
-vi.mock(
-  '@readium/navigator',
-  () => ({
-    EpubNavigator: function (...args: ConstructorParameters<typeof FakeNavigator>) {
-      return new FakeNavigator(...args)
-    },
-    EpubPreferences: class {
-      constructor(public prefs: unknown) {}
-    }
-  }),
-  { virtual: true }
-)
-vi.mock(
-  '@readium/shared',
-  () => ({
-    Link: class {
-      constructor(public values: unknown) {}
-    }
-  }),
-  { virtual: true }
-)
+vi.mock('@readium/navigator', () => ({
+  EpubNavigator: function (...args: ConstructorParameters<typeof FakeNavigator>) {
+    return new FakeNavigator(...args)
+  },
+  EpubPreferences: class {
+    constructor(public prefs: unknown) {}
+  }
+}))
+vi.mock('@readium/shared', () => ({
+  Link: class {
+    constructor(public values: unknown) {}
+  }
+}))
 vi.mock('@/lib/books/readium', () => ({
   loadPublication: (...a: unknown[]) => mockLoadPublication(...a),
   resumeLocator: (...a: unknown[]) => mockResumeLocator(...a),

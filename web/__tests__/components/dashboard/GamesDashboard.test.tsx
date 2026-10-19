@@ -22,22 +22,26 @@ vi.mock('@/hooks/navigation', () => ({
 }))
 
 vi.mock('@/components/dashboard/DashboardShareButton', () => {
-  return function MockDashboardShareButton() {
-    return <div data-testid="profile-share-button" />
+  return {
+    default: function MockDashboardShareButton() {
+      return <div data-testid="profile-share-button" />
+    }
   }
 })
 
 vi.mock('@/components/games/SteamDistributionChart', () => {
-  return function MockSteamDistributionChart({
-    onBucketClick
-  }: {
-    onBucketClick: (bucket: number) => void
-  }) {
-    return (
-      <button data-testid="distribution-chart" onClick={() => onBucketClick(3)}>
-        chart
-      </button>
-    )
+  return {
+    default: function MockSteamDistributionChart({
+      onBucketClick
+    }: {
+      onBucketClick: (bucket: number) => void
+    }) {
+      return (
+        <button data-testid="distribution-chart" onClick={() => onBucketClick(3)}>
+          chart
+        </button>
+      )
+    }
   }
 })
 

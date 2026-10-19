@@ -41,12 +41,7 @@ const allShelves = [...builtInShelves, ...customShelves]
 
 function renderDialog(tags: string[] = []) {
   return render(
-    <ManageShelvesTagsDialog
-      open={true}
-      onOpenChange={vi.fn()}
-      shelves={allShelves}
-      tags={tags}
-    />
+    <ManageShelvesTagsDialog open={true} onOpenChange={vi.fn()} shelves={allShelves} tags={tags} />
   )
 }
 

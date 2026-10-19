@@ -50,7 +50,7 @@ import { useCurrentUser } from '@/hooks/useAuth'
 import { useSessionEffects } from '@/components/SWRProvider'
 
 function signedInAs(user: { userId?: string; role: string; appAccess: string[] } | undefined) {
-  vi.mocked(useCurrentUser).mockReturnValue({ data: user } as ReturnType<typeof useCurrentUser>)
+  vi.mocked(useCurrentUser).mockReturnValue({ data: user } as never)
 }
 
 describe('AppShell', () => {

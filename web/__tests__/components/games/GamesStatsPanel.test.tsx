@@ -7,14 +7,18 @@ vi.mock('@/hooks/useGames', () => ({
 }))
 
 vi.mock('@/components/games/SteamDistributionChart', () => {
-  return function MockSteamDistributionChart() {
-    return <div data-testid="distribution-chart" />
+  return {
+    default: function MockSteamDistributionChart() {
+      return <div data-testid="distribution-chart" />
+    }
   }
 })
 
 vi.mock('@/components/games/SteamProgressChart', () => {
-  return function MockSteamProgressChart() {
-    return <div data-testid="progress-chart" />
+  return {
+    default: function MockSteamProgressChart() {
+      return <div data-testid="progress-chart" />
+    }
   }
 })
 

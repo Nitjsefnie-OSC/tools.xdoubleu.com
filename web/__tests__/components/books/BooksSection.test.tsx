@@ -19,45 +19,49 @@ vi.mock('@/hooks/navigation', () => ({
 }))
 
 vi.mock('@/components/books/BookSearchBar', () => {
-  return function MockBookSearchBar({
-    query,
-    onChange
-  }: {
-    query: string
-    onChange: (v: string) => void
-  }) {
-    return (
-      <input
-        data-testid="book-search-bar"
-        value={query}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Search books…"
-      />
-    )
+  return {
+    default: function MockBookSearchBar({
+      query,
+      onChange
+    }: {
+      query: string
+      onChange: (v: string) => void
+    }) {
+      return (
+        <input
+          data-testid="book-search-bar"
+          value={query}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Search books…"
+        />
+      )
+    }
   }
 })
 
 vi.mock('@/components/books/BooksLibrary', () => {
-  return function MockBooksLibrary({
-    library,
-    searchQuery,
-    onSaved
-  }: {
-    library: { reading: unknown[] }
-    searchQuery: string
-    onSaved: () => void
-  }) {
-    return (
-      <div
-        data-testid="books-library"
-        data-reading-count={library.reading.length}
-        data-search-query={searchQuery}
-      >
-        <button data-testid="trigger-saved" onClick={onSaved}>
-          save
-        </button>
-      </div>
-    )
+  return {
+    default: function MockBooksLibrary({
+      library,
+      searchQuery,
+      onSaved
+    }: {
+      library: { reading: unknown[] }
+      searchQuery: string
+      onSaved: () => void
+    }) {
+      return (
+        <div
+          data-testid="books-library"
+          data-reading-count={library.reading.length}
+          data-search-query={searchQuery}
+        >
+          <button data-testid="trigger-saved" onClick={onSaved}>
+            save
+          </button>
+        </div>
+      )
+    }
   }
 })
 
@@ -163,7 +167,7 @@ describe('BooksSection', () => {
     fireEvent.change(screen.getByPlaceholderText('Search books…'), {
       target: { value: 'dune' }
     })
-    expect(mockReplace).toHaveBeenCalledWith('/books/library?q=dune', { scroll: false })
+    expect(mockReplace).toHaveBeenCalledWith('/books/library?q=dune')
   })
 
   it('restores the query from the URL on mount (back-navigation)', () => {

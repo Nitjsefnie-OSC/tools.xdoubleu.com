@@ -5,39 +5,53 @@ import BookCard from '@/components/books/BookCard'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
 vi.mock('@/components/books/BookProgressEditor', () => {
-  return function MockProgressEditor() {
-    return <div role="progressbar" data-testid="progress-editor" />
+  return {
+    default: function MockProgressEditor() {
+      return <div role="progressbar" data-testid="progress-editor" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookRatingStars', () => {
-  return function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
-    return <div data-testid="rating-stars">{userBook.rating} stars</div>
+  return {
+    default: function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
+      return <div data-testid="rating-stars">{userBook.rating} stars</div>
+    }
   }
 })
 
 vi.mock('@/components/books/BookFavouriteButton', () => {
-  return function MockFavButton() {
-    return <div data-testid="favourite-button" />
+  return {
+    default: function MockFavButton() {
+      return <div data-testid="favourite-button" />
+    }
   }
 })
 
 vi.mock('@/components/books/OfflineBookBadge', () => {
-  return function MockOfflineBadge({ bookId }: { bookId: string }) {
-    return <span>offline:{bookId}</span>
+  return {
+    default: function MockOfflineBadge({ bookId }: { bookId: string }) {
+      return <span>offline:{bookId}</span>
+    }
   }
 })
 
 vi.mock('@/components/books/BookOwnershipToggles', () => {
-  return function MockOwnership({ userBook }: { userBook: { tags: string[]; formats: string[] } }) {
-    return (
-      <div data-testid="ownership-toggles">
-        {userBook.tags.includes('own-physical') && <span>Physical</span>}
-        {userBook.tags.includes('own-digital') && <span>Digital</span>}
-        {userBook.formats.includes('pdf') && <span>PDF</span>}
-        {userBook.formats.includes('epub') && <span>EPUB</span>}
-      </div>
-    )
+  return {
+    default: function MockOwnership({
+      userBook
+    }: {
+      userBook: { tags: string[]; formats: string[] }
+    }) {
+      return (
+        <div data-testid="ownership-toggles">
+          {userBook.tags.includes('own-physical') && <span>Physical</span>}
+          {userBook.tags.includes('own-digital') && <span>Digital</span>}
+          {userBook.formats.includes('pdf') && <span>PDF</span>}
+          {userBook.formats.includes('epub') && <span>EPUB</span>}
+        </div>
+      )
+    }
   }
 })
 

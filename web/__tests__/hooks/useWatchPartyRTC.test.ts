@@ -84,7 +84,7 @@ function makeMockStream() {
 beforeEach(() => {
   vi.useFakeTimers()
 
-  mockWebSocketFn = vi.fn().mockImplementation(() => {
+  mockWebSocketFn = vi.fn(function () {
     mockWs = new MockWebSocket()
     return mockWs
   })
@@ -95,7 +95,9 @@ beforeEach(() => {
     configurable: true
   })
 
-  mockRTCPeerConnectionFn = vi.fn(() => new MockPC())
+  mockRTCPeerConnectionFn = vi.fn(function () {
+    return new MockPC()
+  })
   Object.defineProperty(global, 'RTCPeerConnection', {
     value: mockRTCPeerConnectionFn,
     writable: true,
@@ -223,9 +225,9 @@ describe('useWatchPartyRTC — toggle controls', () => {
 
 describe('useWatchPartyRTC — getUserMedia error', () => {
   it('sets error when getUserMedia rejects', async () => {
-    vi
-      .mocked(navigator.mediaDevices.getUserMedia)
-      .mockRejectedValueOnce(new Error('Permission denied'))
+    vi.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValueOnce(
+      new Error('Permission denied')
+    )
     const { result } = renderHook(() =>
       useWatchPartyRTC({ id: 'room1', role: 'viewer', ...makeRefs() })
     )

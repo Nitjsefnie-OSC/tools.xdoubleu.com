@@ -132,11 +132,11 @@ describe('ReadingDashboardPublicLibrary', () => {
     fireEvent.click(screen.getAllByText('custom-shelf')[0]!)
     expect(screen.getByText('Shelved Book')).toBeInTheDocument()
 
-    fireEvent.click(screen.getAllByRole('button', { name: /^Want to read \d/ })[0]!)
+    fireEvent.click(screen.getAllByRole('button', { name: /^Want to read ?\d/ })[0]!)
     expect(screen.getByText('Wishlist Book')).toBeInTheDocument()
-    fireEvent.click(screen.getAllByRole('button', { name: /^Currently reading \d/ })[0]!)
-    fireEvent.click(screen.getAllByRole('button', { name: /^Read \d/ })[0]!)
-    fireEvent.click(screen.getAllByRole('button', { name: /^All books \d/ })[0]!)
+    fireEvent.click(screen.getAllByRole('button', { name: /^Currently reading ?\d/ })[0]!)
+    fireEvent.click(screen.getAllByRole('button', { name: /^Read ?\d/ })[0]!)
+    fireEvent.click(screen.getAllByRole('button', { name: /^All books ?\d/ })[0]!)
 
     fireEvent.click(screen.getAllByText('sci-fi')[0]!)
     expect(screen.getByText('Wishlist Book')).toBeInTheDocument()

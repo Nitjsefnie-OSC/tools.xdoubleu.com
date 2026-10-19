@@ -18,11 +18,7 @@ describe('MealPlanGroupFilter', () => {
 
   it('checks included groups and unchecks excluded ones', () => {
     render(
-      <MealPlanGroupFilter
-        groups={groups}
-        excludedGroups={new Set(['Sauce'])}
-        onToggle={vi.fn()}
-      />
+      <MealPlanGroupFilter groups={groups} excludedGroups={new Set(['Sauce'])} onToggle={vi.fn()} />
     )
     const [sauce, dressing] = screen.getAllByRole('checkbox')
     expect(sauce).not.toBeChecked()

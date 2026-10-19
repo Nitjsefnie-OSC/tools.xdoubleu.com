@@ -14,7 +14,7 @@ import {
   syncOfflineBooks
 } from '@/lib/books/offlineSync'
 
-const mockDownload = vi.fn<Promise<unknown>, [BookFileRef]>()
+const mockDownload = vi.fn<(ref: BookFileRef) => Promise<unknown>>()
 const mockDelete = vi.fn()
 const mockList = vi.fn()
 vi.mock('@/lib/books/offlineBooks', () => ({
@@ -23,21 +23,11 @@ vi.mock('@/lib/books/offlineBooks', () => ({
   listStoredBooks: () => mockList()
 }))
 
-const mockSavePage = vi.fn()
-vi.mock('@/lib/offline/session', () => ({
-  savePageForOffline: (url: string) => mockSavePage(url)
-}))
-
 const mockWarmWebPub = vi.fn()
 const mockIsWebPubWarm = vi.fn()
 vi.mock('@/lib/books/webpubCache', () => ({
   warmWebPub: (...args: unknown[]) => mockWarmWebPub(...args),
   isWebPubWarm: (...args: unknown[]) => mockIsWebPubWarm(...args)
-}))
-
-const mockWarm = vi.fn()
-vi.mock('@/lib/books/readerModules', () => ({
-  warmReaderModules: () => mockWarm()
 }))
 
 function book(bookId: string, init: MessageInitShape<typeof UserBookSchema> = {}): UserBook {
@@ -97,8 +87,8 @@ describe('planOfflineBooks', () => {
       [stored('stale', 'epub', 'old'), stored('fresh', 'epub', 'fresh-v1')]
     )
     expect(plan.downloads).toEqual([
-      { bookId: 'new', format: 'epub', version: 'new-v1', readerPath: '/books/ub-new/read' },
-      { bookId: 'stale', format: 'epub', version: 'stale-v1', readerPath: '/books/ub-stale/read' }
+      { bookId: 'new', format: 'epub', version: 'new-v1' },
+      { bookId: 'stale', format: 'epub', version: 'stale-v1' }
     ])
     expect(plan.evictions).toEqual([])
   })
@@ -175,7 +165,7 @@ describe('canPrefetch', () => {
 })
 
 describe('syncOfflineBooks', () => {
-  it('downloads each missing book once, in order, and saves its reader page', async () => {
+  it('downloads each missing book once, in order', async () => {
     const lib = library({ reading: [book('s1'), book('s2')] })
     await syncOfflineBooks(lib, { gapMs: 0 })
 
@@ -183,7 +173,6 @@ describe('syncOfflineBooks', () => {
       [{ bookId: 's1', format: 'epub', version: 's1-v1' }],
       [{ bookId: 's2', format: 'epub', version: 's2-v1' }]
     ])
-    expect(mockSavePage.mock.calls).toEqual([['/books/ub-s1/read'], ['/books/ub-s2/read']])
 
     // Once stored, a later run fetches nothing.
     mockList.mockResolvedValue([stored('s1', 'epub', 's1-v1'), stored('s2', 'epub', 's2-v1')])
@@ -289,7 +278,6 @@ describe('syncOfflineBooks', () => {
       const lib = library({ reading: [book('bad'), book('ok')] })
       await syncOfflineBooks(lib, { gapMs: 0 })
       expect(mockDownload).toHaveBeenCalledTimes(2)
-      expect(mockSavePage).toHaveBeenCalledTimes(1)
 
       mockList.mockResolvedValue([stored('ok', 'epub', 'ok-v1')])
       mockDownload.mockClear()
@@ -320,29 +308,6 @@ describe('syncOfflineBooks', () => {
     expect(mockDownload).not.toHaveBeenCalled()
   })
 
-  it('does not warm the reader modules once every stored book is evicted', async () => {
-    mockList.mockResolvedValue([stored('gone', 'epub', 'x')])
-    await syncOfflineBooks(library({}), { gapMs: 0 })
-    expect(mockWarm).not.toHaveBeenCalled()
-  })
-
-  it('warms the reader modules while a stored book survives eviction', async () => {
-    mockList.mockResolvedValue([stored('gone', 'epub', 'x'), stored('kept', 'epub', 'kept-v1')])
-    await syncOfflineBooks(library({ wishlist: [book('kept', { status: 'to-read' })] }), {
-      gapMs: 0
-    })
-    expect(mockWarm).toHaveBeenCalled()
-  })
-
-  it('warms the reader modules while any book is stored', async () => {
-    await syncOfflineBooks(library({}), { gapMs: 0 })
-    expect(mockWarm).not.toHaveBeenCalled()
-
-    mockList.mockResolvedValue([stored('w', 'epub', 'w-v1')])
-    await syncOfflineBooks(library({ reading: [book('w')] }), { gapMs: 0 })
-    expect(mockWarm).toHaveBeenCalled()
-  })
-
   it('warms the offline copy of a freshly downloaded EPUB, but not of a PDF', async () => {
     const epub = book('e')
     const pdf = book('p', { formats: ['pdf'], fileVersions: { pdf: 'p-v1' } })
@@ -355,7 +320,6 @@ describe('syncOfflineBooks', () => {
     mockWarmWebPub.mockRejectedValue(new Error('x'))
     await syncOfflineBooks(library({ reading: [book('e')] }), { gapMs: 0 })
     expect(mockDownload).toHaveBeenCalled()
-    expect(mockSavePage).toHaveBeenCalledWith('/books/ub-e/read')
   })
 
   it('gives a stored EPUB without an offline copy one', async () => {

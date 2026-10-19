@@ -38,13 +38,7 @@ describe('ArticleReaderDialog', () => {
 
   it('spans the prose edge to edge inside the full-bleed desktop dialog', () => {
     render(
-      <ArticleReaderDialog
-        title="T"
-        open
-        onOpenChange={vi.fn()}
-        html="<p>Body</p>"
-        bleedDesktop
-      />
+      <ArticleReaderDialog title="T" open onOpenChange={vi.fn()} html="<p>Body</p>" bleedDesktop />
     )
     const proseEl = [...document.querySelectorAll('.prose')].find((el) => el.textContent == 'Body')
     // max-w-none stays; the centered lg cap must not apply.

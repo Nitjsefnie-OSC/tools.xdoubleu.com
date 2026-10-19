@@ -28,20 +28,26 @@ vi.mock('@/hooks/useBooks', async () => ({
 vi.useFakeTimers()
 
 vi.mock('@/components/books/BookRatingStars', () => {
-  return function MockRatingStars() {
-    return <div data-testid="rating-stars" />
+  return {
+    default: function MockRatingStars() {
+      return <div data-testid="rating-stars" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookFavouriteButton', () => {
-  return function MockFavButton() {
-    return <div data-testid="favourite-button" />
+  return {
+    default: function MockFavButton() {
+      return <div data-testid="favourite-button" />
+    }
   }
 })
 
 vi.mock('@/components/books/ManageShelvesTagsDialog', () => {
-  return function MockManageDialog({ open }: { open: boolean }) {
-    return open ? <div data-testid="manage-dialog" /> : null
+  return {
+    default: function MockManageDialog({ open }: { open: boolean }) {
+      return open ? <div data-testid="manage-dialog" /> : null
+    }
   }
 })
 

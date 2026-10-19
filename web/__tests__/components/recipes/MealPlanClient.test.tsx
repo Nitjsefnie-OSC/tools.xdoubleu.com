@@ -18,8 +18,10 @@ vi.mock('@/hooks/navigation', () => ({
 }))
 
 vi.mock('@/components/mealplans/MealPlanCalendar', () => {
-  return function MockCalendar() {
-    return <div data-testid="meal-plan-calendar">calendar-mock</div>
+  return {
+    default: function MockCalendar() {
+      return <div data-testid="meal-plan-calendar">calendar-mock</div>
+    }
   }
 })
 

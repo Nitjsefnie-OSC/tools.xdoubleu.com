@@ -15,7 +15,9 @@ vi.mock('@/hooks/useAuth', () => ({
   useCurrentUser: () => mockUseCurrentUser()
 }))
 
-vi.mock('@/components/feeds/FeedManager', () => ({ default: () => <div data-testid="feed-manager" /> }))
+vi.mock('@/components/feeds/FeedManager', () => ({
+  default: () => <div data-testid="feed-manager" />
+}))
 
 import FeedsHeader from '@/components/feeds/FeedsHeader'
 

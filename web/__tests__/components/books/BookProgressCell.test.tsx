@@ -4,14 +4,18 @@ import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
 vi.mock('@/components/books/BookProgressBar', () => {
-  return function MockProgressBar() {
-    return <div role="progressbar" data-testid="progress-bar" />
+  return {
+    default: function MockProgressBar() {
+      return <div role="progressbar" data-testid="progress-bar" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookProgressForm', () => {
-  return function MockProgressForm() {
-    return <div data-testid="progress-form" />
+  return {
+    default: function MockProgressForm() {
+      return <div data-testid="progress-form" />
+    }
   }
 })
 

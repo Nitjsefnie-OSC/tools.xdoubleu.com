@@ -11,14 +11,18 @@ import {
 } from '@/lib/gen/books/v1/library_pb'
 
 vi.mock('@/components/books/BookRatingStars', () => {
-  return function MockRatingStars() {
-    return <div data-testid="rating-stars" />
+  return {
+    default: function MockRatingStars() {
+      return <div data-testid="rating-stars" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookFavouriteButton', () => {
-  return function MockFavButton() {
-    return <div data-testid="favourite-button" />
+  return {
+    default: function MockFavButton() {
+      return <div data-testid="favourite-button" />
+    }
   }
 })
 

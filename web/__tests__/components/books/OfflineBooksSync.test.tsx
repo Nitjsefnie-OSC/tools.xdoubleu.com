@@ -8,13 +8,13 @@ interface LibraryState {
 }
 
 let mockLibrary: LibraryState = { isValidating: false }
-const mockUseLibrary = vi.fn<LibraryState, [unknown]>(() => mockLibrary)
+const mockUseLibrary = vi.fn<(config: unknown) => LibraryState>(() => mockLibrary)
 vi.mock('@/hooks/useBooks', () => ({
   useLibrary: (config: unknown) => mockUseLibrary(config)
 }))
 
 let mockServedFromCache = false
-const mockServedFromCacheFn = vi.fn<boolean, [unknown]>(() => mockServedFromCache)
+const mockServedFromCacheFn = vi.fn<(key: unknown) => boolean>(() => mockServedFromCache)
 vi.mock('@/lib/offline/persist', () => ({
   servedFromCache: (key: unknown) => mockServedFromCacheFn(key)
 }))

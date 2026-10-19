@@ -91,7 +91,7 @@ describe('MoviesClient backlog', () => {
     expect(screen.getByRole('link', { name: /The Matrix/ })).toHaveAttribute('href', '/movies/e-1')
     expect(screen.getByText(/1999/)).toBeInTheDocument()
     expect(screen.getByText(/Releases 2099-12-18/)).toBeInTheDocument()
-    expect(screen.getByTestId('poster')).toHaveAttribute(
+    expect(screen.getByRole('presentation')).toHaveAttribute(
       'src',
       'https://image.tmdb.org/t/p/w92/matrix.jpg'
     )
@@ -103,8 +103,8 @@ describe('MoviesClient backlog', () => {
   it('falls back to an initial when the poster fails to load', () => {
     mockBacklog({ data: create(ListBacklogResponseSchema, { entries: [matrix] }) })
     render(<MoviesClient />)
-    fireEvent.error(screen.getByTestId('poster'))
-    expect(screen.queryByTestId('poster')).not.toBeInTheDocument()
+    fireEvent.error(screen.getByRole('presentation'))
+    expect(screen.queryByRole('presentation')).not.toBeInTheDocument()
     expect(screen.getByText('T')).toBeInTheDocument()
   })
 

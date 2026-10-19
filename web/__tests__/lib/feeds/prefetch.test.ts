@@ -32,11 +32,9 @@ beforeEach(() => {
       { id: 'empty', hasContent: false }
     ]
   })
-  vi
-    .mocked(loadEntry)
-    .mockImplementation(async (key) =>
-      key === '/feeds/item/saved' ? { key, data: {}, savedAt: 1 } : undefined
-    )
+  vi.mocked(loadEntry).mockImplementation(async (key) =>
+    key === '/feeds/item/saved' ? { key, data: {}, savedAt: 1 } : undefined
+  )
   getFeedItem.mockImplementation(async ({ itemId }: { itemId: string }) => ({
     item: { id: itemId }
   }))

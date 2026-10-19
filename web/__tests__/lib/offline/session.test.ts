@@ -1,8 +1,4 @@
-import {
-  claimOfflineData,
-  clearOfflineData,
-  registerServiceWorker
-} from '@/lib/offline/session'
+import { claimOfflineData, clearOfflineData, registerServiceWorker } from '@/lib/offline/session'
 import { clearStore, getOwner, pruneEntries, setOwner } from '@/lib/offline/store'
 import { logger } from '@/lib/logger'
 import { resetOutbox } from '@/lib/offline/outbox'

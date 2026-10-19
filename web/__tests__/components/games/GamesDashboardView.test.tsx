@@ -5,19 +5,23 @@ import { GameSchema, RecentGameSchema, SteamResponseSchema } from '@/lib/gen/gam
 import type { DashboardChartState } from '@/hooks/useDashboardChartState'
 
 vi.mock('@/components/games/SteamDistributionChart', () => {
-  return function MockSteamDistributionChart({
-    onBucketClick
-  }: {
-    onBucketClick?: (bucket: number) => void
-  }) {
-    return (
-      <button data-testid="distribution-chart" onClick={() => onBucketClick?.(3)}>
-        chart
-      </button>
-    )
+  return {
+    default: function MockSteamDistributionChart({
+      onBucketClick
+    }: {
+      onBucketClick?: (bucket: number) => void
+    }) {
+      return (
+        <button data-testid="distribution-chart" onClick={() => onBucketClick?.(3)}>
+          chart
+        </button>
+      )
+    }
   }
 })
-vi.mock('@/components/games/SteamProgressChart', () => ({ default: () => <div data-testid="progress-chart" /> }))
+vi.mock('@/components/games/SteamProgressChart', () => ({
+  default: () => <div data-testid="progress-chart" />
+}))
 
 import GamesDashboardView from '@/components/games/GamesDashboardView'
 

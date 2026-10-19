@@ -18,3 +18,20 @@ vi.mock('@/components/ui/link', () => ({
   ),
   useLinkPending: () => false
 }))
+
+// Components read router state through @/hooks/navigation; unit tests render
+// them without a router, so every test gets an empty location.
+// __tests__/hooks/navigation.test.tsx unmocks the real hooks.
+vi.mock('@/hooks/navigation', () => {
+  const router = { push: vi.fn(), replace: vi.fn(), back: vi.fn() }
+  return {
+    useRouter: vi.fn(() => router),
+    usePathname: vi.fn(() => '/'),
+    useSearchParams: vi.fn(() => new URLSearchParams()),
+    useRouteParams: vi.fn(() => ({}))
+  }
+})
+
+// Testing Library's waitFor/findBy only advance fake timers when it sees
+// Jest's global; Vitest's clock is compatible with the same call.
+Object.assign(globalThis, { jest: { advanceTimersByTime: (ms: number) => vi.advanceTimersByTime(ms) } })

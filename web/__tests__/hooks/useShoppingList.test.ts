@@ -15,6 +15,7 @@ const mockClient = {
 }
 
 vi.mock('@/lib/client', () => ({
+  transport: {},
   createServiceClient: vi.fn(() => mockClient)
 }))
 vi.mock('@/lib/offline/outbox', () => ({

@@ -26,9 +26,7 @@ afterEach(() => {
 
 describe('ResourceLinkPicker — unlinked', () => {
   it('renders the link buttons', () => {
-    render(
-      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Link a book' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Link a feed item' })).toBeInTheDocument()
   })
@@ -131,9 +129,7 @@ describe('ResourceLinkPicker — book search', () => {
     mockSearchLibrary.mockResolvedValue({
       books: [{ bookId: 'b1', book: undefined }]
     })
-    render(
-      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     fireEvent.change(screen.getByPlaceholderText('Search your library…'), {
       target: { value: 'Dune' }
@@ -148,9 +144,7 @@ describe('ResourceLinkPicker — book search', () => {
     mockSearchLibrary.mockResolvedValue({
       books: [{ bookId: 'b1', book: { title: 'Dune' } }]
     })
-    render(
-      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     const input = screen.getByPlaceholderText('Search your library…')
     fireEvent.change(input, { target: { value: 'Dune' } })
@@ -164,9 +158,7 @@ describe('ResourceLinkPicker — book search', () => {
 
   it('shows no results when the search rejects', async () => {
     mockSearchLibrary.mockRejectedValue(new Error('boom'))
-    render(
-      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     fireEvent.change(screen.getByPlaceholderText('Search your library…'), {
       target: { value: 'Dune' }
@@ -179,9 +171,7 @@ describe('ResourceLinkPicker — book search', () => {
   })
 
   it('cancels back to the unlinked view', () => {
-    render(
-      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.getByRole('button', { name: 'Link a book' })).toBeInTheDocument()
@@ -200,11 +190,7 @@ describe('ResourceLinkPicker — feed item search', () => {
       }
     })
     render(
-      <ResourceLinkPicker
-        onLinkBook={vi.fn()}
-        onLinkFeedItem={onLinkFeedItem}
-        onUnlink={vi.fn()}
-      />
+      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={onLinkFeedItem} onUnlink={vi.fn()} />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Link a feed item' }))
     fireEvent.change(screen.getByPlaceholderText('Search your feed items…'), {
@@ -221,18 +207,14 @@ describe('ResourceLinkPicker — feed item search', () => {
     mockUseFeedItems.mockReturnValue({
       data: { items: [{ id: 'f1', title: 'Learning Go' }] }
     })
-    render(
-      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a feed item' }))
     expect(screen.queryByText('Learning Go')).not.toBeInTheDocument()
   })
 
   it('handles an undefined items list', () => {
     mockUseFeedItems.mockReturnValue({ data: undefined })
-    render(
-      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a feed item' }))
     fireEvent.change(screen.getByPlaceholderText('Search your feed items…'), {
       target: { value: 'go' }
@@ -241,9 +223,7 @@ describe('ResourceLinkPicker — feed item search', () => {
   })
 
   it('cancels back to the unlinked view', () => {
-    render(
-      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a feed item' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.getByRole('button', { name: 'Link a feed item' })).toBeInTheDocument()

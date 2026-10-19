@@ -17,9 +17,9 @@ vi.mock('@/hooks/useDashboardShare', () => ({
   useSharedBooksProgress: () => mockUseSharedBooksProgress()
 }))
 
-vi.mock('@/components/books/BooksProgressChart', () => ({ default: () => (
-  <div data-testid="books-progress-chart" />
-) }))
+vi.mock('@/components/books/BooksProgressChart', () => ({
+  default: () => <div data-testid="books-progress-chart" />
+}))
 
 import ReadingDashboardPublicClient from '@/components/dashboard/ReadingDashboardPublicClient'
 

@@ -15,7 +15,7 @@ describe('MoviePoster', () => {
     expect(initial).toHaveClass(text, 'bg-surface', 'text-muted', 'font-semibold')
 
     rerender(<MoviePoster posterPath="/d.jpg" title="dune" size={size} />)
-    expect(screen.getByTestId('poster')).toHaveAttribute(
+    expect(screen.getByRole('presentation')).toHaveAttribute(
       'src',
       `https://image.tmdb.org/t/p/${tmdb}/d.jpg`
     )

@@ -21,7 +21,7 @@ const mockSourcesData: {
   isLoading: false,
   error: undefined
 }
-const mockUseBookSources: Mock<typeof mockSourcesData, unknown[]> = vi.fn(
+const mockUseBookSources: Mock<(...args: unknown[]) => typeof mockSourcesData> = vi.fn(
   () => mockSourcesData
 )
 const mockMutate = vi.fn()

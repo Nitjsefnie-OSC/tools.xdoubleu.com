@@ -10,8 +10,10 @@ vi.mock('@/hooks/navigation', () => ({
 }))
 
 vi.mock('@/components/learningpaths/LearningPathForm', () => {
-  return function MockLearningPathForm() {
-    return <div data-testid="learning-path-form">learning-path-form-mock</div>
+  return {
+    default: function MockLearningPathForm() {
+      return <div data-testid="learning-path-form">learning-path-form-mock</div>
+    }
   }
 })
 

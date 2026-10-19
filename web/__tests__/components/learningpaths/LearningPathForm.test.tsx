@@ -1,4 +1,3 @@
-import type { Mock } from 'vitest'
 import React from 'react'
 import { create } from '@bufbuild/protobuf'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
@@ -335,9 +334,7 @@ describe('LearningPathForm (edit)', () => {
       ]
     })
     mockUpdateLearningPath.mockResolvedValue({ learningPath: { id: 'lp-1' } })
-    render(
-      <LearningPathForm learningPath={withQuizAndDue} onSave={vi.fn()} onCancel={vi.fn()} />
-    )
+    render(<LearningPathForm learningPath={withQuizAndDue} onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.submit(screen.getByRole('button', { name: 'Save Learning Path' }).closest('form')!)
 

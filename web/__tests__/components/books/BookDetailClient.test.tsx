@@ -27,14 +27,18 @@ vi.mock('@/hooks/useAuth', () => ({
 }))
 
 vi.mock('@/components/books/BookSourceSync', () => {
-  return function MockBookSourceSync() {
-    return <div data-testid="book-source-sync" />
+  return {
+    default: function MockBookSourceSync() {
+      return <div data-testid="book-source-sync" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookEditDialog', () => {
-  return function MockBookEditDialog({ open }: { open: boolean }) {
-    return open ? <div data-testid="book-edit-dialog" /> : null
+  return {
+    default: function MockBookEditDialog({ open }: { open: boolean }) {
+      return open ? <div data-testid="book-edit-dialog" /> : null
+    }
   }
 })
 
@@ -45,63 +49,81 @@ vi.mock('@/hooks/navigation', () => ({
 
 // Stub inline controls so detail-page tests focus on data display
 vi.mock('@/components/books/BookProgressEditor', () => {
-  return function MockProgressEditor() {
-    return <div role="progressbar" />
+  return {
+    default: function MockProgressEditor() {
+      return <div role="progressbar" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookRatingStars', () => {
-  return function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
-    return <div aria-label={`${userBook.rating} out of 5 stars`} data-testid="rating-stars" />
+  return {
+    default: function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
+      return <div aria-label={`${userBook.rating} out of 5 stars`} data-testid="rating-stars" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookFavouriteButton', () => {
-  return function MockFavButton({ userBook }: { userBook: { tags: string[] } }) {
-    return <div data-testid="favourite-button" aria-pressed={userBook.tags.includes('favourite')} />
+  return {
+    default: function MockFavButton({ userBook }: { userBook: { tags: string[] } }) {
+      return (
+        <div data-testid="favourite-button" aria-pressed={userBook.tags.includes('favourite')} />
+      )
+    }
   }
 })
 
 vi.mock('@/components/books/BookOwnershipToggles', () => {
-  return function MockOwnership() {
-    return <div data-testid="ownership-toggles" />
+  return {
+    default: function MockOwnership() {
+      return <div data-testid="ownership-toggles" />
+    }
   }
 })
 
 vi.mock('@/components/books/BookShelfTagFields', () => {
-  return function MockShelfTagFields() {
-    return <div data-testid="shelf-tag-fields" />
+  return {
+    default: function MockShelfTagFields() {
+      return <div data-testid="shelf-tag-fields" />
+    }
   }
 })
 
 vi.mock('@/components/books/OfflineBookBadge', () => {
-  return function MockOfflineBadge({ bookId }: { bookId: string }) {
-    return <span>offline:{bookId}</span>
+  return {
+    default: function MockOfflineBadge({ bookId }: { bookId: string }) {
+      return <span>offline:{bookId}</span>
+    }
   }
 })
 
 vi.mock('@/components/books/KoboSyncToggle', () => {
-  return function MockKoboSyncToggle() {
-    return <div data-testid="kobo-sync-toggle" />
+  return {
+    default: function MockKoboSyncToggle() {
+      return <div data-testid="kobo-sync-toggle" />
+    }
   }
 })
 
 vi.mock('@/components/books/RemoveBookDialog', () => {
-  return function MockRemoveBookDialog({
-    open,
-    onRemoved
-  }: {
-    open: boolean
-    onRemoved: () => void
-  }) {
-    if (!open) return null
-    return (
-      <div data-testid="remove-book-dialog">
-        <button type="button" onClick={onRemoved}>
-          Confirm remove
-        </button>
-      </div>
-    )
+  return {
+    default: function MockRemoveBookDialog({
+      open,
+      onRemoved
+    }: {
+      open: boolean
+      onRemoved: () => void
+    }) {
+      if (!open) return null
+      return (
+        <div data-testid="remove-book-dialog">
+          <button type="button" onClick={onRemoved}>
+            Confirm remove
+          </button>
+        </div>
+      )
+    }
   }
 })
 

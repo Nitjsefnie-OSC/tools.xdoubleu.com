@@ -25,8 +25,10 @@ vi.mock('@/hooks/useBooks', () => ({
 }))
 
 vi.mock('@/components/books/BookProgressBar', () => {
-  return function MockProgressBar() {
-    return <div role="progressbar" data-testid="progress-bar" />
+  return {
+    default: function MockProgressBar() {
+      return <div role="progressbar" data-testid="progress-bar" />
+    }
   }
 })
 

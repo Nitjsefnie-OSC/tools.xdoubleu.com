@@ -17,10 +17,12 @@ vi.mock('@/hooks/useDashboardShare', () => ({
   useSharedRecentlyActiveGames: () => mockUseSharedRecentlyActiveGames()
 }))
 
-vi.mock('@/components/games/SteamDistributionChart', () => ({ default: () => (
-  <div data-testid="distribution-chart" />
-) }))
-vi.mock('@/components/games/SteamProgressChart', () => ({ default: () => <div data-testid="progress-chart" /> }))
+vi.mock('@/components/games/SteamDistributionChart', () => ({
+  default: () => <div data-testid="distribution-chart" />
+}))
+vi.mock('@/components/games/SteamProgressChart', () => ({
+  default: () => <div data-testid="progress-chart" />
+}))
 
 import GamesDashboardPublicClient from '@/components/dashboard/GamesDashboardPublicClient'
 

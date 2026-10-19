@@ -5,6 +5,7 @@ const mockClient = {
   listRecipes: vi.fn().mockResolvedValue({ recipes: [{ id: 'r-1' }], hasMore: true })
 }
 vi.mock('@/lib/client', () => ({
+  transport: {},
   createServiceClient: vi.fn(() => mockClient)
 }))
 let mockStatus = 'sent'

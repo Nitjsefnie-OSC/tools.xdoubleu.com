@@ -16,23 +16,21 @@ vi.mock('@/hooks/useFeeds', () => ({
   useUpdateItem: () => vi.fn()
 }))
 
-vi.mock(
-  '@/components/feeds/ArticleReaderDialog',
-  () =>
-    (props: {
-      open: boolean
-      item: { id: string }
-      onOpenChange: (open: boolean) => void
-      onMarkRead: (itemId: string) => void
-      onSettled: (itemId: string) => void
-    }) => (
-      <div data-testid={props.open ? 'reader-open' : 'reader-closed'}>
-        <button onClick={() => props.onMarkRead(props.item.id)}>Mark read</button>
-        <button onClick={() => props.onSettled(props.item.id)}>Settle</button>
-        <button onClick={() => props.onOpenChange(false)}>Close reader</button>
-      </div>
-    )
-)
+vi.mock('@/components/feeds/ArticleReaderDialog', () => ({
+  default: (props: {
+    open: boolean
+    item: { id: string }
+    onOpenChange: (open: boolean) => void
+    onMarkRead: (itemId: string) => void
+    onSettled: (itemId: string) => void
+  }) => (
+    <div data-testid={props.open ? 'reader-open' : 'reader-closed'}>
+      <button onClick={() => props.onMarkRead(props.item.id)}>Mark read</button>
+      <button onClick={() => props.onSettled(props.item.id)}>Settle</button>
+      <button onClick={() => props.onOpenChange(false)}>Close reader</button>
+    </div>
+  )
+}))
 
 import FeedReaderClient from '@/components/feeds/FeedReaderClient'
 

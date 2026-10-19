@@ -10,8 +10,10 @@ vi.mock('@/hooks/navigation', () => ({
 }))
 
 vi.mock('@/components/recipes/RecipeForm', () => {
-  return function MockRecipeForm() {
-    return <div data-testid="recipe-form">recipe-form-mock</div>
+  return {
+    default: function MockRecipeForm() {
+      return <div data-testid="recipe-form">recipe-form-mock</div>
+    }
   }
 })
 

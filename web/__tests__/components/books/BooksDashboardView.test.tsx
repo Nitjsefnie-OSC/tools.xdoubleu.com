@@ -3,9 +3,9 @@ import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema, LibraryResponseSchema } from '@/lib/gen/books/v1/library_pb'
 import type { DashboardChartState } from '@/hooks/useDashboardChartState'
 
-vi.mock('@/components/books/BooksProgressChart', () => ({ default: () => (
-  <div data-testid="books-progress-chart" />
-) }))
+vi.mock('@/components/books/BooksProgressChart', () => ({
+  default: () => <div data-testid="books-progress-chart" />
+}))
 
 import BooksDashboardView from '@/components/books/BooksDashboardView'
 

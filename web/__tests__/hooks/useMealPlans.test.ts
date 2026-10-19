@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react'
 
 vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
 vi.mock('@/lib/client', () => ({
+  transport: {},
   createServiceClient: vi.fn(() => ({}))
 }))
 let mockStatus = 'sent'
@@ -87,9 +88,8 @@ describe('useMealSuggestions', () => {
 describe('useRotateICalToken', () => {
   it('calls client.rotateICalToken with the plan id', () => {
     const rotateICalToken = vi.fn()
-    vi.mocked(createServiceClient).mockReturnValueOnce({
-      rotateICalToken
-    })
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- only the RPC under test
+    vi.mocked(createServiceClient).mockReturnValueOnce({ rotateICalToken } as never)
     const { result } = renderHook(() => useRotateICalToken())
     result.current('p1')
     expect(rotateICalToken).toHaveBeenCalledWith({ id: 'p1' })
