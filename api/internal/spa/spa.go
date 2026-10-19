@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -60,6 +59,7 @@ type Config struct {
 // Handler serves the web app in front of the API.
 type Handler struct {
 	cfg      Config
+	root     *os.Root
 	logger   *slog.Logger
 	index    []byte
 	sw       []byte
@@ -78,11 +78,16 @@ type Handler struct {
 // New loads the build output; it fails when the build is missing, so a bad
 // image doesn't boot into serving nothing.
 func New(cfg Config, logger *slog.Logger) (*Handler, error) {
-	index, err := os.ReadFile(filepath.Join(cfg.Dir, indexFile))
+	// os.Root refuses any path that escapes the build directory.
+	root, err := os.OpenRoot(cfg.Dir)
+	if err != nil {
+		return nil, fmt.Errorf("open web build: %w", err)
+	}
+	index, err := root.ReadFile(indexFile)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", indexFile, err)
 	}
-	sw, err := os.ReadFile(filepath.Join(cfg.Dir, swFile))
+	sw, err := root.ReadFile(swFile)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", swFile, err)
 	}
@@ -106,6 +111,7 @@ func New(cfg Config, logger *slog.Logger) (*Handler, error) {
 
 	return &Handler{
 		cfg:        cfg,
+		root:       root,
 		logger:     logger,
 		index:      index,
 		sw:         sw,
@@ -237,9 +243,7 @@ func (h *Handler) serveStatic(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(clean, "/")
 
 	if name != "" && name != indexFile && name != swFile {
-		full := filepath.Join(h.cfg.Dir, filepath.FromSlash(name))
-		//nolint:gosec // name is path.Clean-ed, so it stays under the build directory
-		if info, err := os.Stat(full); err == nil && !info.IsDir() {
+		if info, err := h.root.Stat(name); err == nil && !info.IsDir() {
 			h.serveFile(w, r, name, info.ModTime())
 			return
 		}
@@ -261,12 +265,10 @@ func (h *Handler) serveFile(
 	}
 	w.Header().Set("Cache-Control", cache)
 
-	full := filepath.Join(h.cfg.Dir, filepath.FromSlash(name))
-	if h.gzip.serve(w, r, full, name, modTime) {
+	if h.gzip.serve(w, r, h.root, name, modTime) {
 		return
 	}
-	//nolint:gosec // full is path.Clean-ed under the build directory
-	f, err := os.Open(full)
+	f, err := h.root.Open(name)
 	if err != nil {
 		http.NotFound(w, r)
 		return

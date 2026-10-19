@@ -40,14 +40,15 @@ func newGzipCache() gzipCache {
 // serve writes the gzipped file and reports true, or reports false when the
 // client or file type doesn't call for it.
 func (c *gzipCache) serve(
-	w http.ResponseWriter, r *http.Request, full, name string, modTime time.Time,
+	w http.ResponseWriter, r *http.Request, root *os.Root, name string,
+	modTime time.Time,
 ) bool {
 	if !compressible[path.Ext(name)] ||
 		!strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 		return false
 	}
 
-	body, ok := c.load(full, name, modTime)
+	body, ok := c.load(root, name, modTime)
 	if !ok {
 		return false
 	}
@@ -59,7 +60,9 @@ func (c *gzipCache) serve(
 	return true
 }
 
-func (c *gzipCache) load(full, name string, modTime time.Time) ([]byte, bool) {
+func (c *gzipCache) load(
+	root *os.Root, name string, modTime time.Time,
+) ([]byte, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -67,8 +70,7 @@ func (c *gzipCache) load(full, name string, modTime time.Time) ([]byte, bool) {
 		return e.body, true
 	}
 
-	//nolint:gosec // full is path.Clean-ed under the build directory
-	raw, err := os.ReadFile(full)
+	raw, err := root.ReadFile(name)
 	if err != nil {
 		return nil, false
 	}
