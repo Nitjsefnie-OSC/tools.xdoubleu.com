@@ -30,6 +30,7 @@ function renderPage() {
 }
 
 function signedIn(signed: boolean, isLoading = false) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- only data and isLoading are read
   vi.mocked(useCurrentUser).mockReturnValue({
     data: signed ? { userId: 'u1' } : undefined,
     isLoading

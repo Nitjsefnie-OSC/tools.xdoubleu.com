@@ -1,4 +1,8 @@
-import { getTheme, setTheme, themeInitScript, THEME_KEY } from '@/lib/theme'
+import { readFileSync } from 'node:fs'
+import { getTheme, setTheme, THEME_KEY } from '@/lib/theme'
+
+// The pre-paint script index.html loads; it must resolve themes like setTheme.
+const themeInitScript = readFileSync('public/theme-init.js', 'utf8')
 
 /** Stubs matchMedia with a single mutable media-query-list, returned for inspection. */
 function mockPrefersDark(matches: boolean) {
@@ -58,7 +62,7 @@ describe('theme', () => {
     })
   })
 
-  describe('themeInitScript', () => {
+  describe('public/theme-init.js', () => {
     it.each([
       ['dark', false, 'dark'],
       ['light', true, 'light'],

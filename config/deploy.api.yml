@@ -1,7 +1,8 @@
 # Kamal config for the api service; Kamal evaluates it as ERB. The server IP
 # and registry user come from the environment (Secrets, since the repo is
 # public); CI supplies them, export them for a manual deploy.
-# api and web are two Kamal apps sharing one kamal-proxy and domain (ADR 0001).
+# api is the root service on the shared kamal-proxy: it serves the built web app
+# and the API, and Grafana sits beside it at /grafana (ADR 0034).
 # Postgres is Tofu-managed (infra/postgres-compose.yml), bound to 127.0.0.1
 # and reached over the external `kamal` Docker network as host `postgres`.
 
@@ -34,16 +35,14 @@ builder:
     - amd64
 
 proxy:
-  # No `ssl` key: TLS is declared only on the root path service
-  # (deploy.web.yml); declaring it here is rejected.
+  # The root path service declares `ssl`; Grafana's /grafana service must not.
   host: tools.xdoubleu.com
+  ssl: true
   app_port: 8000
-  # Unstripped: kamal-proxy can't strip one of several prefixes, and
-  # /.well-known/* must reach api unmodified, so kamal_proxy_shim.go strips /api.
-  path_prefix: "/api,/.well-known"
-  strip_path_prefix: false
+  # No path_prefix: every path reaches the api, which serves web's files and
+  # strips /api itself (kamal_proxy_shim.go) because /.well-known/* must arrive
+  # unmodified.
   healthcheck:
-    # Checked over the internal Docker network, bypassing path_prefix.
     path: /health
     interval: 10
     timeout: 5
@@ -61,7 +60,10 @@ env:
     ENV: production
     # CORS allowedOrigins and mailer links need it.
     WEB_URL: https://tools.xdoubleu.com
+    # Also the base URL the browser calls (web's /env.js).
     API_URL: https://tools.xdoubleu.com/api
+    # PostHog Cloud EU ingestion host.
+    POSTHOG_HOST: https://eu.i.posthog.com
     # Not re-tuned since api got its own container.
     GOMEMLIMIT: 300MiB
   secret:
@@ -107,9 +109,13 @@ env:
     - NOTIFY_EMAIL_TO
     - EMAIL_INBOUND_DOMAIN
     - EMAIL_INBOUND_SECRET
-    # Authenticates web's POSTs to /api/observability/logs; empty rejects every
-    # batch.
+    # Bearer token GET /metrics requires (the api is publicly reachable);
+    # Prometheus sends it. Same Secret as Tofu's. Empty leaves /metrics open.
     - OBSERVABILITY_INGEST_SECRET
+    # Browser Sentry DSN and PostHog key, served as /env.js. Both ship in the
+    # bundle's runtime config anyway.
+    - SENTRY_DSN_WEB
+    - POSTHOG_KEY
     # Same as grafana's GF_SECURITY_ADMIN_PASSWORD; get_grafana_alerts logs in as
     # `admin` via the public host.
     - GRAFANA_ADMIN_PASSWORD

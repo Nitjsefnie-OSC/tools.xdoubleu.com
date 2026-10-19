@@ -21,7 +21,9 @@ function useAppIcon(pathname: string) {
   useEffect(() => {
     const app = pathname.split('/')[1] ?? ''
     const own = APP_ICONS.has(app)
-    document.getElementById('app-icon')?.setAttribute('href', own ? `/icons/${app}.svg` : '/icon.svg')
+    document
+      .getElementById('app-icon')
+      ?.setAttribute('href', own ? `/icons/${app}.svg` : '/icon.svg')
     document
       .getElementById('app-apple-icon')
       ?.setAttribute('href', own ? `/icons/${app}-apple.png` : '/apple-icon.png')

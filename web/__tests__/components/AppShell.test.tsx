@@ -50,6 +50,7 @@ import { useCurrentUser } from '@/hooks/useAuth'
 import { useSessionEffects } from '@/components/SWRProvider'
 
 function signedInAs(user: { userId?: string; role: string; appAccess: string[] } | undefined) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- only data is read
   vi.mocked(useCurrentUser).mockReturnValue({ data: user } as never)
 }
 

@@ -39,8 +39,8 @@ describe('logger', () => {
     await Promise.resolve()
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
-    const init = mockFetch.mock.calls[0][1] as RequestInit
-    const body = JSON.parse(String(init.body)) as { entries: Record<string, unknown>[] }
+    const init: RequestInit = mockFetch.mock.calls[0][1]
+    const body: { entries: Record<string, unknown>[] } = JSON.parse(String(init.body))
     expect(body.entries).toHaveLength(2)
     expect(body.entries[0]).toMatchObject({
       level: 'info',

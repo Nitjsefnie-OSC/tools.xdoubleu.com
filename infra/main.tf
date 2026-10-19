@@ -284,10 +284,10 @@ resource "null_resource" "prometheus" {
     destination = "/home/deploy/prometheus/.env"
   }
 
-  # Bearer token for the `web` scrape job; mounted read-only.
+  # Bearer token for the `api` scrape job; mounted read-only.
   provisioner "file" {
     content     = var.observability_ingest_secret
-    destination = "/home/deploy/prometheus/web_ingest_secret"
+    destination = "/home/deploy/prometheus/ingest_secret"
   }
 
   provisioner "file" {

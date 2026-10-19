@@ -66,11 +66,7 @@ export default function ConsentForm({
         {error && <p className="text-sm text-danger">{error}</p>}
 
         <div className="flex gap-3">
-          <Button
-            className="flex-1"
-            disabled={pending}
-            onClick={() => void decide('allow')}
-          >
+          <Button className="flex-1" disabled={pending} onClick={() => void decide('allow')}>
             Approve
           </Button>
           <Button

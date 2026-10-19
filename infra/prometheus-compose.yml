@@ -20,8 +20,8 @@ services:
       - "--storage.tsdb.retention.time=30d"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      # Bearer token for the `web` scrape job (written by infra/main.tf).
-      - ./web_ingest_secret:/etc/prometheus/web_ingest_secret:ro
+      # Bearer token for the `api` scrape job (written by infra/main.tf).
+      - ./ingest_secret:/etc/prometheus/ingest_secret:ro
       - prometheus_data:/prometheus
       # For docker_sd_configs. Socket access is effectively host root; acceptable
       # only while Prometheus has no host port, sits on the internal network, and

@@ -1,6 +1,6 @@
 /**
  * Per-device theme preference in localStorage, applied as `data-theme` on
- * <html>. No React imports: used by the server layout and client components.
+ * <html>. public/theme-init.js repeats this resolution for the pre-paint run.
  */
 
 export const THEMES = ['auto', 'light', 'dark'] as const
@@ -30,9 +30,3 @@ export function setTheme(value: string): Theme {
   el.style.colorScheme = dark ? 'dark' : 'light'
   return theme
 }
-
-/*
- * ponytail: the same logic hand-inlined for <head> — it must run before first
- * paint and any bundle. Also re-runs on OS scheme changes to keep `auto` live.
- */
-export const themeInitScript = `(function(){var m=matchMedia('${DARK_QUERY}');function a(){var t=localStorage.getItem('${THEME_KEY}');var d=t==='dark'||(t!=='light'&&m.matches);var e=document.documentElement;e.dataset.theme=d?'dark':'light';e.style.colorScheme=d?'dark':'light'}a();m.addEventListener('change',a)})()`

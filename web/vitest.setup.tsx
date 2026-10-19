@@ -34,4 +34,6 @@ vi.mock('@/hooks/navigation', () => {
 
 // Testing Library's waitFor/findBy only advance fake timers when it sees
 // Jest's global; Vitest's clock is compatible with the same call.
-Object.assign(globalThis, { jest: { advanceTimersByTime: (ms: number) => vi.advanceTimersByTime(ms) } })
+Object.assign(globalThis, {
+  jest: { advanceTimersByTime: (ms: number) => vi.advanceTimersByTime(ms) }
+})

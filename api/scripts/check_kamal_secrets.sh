@@ -2,7 +2,7 @@
 # Fails if the Kamal deploy-secret list disagrees across the three places it
 # is declared:
 #
-#   1. config/deploy.{api,web}.yml   -> env.secret:      (what Kamal injects)
+#   1. config/deploy.{api,grafana}.yml -> env.secret:    (what Kamal injects)
 #   2. .kamal/secrets                                    (shell script Kamal resolves each name from)
 #   3. .github/workflows/main.yml     -> deploy-kamal job -> the per-service
 #      "Deploy <svc> via Kamal" step's env: block        (maps a repo Secret into that script's env)
@@ -75,7 +75,6 @@ check_service() {
 }
 
 check_service api "$root/config/deploy.api.yml"
-check_service web "$root/config/deploy.web.yml"
 check_service grafana "$root/config/deploy.grafana.yml"
 
 # Grafana only reads GF_-prefixed env vars, so a non-GF_ name is consistent
@@ -110,7 +109,6 @@ done <<<"$grafana_env_names"
 # auth), not via env.secret, so they are expected orphans.
 all_cfg_secrets="$(
 	{ extract_config_secrets "$root/config/deploy.api.yml"
-	  extract_config_secrets "$root/config/deploy.web.yml"
 	  extract_config_secrets "$root/config/deploy.grafana.yml"; } | sort -u
 )"
 while IFS= read -r name; do

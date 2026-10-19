@@ -10,11 +10,11 @@ infra_dir="$repo_root/infra"
 prom_image="prom/prometheus:v3.1.0"
 
 echo "==> promtool check config (infra/prometheus.yml)"
-# promtool fails if the `web` job's credentials_file is missing; mount a stub.
+# promtool fails if the `api` job's credentials_file is missing; mount a stub.
 docker run --rm \
 	--entrypoint promtool \
 	-v "$infra_dir/prometheus.yml:/prometheus.yml:ro" \
-	-v /dev/null:/etc/prometheus/web_ingest_secret:ro \
+	-v /dev/null:/etc/prometheus/ingest_secret:ro \
 	"$prom_image" check config /prometheus.yml
 
 echo "==> tofu fmt -check (infra/)"

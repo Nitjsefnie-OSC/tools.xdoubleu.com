@@ -24,6 +24,8 @@ describe('pageRoutes', () => {
 
     expect(routes).toHaveLength(1)
     expect(routes[0].path).toBe('trains/:journeyId')
-    expect(await routes[0].lazy?.()).toEqual({ Component: Page })
+    const { lazy } = routes[0]
+    if (typeof lazy !== 'function') throw new Error('expected a lazy route')
+    expect(await lazy()).toEqual({ Component: Page })
   })
 })

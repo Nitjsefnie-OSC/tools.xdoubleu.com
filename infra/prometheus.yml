@@ -10,6 +10,11 @@ scrape_configs:
   # <service>-<role>-<version>, so no stable DNS alias exists. The `job` label
   # matches what dashboards and alert rules expect.
   - job_name: api
+    # The api is the root service, so /metrics is public via kamal-proxy and
+    # gated on this token. An unset secret fails open on the api side.
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/ingest_secret
     docker_sd_configs: &app_sd
       - host: unix:///var/run/docker.sock
         # Otherwise stopped previous-version containers show as down targets.
@@ -40,29 +45,6 @@ scrape_configs:
         target_label: job_name
       - regex: exported_job
         action: labeldrop
-
-  - job_name: web
-    docker_sd_configs: *app_sd
-    # web's /metrics is public via the catch-all, so it's gated on this token.
-    # An unset secret fails open on the web side.
-    authorization:
-      type: Bearer
-      credentials_file: /etc/prometheus/web_ingest_secret
-    relabel_configs:
-      - source_labels: [__meta_docker_container_label_service]
-        regex: tools-xdoubleu-com-web
-        action: keep
-      - source_labels: [__meta_docker_network_name]
-        regex: kamal
-        action: keep
-      - source_labels: [__meta_docker_network_ip]
-        target_label: __address__
-        replacement: "$1:3000"
-      # Strip Docker's leading slash from the container name.
-      - source_labels: [__meta_docker_container_name]
-        regex: "/?(.*)"
-        target_label: instance
-        replacement: "$1"
 
   # /grafana/metrics: GF_SERVER_SERVE_FROM_SUB_PATH also applies to /metrics,
   # even when scraped by container IP.
