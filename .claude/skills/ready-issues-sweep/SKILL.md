@@ -33,7 +33,7 @@ run: handle issues sequentially via `git checkout -B <branch> origin/main`
      end the run (`"failed"`), never report a false "nothing to do".
    - **`gh` fallback** (the OpenCode harness has no
      `get_project_issues_by_status`/`issue_read`): the column is
-     `gh project item-list 8 --owner xdoubleu --format json --limit 100`,
+     `gh project item-list 8 --owner xdoubleu --format json --limit 500`,
      filtered to `status == "Ready"`; per-issue labels/author/body are
      `gh api repos/<owner>/<repo>/issues/<n>` (labels → `labels[].name`,
      author → `user.login` + `author_association`). Re-derive every filter
