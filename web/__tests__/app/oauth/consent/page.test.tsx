@@ -1,23 +1,23 @@
 import { render, screen } from '@testing-library/react'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { redirect } from '@/hooks/navigation'
 import ConsentPage from '@/app/oauth/consent/page'
 import { getConsentInfo } from '@/lib/oauth2as/consentClient'
 
-jest.mock('next/headers', () => ({ cookies: jest.fn() }))
-jest.mock('next/navigation', () => ({
-  redirect: jest.fn((url: string) => {
+vi.mock('next/headers', () => ({ cookies: vi.fn() }))
+vi.mock('@/hooks/navigation', () => ({
+  redirect: vi.fn((url: string) => {
     throw new Error(`REDIRECT:${url}`)
   })
 }))
-jest.mock('@/lib/oauth2as/consentClient', () => ({ getConsentInfo: jest.fn() }))
+vi.mock('@/lib/oauth2as/consentClient', () => ({ getConsentInfo: vi.fn() }))
 
 function withCookies(map: Record<string, string>) {
   const store = {
     get: (name: string) => (name in map ? { name, value: map[name] } : undefined)
   }
   // @ts-expect-error -- partial cookie store exposing only get()
-  jest.mocked(cookies).mockResolvedValue(store)
+  vi.mocked(cookies).mockResolvedValue(store)
 }
 
 async function renderPage(params?: Record<string, string | string[] | undefined>) {
@@ -26,7 +26,7 @@ async function renderPage(params?: Record<string, string | string[] | undefined>
 }
 
 describe('ConsentPage', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it('redirects home without a client_id', async () => {
     await expect(renderPage()).rejects.toThrow('REDIRECT:/')
@@ -42,7 +42,7 @@ describe('ConsentPage', () => {
 
   it('renders an error when the authorization is invalid', async () => {
     withCookies({ accessToken: 'at' })
-    jest.mocked(getConsentInfo).mockResolvedValue(null)
+    vi.mocked(getConsentInfo).mockResolvedValue(null)
     await renderPage({ client_id: 'c1' })
     expect(
       screen.getByText('This authorization request is invalid or has expired.')
@@ -51,7 +51,7 @@ describe('ConsentPage', () => {
 
   it('renders the consent form with client details', async () => {
     withCookies({ accessToken: 'at' })
-    jest.mocked(getConsentInfo).mockResolvedValue({
+    vi.mocked(getConsentInfo).mockResolvedValue({
       clientId: 'c1',
       clientName: 'Claude CLI',
       scope: 'openid email',
@@ -77,7 +77,7 @@ describe('ConsentPage', () => {
 
   it('takes the first value of a repeated query param', async () => {
     withCookies({ accessToken: 'at' })
-    jest.mocked(getConsentInfo).mockResolvedValue({
+    vi.mocked(getConsentInfo).mockResolvedValue({
       clientId: 'c1',
       clientName: 'Claude CLI',
       scope: 'openid',

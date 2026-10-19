@@ -1,15 +1,15 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
-jest.mock('@/lib/books/gatewayClient', () => ({
-  probeGateway: jest.fn()
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
+vi.mock('@/lib/books/gatewayClient', () => ({
+  probeGateway: vi.fn()
 }))
 
 import useSWR from 'swr'
 import { useGatewayStatus } from '@/hooks/useKoboGateway'
 import { swrKeys } from '@/lib/swrKeys'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 beforeEach(() => {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes

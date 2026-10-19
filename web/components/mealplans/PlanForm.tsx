@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useRotateICalToken, useUpdatePlan } from '@/hooks/useMealPlans'
 import type { UpdatePlanInput } from '@/hooks/useMealPlans'

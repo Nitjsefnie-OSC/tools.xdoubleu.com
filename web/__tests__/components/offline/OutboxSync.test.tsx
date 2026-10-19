@@ -2,19 +2,19 @@ import { act, render } from '@testing-library/react'
 import OutboxSync from '@/components/offline/OutboxSync'
 import { flushOutbox, getOutboxSnapshot } from '@/lib/offline/outbox'
 
-jest.mock('@/lib/offline/outbox', () => ({
-  flushOutbox: jest.fn(async () => {}),
-  getOutboxSnapshot: jest.fn(() => ({ pending: 0, failed: [], authBlocked: false }))
+vi.mock('@/lib/offline/outbox', () => ({
+  flushOutbox: vi.fn(async () => {}),
+  getOutboxSnapshot: vi.fn(() => ({ pending: 0, failed: [], authBlocked: false }))
 }))
 
 describe('OutboxSync', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.clearAllMocks()
+    vi.useFakeTimers()
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('flushes on mount and when the browser comes back online', () => {
@@ -34,11 +34,11 @@ describe('OutboxSync', () => {
   it('retries periodically only while writes are pending', () => {
     render(<OutboxSync />)
 
-    act(() => jest.advanceTimersByTime(30_000))
+    act(() => vi.advanceTimersByTime(30_000))
     expect(flushOutbox).toHaveBeenCalledTimes(1)
 
-    jest.mocked(getOutboxSnapshot).mockReturnValue({ pending: 2, failed: [], authBlocked: false })
-    act(() => jest.advanceTimersByTime(30_000))
+    vi.mocked(getOutboxSnapshot).mockReturnValue({ pending: 2, failed: [], authBlocked: false })
+    act(() => vi.advanceTimersByTime(30_000))
     expect(flushOutbox).toHaveBeenCalledTimes(2)
   })
 })

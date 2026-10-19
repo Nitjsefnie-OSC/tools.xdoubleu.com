@@ -1,14 +1,6 @@
 import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: ({ src, onError }: { src: string; onError: () => void }) => (
-    // eslint-disable-next-line @next/next/no-img-element -- next/image stand-in
-    <img src={src} alt="" data-testid="artwork" onError={onError} />
-  )
-}))
-
 import ShowArtwork from '@/components/podcasts/ShowArtwork'
 
 describe('ShowArtwork', () => {

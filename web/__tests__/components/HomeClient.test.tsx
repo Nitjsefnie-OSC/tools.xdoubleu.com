@@ -4,20 +4,20 @@ import { ConnectError } from '@connectrpc/connect'
 import HomeClient, { safeNext } from '@/components/HomeClient'
 import { GetCurrentUserResponseSchema } from '@/lib/gen/auth/v1/auth_pb'
 
-jest.mock('@/hooks/useAuth', () => ({
-  useCurrentUser: jest.fn(),
-  useSignIn: jest.fn(),
-  useMFAChallenge: jest.fn()
+vi.mock('@/hooks/useAuth', () => ({
+  useCurrentUser: vi.fn(),
+  useSignIn: vi.fn(),
+  useMFAChallenge: vi.fn()
 }))
 
 import { useCurrentUser, useSignIn, useMFAChallenge } from '@/hooks/useAuth'
 
-const mockUseSettings = jest.mocked(useCurrentUser)
-const mockUseSignIn = jest.mocked(useSignIn)
-const mockUseMFAChallenge = jest.mocked(useMFAChallenge)
+const mockUseSettings = vi.mocked(useCurrentUser)
+const mockUseSignIn = vi.mocked(useSignIn)
+const mockUseMFAChallenge = vi.mocked(useMFAChallenge)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('HomeClient', () => {
@@ -121,7 +121,7 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockResolvedValue({})
+    const mockSignIn = vi.fn().mockResolvedValue({})
     mockUseSignIn.mockReturnValue(mockSignIn)
 
     render(<HomeClient />)
@@ -148,7 +148,7 @@ describe('HomeClient', () => {
     })
 
     const connectError = new ConnectError('Invalid credentials')
-    const mockSignIn = jest.fn().mockRejectedValue(connectError)
+    const mockSignIn = vi.fn().mockRejectedValue(connectError)
     mockUseSignIn.mockReturnValue(mockSignIn)
 
     render(<HomeClient />)
@@ -174,7 +174,7 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockRejectedValue(new Error('Network error'))
+    const mockSignIn = vi.fn().mockRejectedValue(new Error('Network error'))
     mockUseSignIn.mockReturnValue(mockSignIn)
 
     render(<HomeClient />)
@@ -200,7 +200,7 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockResolvedValue({})
+    const mockSignIn = vi.fn().mockResolvedValue({})
     mockUseSignIn.mockReturnValue(mockSignIn)
 
     render(<HomeClient />)
@@ -236,7 +236,7 @@ describe('HomeClient', () => {
     const neverResolvingPromise = new Promise<void>((resolve) => {
       resolveSignIn = resolve
     })
-    const mockSignIn = jest.fn().mockReturnValue(neverResolvingPromise)
+    const mockSignIn = vi.fn().mockReturnValue(neverResolvingPromise)
     mockUseSignIn.mockReturnValue(mockSignIn)
 
     render(<HomeClient />)
@@ -486,8 +486,8 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockResolvedValue({ needsMfa: true })
-    const mockMFAChallenge = jest.fn()
+    const mockSignIn = vi.fn().mockResolvedValue({ needsMfa: true })
+    const mockMFAChallenge = vi.fn()
 
     mockUseSignIn.mockReturnValue(mockSignIn)
     mockUseMFAChallenge.mockReturnValue(mockMFAChallenge)
@@ -516,8 +516,8 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockResolvedValue({ needsMfa: true })
-    const mockMFAChallenge = jest.fn().mockResolvedValue({})
+    const mockSignIn = vi.fn().mockResolvedValue({ needsMfa: true })
+    const mockMFAChallenge = vi.fn().mockResolvedValue({})
 
     mockUseSignIn.mockReturnValue(mockSignIn)
     mockUseMFAChallenge.mockReturnValue(mockMFAChallenge)
@@ -555,8 +555,8 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockResolvedValue({ needsMfa: true })
-    const mockMFAChallenge = jest.fn().mockResolvedValue({})
+    const mockSignIn = vi.fn().mockResolvedValue({ needsMfa: true })
+    const mockMFAChallenge = vi.fn().mockResolvedValue({})
 
     mockUseSignIn.mockReturnValue(mockSignIn)
     mockUseMFAChallenge.mockReturnValue(mockMFAChallenge)
@@ -591,9 +591,9 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockResolvedValue({ needsMfa: true })
+    const mockSignIn = vi.fn().mockResolvedValue({ needsMfa: true })
     const connectError = new ConnectError('Invalid code')
-    const mockMFAChallenge = jest.fn().mockRejectedValue(connectError)
+    const mockMFAChallenge = vi.fn().mockRejectedValue(connectError)
 
     mockUseSignIn.mockReturnValue(mockSignIn)
     mockUseMFAChallenge.mockReturnValue(mockMFAChallenge)
@@ -631,8 +631,8 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockResolvedValue({ needsMfa: true })
-    const mockMFAChallenge = jest.fn().mockRejectedValue(new Error('Network error'))
+    const mockSignIn = vi.fn().mockResolvedValue({ needsMfa: true })
+    const mockMFAChallenge = vi.fn().mockRejectedValue(new Error('Network error'))
 
     mockUseSignIn.mockReturnValue(mockSignIn)
     mockUseMFAChallenge.mockReturnValue(mockMFAChallenge)
@@ -670,8 +670,8 @@ describe('HomeClient', () => {
       error: new Error('401')
     })
 
-    const mockSignIn = jest.fn().mockResolvedValue({ needsMfa: true })
-    const mockMFAChallenge = jest.fn().mockResolvedValue({})
+    const mockSignIn = vi.fn().mockResolvedValue({ needsMfa: true })
+    const mockMFAChallenge = vi.fn().mockResolvedValue({})
 
     mockUseSignIn.mockReturnValue(mockSignIn)
     mockUseMFAChallenge.mockReturnValue(mockMFAChallenge)

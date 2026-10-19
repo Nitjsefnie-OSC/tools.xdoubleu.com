@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest'
 import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
@@ -8,33 +9,33 @@ import {
   UserBookSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-const mockUseLibrary = jest.fn()
-const mockUseOfflineBookFile = jest.fn()
-const mockUseReadingState = jest.fn()
-const mockSave = jest.fn()
-const mockIsWebPubWarm = jest.fn()
-jest.mock('@/lib/books/webpubCache', () => ({
+const mockUseLibrary = vi.fn()
+const mockUseOfflineBookFile = vi.fn()
+const mockUseReadingState = vi.fn()
+const mockSave = vi.fn()
+const mockIsWebPubWarm = vi.fn()
+vi.mock('@/lib/books/webpubCache', () => ({
   isWebPubWarm: (...args: unknown[]) => mockIsWebPubWarm(...args)
 }))
-const mockRouterPush = jest.fn()
-const mockRouterBack = jest.fn()
+const mockRouterPush = vi.fn()
+const mockRouterBack = vi.fn()
 let mockSearchParams = new URLSearchParams()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useLibrary: () => mockUseLibrary()
 }))
 
-jest.mock('@/hooks/useOfflineBooks', () => ({
+vi.mock('@/hooks/useOfflineBooks', () => ({
   useOfflineBookFile: (...args: unknown[]) => mockUseOfflineBookFile(...args)
 }))
 
 // The real hook unless a test stubs it (e.g. the hydration pass).
-jest.mock('@/hooks/useReadingState', () => ({
+vi.mock('@/hooks/useReadingState', () => ({
   useReadingState: (...args: unknown[]) => mockUseReadingState(...args),
   useReadingProgressSaver: () => mockSave
 }))
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ push: mockRouterPush, back: mockRouterBack }),
   useSearchParams: () => mockSearchParams
 }))
@@ -48,7 +49,7 @@ interface MockReaderProps {
   initialPosition: unknown
 }
 
-jest.mock('@/components/books/reader/PdfBookReader', () => ({
+vi.mock('@/components/books/reader/PdfBookReader', () => ({
   __esModule: true,
   default: ({ file, title, onClose, onRelocate, initialPosition }: MockReaderProps) => (
     <div
@@ -85,7 +86,7 @@ jest.mock('@/components/books/reader/PdfBookReader', () => ({
   )
 }))
 
-jest.mock('@/components/books/reader/PdfBookReader', () => ({
+vi.mock('@/components/books/reader/PdfBookReader', () => ({
   __esModule: true,
   default: ({ file, title, onClose, onRelocate, initialPosition }: MockReaderProps) => (
     <div
@@ -122,7 +123,7 @@ jest.mock('@/components/books/reader/PdfBookReader', () => ({
   )
 }))
 
-jest.mock('@/components/books/reader/ReadiumBookReader', () => ({
+vi.mock('@/components/books/reader/ReadiumBookReader', () => ({
   __esModule: true,
   default: ({ bookId, title, onClose, onRelocate, initialPosition }: MockReaderProps) => (
     <div
@@ -180,7 +181,7 @@ function setLibrary(formats: string[]) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   localStorage.clear()
   mockSearchParams = new URLSearchParams()
   setLibrary(['epub', 'pdf'])
@@ -192,16 +193,16 @@ beforeEach(() => {
 
 /** The hook's cached data is stale; only `mutate()` (a fresh read) counts. */
 function setFreshReadingState(state: unknown, stale: unknown = { percent: 99 }) {
-  const mutate = jest.fn(() => Promise.resolve(state === undefined ? undefined : { state }))
+  const mutate = vi.fn(() => Promise.resolve(state === undefined ? undefined : { state }))
   mockUseReadingState.mockReturnValue({ data: { state: stale }, error: undefined, mutate })
   return mutate
 }
 
 describe('ReadBookClient', () => {
   describe('opened offline', () => {
-    let online: jest.SpyInstance
+    let online: MockInstance
     beforeEach(() => {
-      online = jest.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(false)
+      online = vi.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(false)
     })
     afterEach(() => online.mockRestore())
 

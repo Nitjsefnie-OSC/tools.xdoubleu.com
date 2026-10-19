@@ -6,16 +6,16 @@ import { applyPending } from '@/lib/offline/outbox'
 import { loadEntry, saveEntry } from '@/lib/offline/store'
 import { getSnapshot, markLive } from '@/lib/offline/status'
 
-jest.mock('@/lib/offline/store', () => ({
-  loadEntry: jest.fn(),
-  saveEntry: jest.fn()
+vi.mock('@/lib/offline/store', () => ({
+  loadEntry: vi.fn(),
+  saveEntry: vi.fn()
 }))
-jest.mock('@/lib/offline/outbox', () => ({
-  applyPending: jest.fn(async (_key: unknown, data: unknown) => data)
+vi.mock('@/lib/offline/outbox', () => ({
+  applyPending: vi.fn(async (_key: unknown, data: unknown) => data)
 }))
 
-const mockLoad = jest.mocked(loadEntry)
-const mockSave = jest.mocked(saveEntry)
+const mockLoad = vi.mocked(loadEntry)
+const mockSave = vi.mocked(saveEntry)
 
 function Probe({
   swrKey,
@@ -50,7 +50,7 @@ const networkError = () =>
 
 describe('persistMiddleware', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     markLive()
   })
 
@@ -97,13 +97,13 @@ describe('persistMiddleware', () => {
   })
 
   it('re-applies queued writes to fetched and saved data', async () => {
-    jest.mocked(applyPending).mockImplementation(async (_key, data) => `${String(data)}+pending`)
+    vi.mocked(applyPending).mockImplementation(async (_key, data) => `${String(data)}+pending`)
     renderProbe('/recipes', () => Promise.resolve('live'))
 
     expect(await screen.findByText('live+pending')).toBeInTheDocument()
     expect(applyPending).toHaveBeenCalledWith('/recipes', 'live')
     expect(mockSave).toHaveBeenCalledWith(unstable_serialize('/recipes'), 'live')
-    jest.mocked(applyPending).mockImplementation(async (_key, data) => data)
+    vi.mocked(applyPending).mockImplementation(async (_key, data) => data)
   })
 
   it('neither saves nor falls back for excluded keys', async () => {

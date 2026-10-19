@@ -4,18 +4,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import UserManagementClient from '@/components/user-management/UserManagementClient'
 import { AppUserSchema } from '@/lib/gen/access/v1/access_pb'
 
-const mockUseUsers = jest.fn()
-const mockSetRole = jest.fn()
-const mockSetAppAccess = jest.fn()
-const mockMutate = jest.fn()
+const mockUseUsers = vi.fn()
+const mockSetRole = vi.fn()
+const mockSetAppAccess = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('@/hooks/useUserManagement', () => ({
+vi.mock('@/hooks/useUserManagement', () => ({
   useUsers: () => mockUseUsers(),
   useSetRole: () => mockSetRole,
   useSetAppAccess: () => mockSetAppAccess
 }))
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 

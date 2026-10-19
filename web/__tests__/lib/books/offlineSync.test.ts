@@ -14,29 +14,29 @@ import {
   syncOfflineBooks
 } from '@/lib/books/offlineSync'
 
-const mockDownload = jest.fn<Promise<unknown>, [BookFileRef]>()
-const mockDelete = jest.fn()
-const mockList = jest.fn()
-jest.mock('@/lib/books/offlineBooks', () => ({
+const mockDownload = vi.fn<Promise<unknown>, [BookFileRef]>()
+const mockDelete = vi.fn()
+const mockList = vi.fn()
+vi.mock('@/lib/books/offlineBooks', () => ({
   downloadBookFile: (ref: BookFileRef) => mockDownload(ref),
   deleteStoredBook: (...args: unknown[]) => mockDelete(...args),
   listStoredBooks: () => mockList()
 }))
 
-const mockSavePage = jest.fn()
-jest.mock('@/lib/offline/session', () => ({
+const mockSavePage = vi.fn()
+vi.mock('@/lib/offline/session', () => ({
   savePageForOffline: (url: string) => mockSavePage(url)
 }))
 
-const mockWarmWebPub = jest.fn()
-const mockIsWebPubWarm = jest.fn()
-jest.mock('@/lib/books/webpubCache', () => ({
+const mockWarmWebPub = vi.fn()
+const mockIsWebPubWarm = vi.fn()
+vi.mock('@/lib/books/webpubCache', () => ({
   warmWebPub: (...args: unknown[]) => mockWarmWebPub(...args),
   isWebPubWarm: (...args: unknown[]) => mockIsWebPubWarm(...args)
 }))
 
-const mockWarm = jest.fn()
-jest.mock('@/lib/books/readerModules', () => ({
+const mockWarm = vi.fn()
+vi.mock('@/lib/books/readerModules', () => ({
   warmReaderModules: () => mockWarm()
 }))
 
@@ -68,7 +68,7 @@ function setOnline(online: boolean) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   localStorage.clear()
   setOnline(true)
   setConnection(undefined)
@@ -218,20 +218,20 @@ describe('syncOfflineBooks', () => {
   })
 
   it('pauses between downloads', async () => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     try {
       const run = syncOfflineBooks(library({ reading: [book('g1'), book('g2')] }), {
         gapMs: 5000
       })
-      await jest.advanceTimersByTimeAsync(0)
+      await vi.advanceTimersByTimeAsync(0)
       expect(mockDownload).toHaveBeenCalledTimes(1)
-      await jest.advanceTimersByTimeAsync(4999)
+      await vi.advanceTimersByTimeAsync(4999)
       expect(mockDownload).toHaveBeenCalledTimes(1)
-      await jest.advanceTimersByTimeAsync(1)
+      await vi.advanceTimersByTimeAsync(1)
       expect(mockDownload).toHaveBeenCalledTimes(2)
       await run
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   })
 
@@ -250,17 +250,17 @@ describe('syncOfflineBooks', () => {
   })
 
   it('stops without backing off when the connection drops during the pause', async () => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     try {
       const lib = library({ reading: [book('c1'), book('c2')] })
       const run = syncOfflineBooks(lib, { gapMs: 1000 })
-      await jest.advanceTimersByTimeAsync(0)
+      await vi.advanceTimersByTimeAsync(0)
       setOnline(false)
-      await jest.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(1000)
       await run
       expect(mockDownload).toHaveBeenCalledTimes(1)
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   })
 
@@ -283,7 +283,7 @@ describe('syncOfflineBooks', () => {
   })
 
   it('backs off a failed download, then retries it later', async () => {
-    const now = jest.spyOn(Date, 'now').mockReturnValue(1_000_000)
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
     try {
       mockDownload.mockRejectedValueOnce(new Error('404'))
       const lib = library({ reading: [book('bad'), book('ok')] })

@@ -6,23 +6,23 @@ import {
   type GetSharedLibraryResponse
 } from '@/lib/gen/dashboard/v1/reading_pb'
 
-jest.mock('@/components/dashboard/ReadingDashboardPublicClient', () => () => (
+vi.mock('@/components/dashboard/ReadingDashboardPublicClient', () => () => (
   <div data-testid="reading-dashboard-public" />
 ))
 
-const mockFetchOrNull = jest.fn<Promise<GetSharedLibraryResponse | null>, [unknown]>(
+const mockFetchOrNull = vi.fn<Promise<GetSharedLibraryResponse | null>, [unknown]>(
   async () => null
 )
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => unknown) => mockFetchOrNull(fn)
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
@@ -30,7 +30,7 @@ jest.mock('@/components/SWRFallback', () => ({
 import ReadingDashboardPublicPage, { metadata } from '@/app/dashboard/reading/[token]/page'
 
 describe('ReadingDashboardPublicPage', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it('renders a generic heading and client component when the link is invalid', async () => {
     mockFetchOrNull.mockResolvedValue(null)

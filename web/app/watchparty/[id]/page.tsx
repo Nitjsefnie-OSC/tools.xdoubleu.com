@@ -1,6 +1,7 @@
+import { useRouteParams } from '@/hooks/navigation'
 import ViewerClient from './ViewerClient'
 
-export default async function ViewerPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default function ViewerPage() {
+  const { id } = useRouteParams<{ id: string }>()
   return <ViewerClient id={id} />
 }

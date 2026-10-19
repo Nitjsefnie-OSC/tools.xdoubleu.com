@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import {
@@ -16,7 +16,7 @@ describe('getRelease', () => {
   const originalWindow = global.window
 
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
     process.env = { ...originalEnv }
     if (typeof window !== 'undefined') {
       window.__ENV__ = {
@@ -113,7 +113,7 @@ describe('getKoboGatewayRelease', () => {
   const originalWindow = global.window
 
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
     process.env = { ...originalEnv }
   })
 
@@ -158,7 +158,7 @@ describe('getKoboGatewayRelease', () => {
 
 describe('getApiUrl', () => {
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
   })
 
   it('returns window.__ENV__.API_URL when available', () => {
@@ -178,7 +178,7 @@ describe('getApiUrl', () => {
 
 describe('getSentryDsn', () => {
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
   })
 
   it('returns window.__ENV__.SENTRY_DSN_WEB when available', () => {
@@ -205,7 +205,7 @@ describe('getSentryDsn', () => {
 
 describe('getPostHogKey', () => {
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
   })
 
   it('returns window.__ENV__.POSTHOG_KEY when available', () => {
@@ -231,7 +231,7 @@ describe('getPostHogKey', () => {
 
 describe('getPostHogHost', () => {
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
   })
 
   it('returns window.__ENV__.POSTHOG_HOST when available', () => {

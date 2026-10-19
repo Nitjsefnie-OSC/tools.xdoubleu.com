@@ -2,15 +2,15 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import FeedFilteredItemsClient from '@/components/feeds/FeedFilteredItemsClient'
 import { FilterRuleKind } from '@/lib/gen/feeds/v1/feeds_pb'
 
-const mockUseFeeds = jest.fn()
-jest.mock('@/hooks/useFeeds', () => ({
+const mockUseFeeds = vi.fn()
+vi.mock('@/hooks/useFeeds', () => ({
   useFeeds: () => mockUseFeeds()
 }))
 
-const mockUseFilteredFeedItems = jest.fn()
-const mockFetchPage = jest.fn()
-const mockRestore = jest.fn()
-jest.mock('@/hooks/useFeedFilteredItems', () => ({
+const mockUseFilteredFeedItems = vi.fn()
+const mockFetchPage = vi.fn()
+const mockRestore = vi.fn()
+vi.mock('@/hooks/useFeedFilteredItems', () => ({
   useFilteredFeedItems: (feedId?: string) => mockUseFilteredFeedItems(feedId),
   useFetchFilteredFeedItemsPage: () => mockFetchPage,
   useRestoreFeedItem: () => mockRestore
@@ -70,7 +70,7 @@ const row = (title: string) => screen.getByText(title).closest('li')!
 
 describe('FeedFilteredItemsClient', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUseFeeds.mockReturnValue({ data: { feeds } })
     mockUseFilteredFeedItems.mockReturnValue({
       data: { items, hasMore: false },

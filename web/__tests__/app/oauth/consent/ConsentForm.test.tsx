@@ -2,10 +2,10 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ConsentForm from '@/app/oauth/consent/ConsentForm'
 
-const mockApprove = jest.fn()
-const mockDeny = jest.fn()
+const mockApprove = vi.fn()
+const mockDeny = vi.fn()
 
-jest.mock('@/app/oauth/consent/actions', () => ({
+vi.mock('@/app/oauth/consent/actions', () => ({
   approveAuthorization: (query: string, token: string) => mockApprove(query, token),
   denyAuthorization: (query: string) => mockDeny(query)
 }))

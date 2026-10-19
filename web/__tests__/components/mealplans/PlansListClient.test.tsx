@@ -1,20 +1,14 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/hooks/useMealPlans', () => ({
-  useMealPlans: jest.fn()
+vi.mock('@/hooks/useMealPlans', () => ({
+  useMealPlans: vi.fn()
 }))
 
-const replace = jest.fn()
-jest.mock('next/navigation', () => ({
+const replace = vi.fn()
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ replace })
 }))
-
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
 
 import PlansListClient from '@/components/mealplans/PlansListClient'
 import { useMealPlans } from '@/hooks/useMealPlans'
@@ -23,16 +17,16 @@ import { PlanSchema, ListPlansResponseSchema } from '@/lib/gen/mealplans/v1/meal
 import type { ListPlansResponse } from '@/lib/gen/mealplans/v1/mealplans_pb'
 
 function mockUseMealPlans(value: { data?: ListPlansResponse; error?: Error; isLoading: boolean }) {
-  jest.mocked(useMealPlans).mockReturnValue({
+  vi.mocked(useMealPlans).mockReturnValue({
     data: value.data,
     error: value.error,
     isLoading: value.isLoading,
     isValidating: false,
-    mutate: jest.fn(async () => undefined)
+    mutate: vi.fn(async () => undefined)
   })
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('PlansListClient', () => {
   it('shows a loading state', () => {

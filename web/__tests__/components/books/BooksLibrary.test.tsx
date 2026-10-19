@@ -9,13 +9,13 @@ import {
   LibraryResponseSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-const mockSearchExternal = jest.fn()
-const mockCreateBook = jest.fn()
+const mockSearchExternal = vi.fn()
+const mockCreateBook = vi.fn()
 
-// AddManualBookDialog also calls useLibrary; jest.mock factories can't use
+// AddManualBookDialog also calls useLibrary; vi.mock factories can't use
 // imports, so stub a minimal shape.
-jest.mock('@/hooks/useBooks', () => ({
-  ...jest.requireActual('@/hooks/useBooks'),
+vi.mock('@/hooks/useBooks', () => ({
+  ...vi.requireActual('@/hooks/useBooks'),
   useSearchExternal: () => mockSearchExternal,
   useCreateBook: () => mockCreateBook,
   useLibrary: () => ({
@@ -25,35 +25,21 @@ jest.mock('@/hooks/useBooks', () => ({
   })
 }))
 
-jest.useFakeTimers()
+vi.useFakeTimers()
 
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} />
-  }
-})
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('@/components/books/BookRatingStars', () => {
+vi.mock('@/components/books/BookRatingStars', () => {
   return function MockRatingStars() {
     return <div data-testid="rating-stars" />
   }
 })
 
-jest.mock('@/components/books/BookFavouriteButton', () => {
+vi.mock('@/components/books/BookFavouriteButton', () => {
   return function MockFavButton() {
     return <div data-testid="favourite-button" />
   }
 })
 
-jest.mock('@/components/books/ManageShelvesTagsDialog', () => {
+vi.mock('@/components/books/ManageShelvesTagsDialog', () => {
   return function MockManageDialog({ open }: { open: boolean }) {
     return open ? <div data-testid="manage-dialog" /> : null
   }
@@ -110,7 +96,7 @@ function renderLibrary(
       library={library}
       knownShelves={[]}
       searchQuery={opts.searchQuery ?? ''}
-      onSaved={jest.fn()}
+      onSaved={vi.fn()}
     />
   )
 }
@@ -123,7 +109,7 @@ describe('BooksLibrary', () => {
   })
 
   afterEach(() => {
-    jest.clearAllTimers()
+    vi.clearAllTimers()
   })
 
   it('defaults to the All books shelf', () => {
@@ -371,7 +357,7 @@ describe('BooksLibrary', () => {
   it('does not fetch external results when the library already has a match', async () => {
     renderLibrary(makeLibrary(), { searchQuery: 'dune' })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     expect(mockSearchExternal).not.toHaveBeenCalled()
   })
@@ -393,7 +379,7 @@ describe('BooksLibrary', () => {
     renderLibrary(makeLibrary(), { searchQuery: 'not-in-library' })
 
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => {
       expect(mockSearchExternal).toHaveBeenCalledWith('not-in-library')
@@ -409,7 +395,7 @@ describe('BooksLibrary', () => {
   it('shows "No results." when neither the library nor the external search match', async () => {
     renderLibrary(makeLibrary(), { searchQuery: 'nothing-matches-anything' })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => {
       expect(screen.getByText('No results.')).toBeInTheDocument()
@@ -424,7 +410,7 @@ describe('BooksLibrary', () => {
   it('opens the manual-add dialog from the persistent button, prefilled with the search query', async () => {
     renderLibrary(makeLibrary(), { searchQuery: 'Dungeon Crawler Carl' })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => {
       expect(screen.getByText('No results.')).toBeInTheDocument()

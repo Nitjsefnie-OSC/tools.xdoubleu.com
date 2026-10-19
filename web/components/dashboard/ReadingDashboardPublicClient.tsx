@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { useSharedLibrary, useSharedBooksProgress } from '@/hooks/useDashboardShare'
 import type { GetSharedLibraryResponse } from '@/lib/gen/dashboard/v1/reading_pb'
 import DashboardBookCard from '@/components/dashboard/DashboardBookCard'

@@ -1,28 +1,28 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/components/feeds/FeedsNotificationSettingsCard', () => () => (
+vi.mock('@/components/feeds/FeedsNotificationSettingsCard', () => () => (
   <div data-testid="feeds-notification-settings-card" />
 ))
 
-jest.mock('@/components/feeds/FeedFilterRulesCard', () => () => (
+vi.mock('@/components/feeds/FeedFilterRulesCard', () => () => (
   <div data-testid="feed-filter-rules-card" />
 ))
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({
-    getNotificationSettings: jest.fn(async () => ({ settings: [] })),
-    listFeeds: jest.fn(async () => ({ feeds: [] })),
-    listFilterRules: jest.fn(async () => ({ rules: [] }))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({
+    getNotificationSettings: vi.fn(async () => ({ settings: [] })),
+    listFeeds: vi.fn(async () => ({ feeds: [] })),
+    listFilterRules: vi.fn(async () => ({ rules: [] }))
   }))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: jest.fn(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
+  fetchOrNull: vi.fn(async () => null)
 }))
 
-const mockFallback = jest.fn()
-jest.mock('@/components/SWRFallback', () => ({
+const mockFallback = vi.fn()
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({
     fallback,
@@ -47,7 +47,7 @@ describe('FeedsSettingsPage', () => {
   })
 
   it('prefetches notification settings, feeds and filter rules into the SWR fallback', async () => {
-    jest.mocked(fetchOrNull).mockImplementation(async (fn) => fn())
+    vi.mocked(fetchOrNull).mockImplementation(async (fn) => fn())
     render(await FeedsSettingsPage())
     expect(mockFallback).toHaveBeenCalledWith({
       [swrKeys.monitoringNotificationSettings]: { settings: [] },
@@ -57,7 +57,7 @@ describe('FeedsSettingsPage', () => {
   })
 
   it('leaves the fallback empty when prefetches fail', async () => {
-    jest.mocked(fetchOrNull).mockResolvedValue(null)
+    vi.mocked(fetchOrNull).mockResolvedValue(null)
     render(await FeedsSettingsPage())
     expect(mockFallback).toHaveBeenCalledWith({})
   })

@@ -1,4 +1,4 @@
-/** @jest-environment node */
+/** @vitest-environment node */
 import 'fake-indexeddb/auto'
 import { listBookFiles, listQueued, loadEntry } from '@/lib/offline/store'
 

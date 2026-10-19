@@ -1,5 +1,3 @@
-'use client'
-
 import { useAutomatedActions } from '@/hooks/useMonitoring'
 import AutomatedActionsCard from './AutomatedActionsCard'
 

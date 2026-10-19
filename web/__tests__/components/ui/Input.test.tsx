@@ -22,7 +22,7 @@ describe('Input', () => {
   })
 
   it('forwards value and change events', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(<Input aria-label="q" value="" onChange={onChange} />)
     fireEvent.change(screen.getByLabelText('q'), { target: { value: 'hi' } })
     expect(onChange).toHaveBeenCalled()

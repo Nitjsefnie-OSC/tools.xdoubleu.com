@@ -1,27 +1,12 @@
-import type { Metadata } from 'next'
-import SWRFallback from '@/components/SWRFallback'
-import { createServerClient } from '@/lib/server/client'
-import { fetchOrNull } from '@/lib/server/fetchers'
-import { swrKeys } from '@/lib/swrKeys'
-import { PublicGamesDashboardService } from '@/lib/gen/dashboard/v1/games_pb'
+import { useRouteParams } from '@/hooks/navigation'
+import { useSharedSteam } from '@/hooks/useDashboardShare'
 import GamesDashboardPublicLibrary from '@/components/dashboard/GamesDashboardPublicLibrary'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageHeader } from '@/components/ui/page-header'
 
-// Token URLs are capability links — keep them out of search indexes.
-export const metadata: Metadata = {
-  title: 'Shared library',
-  robots: { index: false, follow: false }
-}
-
-export default async function GamesDashboardPublicLibraryPage({
-  params
-}: {
-  params: Promise<{ token: string }>
-}) {
-  const { token } = await params
-  const client = await createServerClient(PublicGamesDashboardService)
-  const steam = await fetchOrNull(() => client.getSharedSteam({ token }))
+export default function GamesDashboardPublicLibraryPage() {
+  const { token } = useRouteParams<{ token: string }>()
+  const steam = useSharedSteam(token).data
 
   return (
     <PageContainer>
@@ -36,9 +21,7 @@ export default async function GamesDashboardPublicLibraryPage({
         ]}
       />
 
-      <SWRFallback fallback={steam ? { [swrKeys.dashboardGames(token)]: steam } : {}}>
-        <GamesDashboardPublicLibrary token={token} initialData={steam ?? undefined} />
-      </SWRFallback>
+      <GamesDashboardPublicLibrary token={token} />
     </PageContainer>
   )
 }

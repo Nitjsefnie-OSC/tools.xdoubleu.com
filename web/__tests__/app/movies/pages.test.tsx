@@ -1,29 +1,29 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const fetchOrNull = jest.fn()
-const swrFallback = jest.fn()
+const fetchOrNull = vi.fn()
+const swrFallback = vi.fn()
 const serverClient = {
-  listBacklog: jest.fn(),
-  getTitle: jest.fn(),
-  getStats: jest.fn(),
-  getSettings: jest.fn(),
-  listAvailableProviders: jest.fn()
+  listBacklog: vi.fn(),
+  getTitle: vi.fn(),
+  getStats: vi.fn(),
+  getSettings: vi.fn(),
+  listAvailableProviders: vi.fn()
 }
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => serverClient)
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => serverClient)
 }))
 
 // Runs the fetch so the request arguments are checked.
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: async (fn: () => Promise<unknown>) => {
     await fn()
     return fetchOrNull(fn)
   }
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: (props: { children: React.ReactNode; keyed?: unknown; fallback: unknown }) => {
     swrFallback(props)
@@ -31,22 +31,22 @@ jest.mock('@/components/SWRFallback', () => ({
   }
 }))
 
-jest.mock('@/components/movies/MoviesClient', () => ({
+vi.mock('@/components/movies/MoviesClient', () => ({
   __esModule: true,
   default: () => <div data-testid="movies-client" />
 }))
 
-jest.mock('@/components/movies/MovieTitleClient', () => ({
+vi.mock('@/components/movies/MovieTitleClient', () => ({
   __esModule: true,
   default: ({ id }: { id: string }) => <div data-testid="title-client">{id}</div>
 }))
 
-jest.mock('@/components/movies/MoviesSettingsClient', () => ({
+vi.mock('@/components/movies/MoviesSettingsClient', () => ({
   __esModule: true,
   default: () => <div data-testid="settings-client" />
 }))
 
-jest.mock('@/components/movies/MoviesStatsClient', () => ({
+vi.mock('@/components/movies/MoviesStatsClient', () => ({
   __esModule: true,
   default: () => <div data-testid="stats-client" />
 }))
@@ -56,7 +56,7 @@ import MoviesSettingsPage from '@/app/movies/settings/page'
 import MoviesStatsPage from '@/app/movies/stats/page'
 import MovieTitlePage from '@/app/movies/[id]/page'
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('MoviesPage', () => {
   it('seeds the default backlog key', async () => {

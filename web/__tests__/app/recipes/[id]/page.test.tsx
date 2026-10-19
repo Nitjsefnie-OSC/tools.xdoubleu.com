@@ -1,20 +1,20 @@
 import React from 'react'
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: jest.fn(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
+  fetchOrNull: vi.fn(async () => null)
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
 import { render } from '@testing-library/react'
 
-jest.mock('@/app/recipes/[id]/RecipeClient', () => ({
+vi.mock('@/app/recipes/[id]/RecipeClient', () => ({
   __esModule: true,
   default: ({ id }: { id: string }) => <div data-testid="recipe-client">{id}</div>
 }))

@@ -1,13 +1,13 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const mockCreateShelf = jest.fn()
-const mockRenameShelf = jest.fn()
-const mockDeleteShelf = jest.fn()
-const mockRenameTag = jest.fn()
-const mockDeleteTag = jest.fn()
+const mockCreateShelf = vi.fn()
+const mockRenameShelf = vi.fn()
+const mockDeleteShelf = vi.fn()
+const mockRenameTag = vi.fn()
+const mockDeleteTag = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useCreateShelf: () => mockCreateShelf,
   useRenameShelf: () => mockRenameShelf,
   useDeleteShelf: () => mockDeleteShelf,
@@ -15,18 +15,18 @@ jest.mock('@/hooks/useBooks', () => ({
   useDeleteTag: () => mockDeleteTag
 }))
 
-jest.mock('swr', () => ({ mutate: jest.fn() }))
+vi.mock('swr', () => ({ mutate: vi.fn() }))
 
-jest.mock('@/components/books/LibrarySidebar', () => ({
-  buildShelves: jest.fn(),
-  buildTags: jest.fn()
+vi.mock('@/components/books/LibrarySidebar', () => ({
+  buildShelves: vi.fn(),
+  buildTags: vi.fn()
 }))
 
 import ManageShelvesTagsDialog from '@/components/books/ManageShelvesTagsDialog'
 import type { Shelf } from '@/components/books/LibrarySidebar'
 import { mutate as swrMutate } from 'swr'
 
-const mockMutate = jest.mocked(swrMutate)
+const mockMutate = vi.mocked(swrMutate)
 
 const builtInShelves: Shelf[] = [
   { id: 'currently-reading', label: 'Currently reading', count: 2 },
@@ -43,7 +43,7 @@ function renderDialog(tags: string[] = []) {
   return render(
     <ManageShelvesTagsDialog
       open={true}
-      onOpenChange={jest.fn()}
+      onOpenChange={vi.fn()}
       shelves={allShelves}
       tags={tags}
     />
@@ -52,7 +52,7 @@ function renderDialog(tags: string[] = []) {
 
 describe('ManageShelvesTagsDialog', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockCreateShelf.mockResolvedValue(undefined)
     mockRenameShelf.mockResolvedValue(undefined)
     mockDeleteShelf.mockResolvedValue(undefined)
@@ -110,7 +110,7 @@ describe('ManageShelvesTagsDialog', () => {
     render(
       <ManageShelvesTagsDialog
         open={true}
-        onOpenChange={jest.fn()}
+        onOpenChange={vi.fn()}
         shelves={builtInShelves}
         tags={[]}
       />

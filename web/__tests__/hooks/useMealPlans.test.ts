@@ -1,14 +1,14 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => ({}))
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => ({}))
 }))
 let mockStatus = 'sent'
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn(async () => ({ status: () => mockStatus })),
-  flushOutbox: jest.fn().mockResolvedValue(undefined),
-  sendWrite: jest.fn(async (pending: Promise<{ status: () => string }>) => {
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn(async () => ({ status: () => mockStatus })),
+  flushOutbox: vi.fn().mockResolvedValue(undefined),
+  sendWrite: vi.fn(async (pending: Promise<{ status: () => string }>) => {
     const status = (await pending).status()
     if (status === 'failed') throw new Error('The server rejected the change')
     return status
@@ -36,7 +36,7 @@ import {
   useMoveMeal
 } from '@/hooks/useMealPlans'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 beforeEach(() => {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
@@ -85,8 +85,8 @@ describe('useMealSuggestions', () => {
 
 describe('useRotateICalToken', () => {
   it('calls client.rotateICalToken with the plan id', () => {
-    const rotateICalToken = jest.fn()
-    jest.mocked(jest.requireMock('@/lib/client').createServiceClient).mockReturnValueOnce({
+    const rotateICalToken = vi.fn()
+    vi.mocked(vi.requireMock('@/lib/client').createServiceClient).mockReturnValueOnce({
       rotateICalToken
     })
     const { result } = renderHook(() => useRotateICalToken())
@@ -98,8 +98,8 @@ describe('useRotateICalToken', () => {
 describe('mutation hooks queue writes and send them', () => {
   beforeEach(() => {
     mockStatus = 'sent'
-    jest.mocked(enqueueWrite).mockClear()
-    jest.mocked(flushOutbox).mockClear()
+    vi.mocked(enqueueWrite).mockClear()
+    vi.mocked(flushOutbox).mockClear()
   })
 
   it('useUpdatePlan queues the edit and throws when the server rejects it', async () => {

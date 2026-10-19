@@ -1,11 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
-const mockClearKoboDeviceLogs = jest.fn()
-const mockMutate = jest.fn()
-const mockUseKoboDeviceLogs = jest.fn()
+const mockClearKoboDeviceLogs = vi.fn()
+const mockMutate = vi.fn()
+const mockUseKoboDeviceLogs = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useKoboDeviceLogs: (id: string, enabled: boolean) => mockUseKoboDeviceLogs(id, enabled),
   useClearKoboDeviceLogs: () => mockClearKoboDeviceLogs
 }))

@@ -4,7 +4,7 @@ import { create } from '@bufbuild/protobuf'
 import { GameSchema, RecentGameSchema, SteamResponseSchema } from '@/lib/gen/games/v1/games_pb'
 import type { DashboardChartState } from '@/hooks/useDashboardChartState'
 
-jest.mock('@/components/games/SteamDistributionChart', () => {
+vi.mock('@/components/games/SteamDistributionChart', () => {
   return function MockSteamDistributionChart({
     onBucketClick
   }: {
@@ -17,21 +17,7 @@ jest.mock('@/components/games/SteamDistributionChart', () => {
     )
   }
 })
-jest.mock('@/components/games/SteamProgressChart', () => () => <div data-testid="progress-chart" />)
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt, ...props }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} {...props} />
-  }
-})
+vi.mock('@/components/games/SteamProgressChart', () => () => <div data-testid="progress-chart" />)
 
 import GamesDashboardView from '@/components/games/GamesDashboardView'
 
@@ -51,11 +37,11 @@ function makeChart(
 ): DashboardChartState<'progress' | 'distribution'> {
   return {
     view,
-    setView: jest.fn(),
+    setView: vi.fn(),
     start: '2025-01-01',
-    setStart: jest.fn(),
+    setStart: vi.fn(),
     end: '2026-01-01',
-    setEnd: jest.fn()
+    setEnd: vi.fn()
   }
 }
 
@@ -121,7 +107,7 @@ describe('GamesDashboardView', () => {
   })
 
   it('fires onBucketClick when a distribution bar is clicked', () => {
-    const onBucketClick = jest.fn()
+    const onBucketClick = vi.fn()
     render(
       <GamesDashboardView
         steam={makeSteam()}

@@ -6,19 +6,19 @@ class MockPC {
   signalingState = 'stable'
   remoteDescription: RTCSessionDescriptionInit | null = null
   tracks: unknown[] = []
-  addIceCandidate = jest.fn(async () => {})
-  addTrack = jest.fn((t: unknown) => {
+  addIceCandidate = vi.fn(async () => {})
+  addTrack = vi.fn((t: unknown) => {
     this.tracks.push(t)
   })
-  createOffer = jest.fn(async () => ({ type: 'offer', sdp: 'mock' }) as RTCSessionDescriptionInit)
-  createAnswer = jest.fn(async () => ({ type: 'answer', sdp: 'mock' }) as RTCSessionDescriptionInit)
-  setLocalDescription = jest.fn(async (d: RTCSessionDescriptionInit) => {
+  createOffer = vi.fn(async () => ({ type: 'offer', sdp: 'mock' }) as RTCSessionDescriptionInit)
+  createAnswer = vi.fn(async () => ({ type: 'answer', sdp: 'mock' }) as RTCSessionDescriptionInit)
+  setLocalDescription = vi.fn(async (d: RTCSessionDescriptionInit) => {
     this.signalingState = d.type === 'offer' ? 'have-local-offer' : 'stable'
   })
-  setRemoteDescription = jest.fn(async (d: RTCSessionDescriptionInit) => {
+  setRemoteDescription = vi.fn(async (d: RTCSessionDescriptionInit) => {
     this.remoteDescription = d
   })
-  close = jest.fn(() => {
+  close = vi.fn(() => {
     this.connectionState = 'closed'
   })
 }
@@ -45,9 +45,9 @@ function makeRefs(): RTCRefs {
 
 function makeHandler(role: 'presenter' | 'viewer' = 'viewer', onCreatePC?: (pc: MockPC) => void) {
   const refs = makeRefs()
-  const send = jest.fn()
+  const send = vi.fn()
   const created: MockPC[] = []
-  const createPC = jest.fn(() => {
+  const createPC = vi.fn(() => {
     const pc = new MockPC()
     created.push(pc)
     onCreatePC?.(pc)

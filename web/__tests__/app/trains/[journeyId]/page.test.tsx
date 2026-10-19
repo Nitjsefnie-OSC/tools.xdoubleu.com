@@ -1,23 +1,23 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const fetchOrNull = jest.fn()
-const getJourneyDetail = jest.fn()
+const fetchOrNull = vi.fn()
+const getJourneyDetail = vi.fn()
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({ getJourneyDetail }))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({ getJourneyDetail }))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => Promise<unknown>) => fetchOrNull(fn)
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
-jest.mock('@/components/trains/JourneyDetailClient', () => ({
+vi.mock('@/components/trains/JourneyDetailClient', () => ({
   __esModule: true,
   default: ({ journeyId }: { journeyId: string }) => <div data-testid="client">{journeyId}</div>
 }))

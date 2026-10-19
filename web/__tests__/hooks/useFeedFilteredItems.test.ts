@@ -1,24 +1,24 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
 
 const clientMocks = {
-  listFeedItems: jest.fn().mockResolvedValue({ items: [{ id: 'i1' }], hasMore: true })
+  listFeedItems: vi.fn().mockResolvedValue({ items: [{ id: 'i1' }], hasMore: true })
 }
 
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => clientMocks)
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => clientMocks)
 }))
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn(async () => ({ status: () => 'sent' })),
-  sendWrite: jest.fn(async (pending: Promise<unknown>) => {
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn(async () => ({ status: () => 'sent' })),
+  sendWrite: vi.fn(async (pending: Promise<unknown>) => {
     await pending
     return 'sent'
   })
 }))
-jest.mock('@/lib/feeds/offlineWrites', () => ({ restoreFeedItemWrite: { id: 'restore' } }))
-jest.mock('@/lib/feeds/prefetch', () => ({ prefetchFeedBodies: jest.fn() }))
-jest.mock('@/lib/gen/feeds/v1/feeds_pb', () => ({
+vi.mock('@/lib/feeds/offlineWrites', () => ({ restoreFeedItemWrite: { id: 'restore' } }))
+vi.mock('@/lib/feeds/prefetch', () => ({ prefetchFeedBodies: vi.fn() }))
+vi.mock('@/lib/gen/feeds/v1/feeds_pb', () => ({
   FeedService: {},
   FeedKind: { UNSPECIFIED: 0, RSS: 1, EMAIL: 2 }
 }))
@@ -34,11 +34,11 @@ import {
 import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 import { swrKeys } from '@/lib/swrKeys'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 describe('filtered item hooks', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // @ts-expect-error -- partial SWRResponse is fine for these tests
     mockUseSWR.mockReturnValue({ data: undefined })
   })

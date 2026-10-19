@@ -1,4 +1,4 @@
-/** @jest-environment node */
+/** @vitest-environment node */
 import { GET } from '@/app/sw.js/route'
 
 describe('GET /sw.js', () => {

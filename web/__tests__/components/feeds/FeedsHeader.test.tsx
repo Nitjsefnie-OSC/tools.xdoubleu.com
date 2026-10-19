@@ -6,22 +6,22 @@ const feedsData: { data?: { feeds: unknown[] }; error?: Error; isLoading: boolea
   isLoading: false
 }
 
-jest.mock('@/hooks/useFeeds', () => ({
+vi.mock('@/hooks/useFeeds', () => ({
   useFeeds: () => feedsData
 }))
 
-const mockUseCurrentUser = jest.fn()
-jest.mock('@/hooks/useAuth', () => ({
+const mockUseCurrentUser = vi.fn()
+vi.mock('@/hooks/useAuth', () => ({
   useCurrentUser: () => mockUseCurrentUser()
 }))
 
-jest.mock('@/components/feeds/FeedManager', () => () => <div data-testid="feed-manager" />)
+vi.mock('@/components/feeds/FeedManager', () => () => <div data-testid="feed-manager" />)
 
 import FeedsHeader from '@/components/feeds/FeedsHeader'
 
 describe('FeedsHeader', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUseCurrentUser.mockReturnValue({ data: { role: 'user' } })
     feedsData.data = { feeds: [{ id: 'feed-1' }] }
     feedsData.error = undefined

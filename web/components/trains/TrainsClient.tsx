@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import StationField from '@/components/trains/StationField'
 import JourneyResults from '@/components/trains/JourneyResults'

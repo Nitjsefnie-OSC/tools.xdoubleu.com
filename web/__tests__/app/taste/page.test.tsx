@@ -1,28 +1,28 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const fetchOrNull = jest.fn()
-const swrFallback = jest.fn()
+const fetchOrNull = vi.fn()
+const swrFallback = vi.fn()
 const serverClient = {
-  getProfile: jest.fn(),
-  listRecommendations: jest.fn(),
-  getStats: jest.fn(),
-  listEvents: jest.fn()
+  getProfile: vi.fn(),
+  listRecommendations: vi.fn(),
+  getStats: vi.fn(),
+  listEvents: vi.fn()
 }
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => serverClient)
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => serverClient)
 }))
 
 // Runs the fetch so the request arguments are checked.
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: async (fn: () => Promise<unknown>) => {
     await fn()
     return fetchOrNull(fn)
   }
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: (props: { children: React.ReactNode }) => {
     swrFallback(props)
@@ -30,14 +30,14 @@ jest.mock('@/components/SWRFallback', () => ({
   }
 }))
 
-jest.mock('@/components/taste/TasteClient', () => ({
+vi.mock('@/components/taste/TasteClient', () => ({
   __esModule: true,
   default: () => <div data-testid="taste-client" />
 }))
 
 import TastePage from '@/app/taste/page'
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('TastePage', () => {
   it('seeds the profile, the stats and the first log page', async () => {

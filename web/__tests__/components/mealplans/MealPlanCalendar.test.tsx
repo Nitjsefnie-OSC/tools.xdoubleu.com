@@ -1,15 +1,16 @@
+import type { Mock } from 'vitest'
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-jest.mock('@/hooks/useMealPlans', () => ({
-  useAddMeal: jest.fn(),
-  useUpdateMeal: jest.fn(),
-  useDeleteMeal: jest.fn(),
-  useMoveMeal: jest.fn(),
-  useMealSuggestions: jest.fn(() => ({ data: undefined }))
+vi.mock('@/hooks/useMealPlans', () => ({
+  useAddMeal: vi.fn(),
+  useUpdateMeal: vi.fn(),
+  useDeleteMeal: vi.fn(),
+  useMoveMeal: vi.fn(),
+  useMealSuggestions: vi.fn(() => ({ data: undefined }))
 }))
-jest.mock('@/lib/env', () => ({ getApiUrl: () => 'http://localhost' }))
-jest.mock('@/lib/mealplans/mealPlanCalendar', () => {
+vi.mock('@/lib/env', () => ({ getApiUrl: () => 'http://localhost' }))
+vi.mock('@/lib/mealplans/mealPlanCalendar', () => {
   const week = Array.from({ length: 7 }, (_, i) => {
     const d = new Date('2026-05-25')
     d.setDate(d.getDate() + i)
@@ -38,10 +39,10 @@ import {
 } from '@/lib/gen/mealplans/v1/mealplans_pb'
 import { RecipeSchema } from '@/lib/gen/recipes/v1/recipes_pb'
 
-const mockAddMeal = jest.fn()
-const mockUpdateMeal = jest.fn()
-const mockDeleteMeal = jest.fn()
-const mockMoveMeal = jest.fn()
+const mockAddMeal = vi.fn()
+const mockUpdateMeal = vi.fn()
+const mockDeleteMeal = vi.fn()
+const mockMoveMeal = vi.fn()
 
 const basePlan = create(PlanSchema, {
   id: 'plan-1',
@@ -62,8 +63,8 @@ function makePlanMeal(overrides: {
   return create(PlanMealSchema, overrides)
 }
 
-const mockOnPrevWeek = jest.fn()
-const mockOnNextWeek = jest.fn()
+const mockOnPrevWeek = vi.fn()
+const mockOnNextWeek = vi.fn()
 const defaultNavProps = {
   weekOffset: 0,
   onPrevWeek: mockOnPrevWeek,
@@ -71,11 +72,11 @@ const defaultNavProps = {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
-  jest.mocked(useAddMeal).mockReturnValue(mockAddMeal)
-  jest.mocked(useUpdateMeal).mockReturnValue(mockUpdateMeal)
-  jest.mocked(useDeleteMeal).mockReturnValue(mockDeleteMeal)
-  jest.mocked(useMoveMeal).mockReturnValue(mockMoveMeal)
+  vi.clearAllMocks()
+  vi.mocked(useAddMeal).mockReturnValue(mockAddMeal)
+  vi.mocked(useUpdateMeal).mockReturnValue(mockUpdateMeal)
+  vi.mocked(useDeleteMeal).mockReturnValue(mockDeleteMeal)
+  vi.mocked(useMoveMeal).mockReturnValue(mockMoveMeal)
   mockAddMeal.mockResolvedValue({})
   mockUpdateMeal.mockResolvedValue({})
   mockDeleteMeal.mockResolvedValue({})
@@ -121,7 +122,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('adds a custom item kept off the shopping list', async () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     render(
       <MealPlanCalendar
         plan={basePlan}
@@ -180,7 +181,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('adds meal with recipeId when recipe selected from combobox', async () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     render(
       <MealPlanCalendar
         plan={basePlan}
@@ -206,7 +207,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('adds meal with customName for free-text entry', async () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     render(
       <MealPlanCalendar
         plan={basePlan}
@@ -265,7 +266,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('submits recipe on Enter key in combobox after selecting', async () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     render(
       <MealPlanCalendar
         plan={basePlan}
@@ -388,7 +389,7 @@ describe('MealPlanCalendar', () => {
       ]
     }
 
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     render(
       <MealPlanCalendar
         plan={planWithMeal}
@@ -434,7 +435,7 @@ describe('MealPlanCalendar', () => {
       ]
     }
 
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     render(
       <MealPlanCalendar
         plan={planWithMeals}
@@ -551,7 +552,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('save edit calls updateMeal for the same meal id with new values, then onMutate', async () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     const planWithMeal = {
       ...basePlan,
       meals: [
@@ -635,14 +636,14 @@ describe('MealPlanCalendar', () => {
 
   it('highlights today with accent label in mobile view', () => {
     // Pin the clock so "today" falls within the mocked week (2026-05-25–2026-05-31).
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-05-30'))
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-30'))
     try {
       render(<MealPlanCalendar plan={basePlan} recipes={baseRecipes} {...defaultNavProps} />)
       // Mobile view appends "(today)" next to the day header for today.
       expect(screen.getAllByText('(today)').length).toBeGreaterThan(0)
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   })
 
@@ -670,7 +671,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('keeps an add button on an occupied slot so a second meal can be added', async () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     const planWithMeal = {
       ...basePlan,
       meals: [
@@ -708,7 +709,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('adds multiple custom items joined by newline', async () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     render(
       <MealPlanCalendar
         plan={basePlan}
@@ -786,7 +787,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('fills every slot of a day with the same entry', async () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     render(
       <MealPlanCalendar
         plan={basePlan}
@@ -840,14 +841,14 @@ describe('MealPlanCalendar', () => {
   })
 
   it('prefills servings from a suggestion chip', () => {
-    jest.mocked(useMealSuggestions).mockReturnValue({
+    vi.mocked(useMealSuggestions).mockReturnValue({
       data: create(SuggestRecipesResponseSchema, {
         suggestions: [{ recipeId: 'r1', servings: 5 }]
       }),
       error: undefined,
       isLoading: false,
       isValidating: false,
-      mutate: jest.fn(async () => undefined)
+      mutate: vi.fn(async () => undefined)
     })
     try {
       render(<MealPlanCalendar plan={basePlan} recipes={baseRecipes} {...defaultNavProps} />)
@@ -857,12 +858,12 @@ describe('MealPlanCalendar', () => {
       if (!(servingsInput instanceof HTMLInputElement)) throw new Error('expected input')
       expect(servingsInput.value).toBe('5')
     } finally {
-      jest.mocked(useMealSuggestions).mockReturnValue({
+      vi.mocked(useMealSuggestions).mockReturnValue({
         data: undefined,
         error: undefined,
         isLoading: false,
         isValidating: false,
-        mutate: jest.fn(async () => undefined)
+        mutate: vi.fn(async () => undefined)
       })
     }
   })
@@ -898,7 +899,7 @@ describe('MealPlanCalendar', () => {
   })
 
   it('removing one chip leaves the other meal in the slot', () => {
-    const onMutate = jest.fn()
+    const onMutate = vi.fn()
     const planWithTwo = {
       ...basePlan,
       meals: [

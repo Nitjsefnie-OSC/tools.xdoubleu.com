@@ -1,28 +1,28 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
 
 const clientMocks = {
-  getDashboardShare: jest.fn().mockResolvedValue({}),
-  createDashboardShare: jest.fn().mockResolvedValue({ share: { token: 'tok' } }),
-  deleteDashboardShare: jest.fn().mockResolvedValue({}),
-  getSharedLibrary: jest.fn().mockResolvedValue({}),
-  getSharedBooksProgress: jest.fn().mockResolvedValue({}),
-  getSharedFeedsSummary: jest.fn().mockResolvedValue({}),
-  getSharedSteam: jest.fn().mockResolvedValue({}),
-  getSharedSteamGame: jest.fn().mockResolvedValue({}),
-  getSharedRecentlyActiveGames: jest.fn().mockResolvedValue({})
+  getDashboardShare: vi.fn().mockResolvedValue({}),
+  createDashboardShare: vi.fn().mockResolvedValue({ share: { token: 'tok' } }),
+  deleteDashboardShare: vi.fn().mockResolvedValue({}),
+  getSharedLibrary: vi.fn().mockResolvedValue({}),
+  getSharedBooksProgress: vi.fn().mockResolvedValue({}),
+  getSharedFeedsSummary: vi.fn().mockResolvedValue({}),
+  getSharedSteam: vi.fn().mockResolvedValue({}),
+  getSharedSteamGame: vi.fn().mockResolvedValue({}),
+  getSharedRecentlyActiveGames: vi.fn().mockResolvedValue({})
 }
 
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => clientMocks)
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => clientMocks)
 }))
-jest.mock('@/lib/gen/dashboard/v1/dashboard_pb', () => ({
+vi.mock('@/lib/gen/dashboard/v1/dashboard_pb', () => ({
   DashboardService: {},
   DashboardKind: { UNSPECIFIED: 0, GAMES: 1, READING: 2 }
 }))
-jest.mock('@/lib/gen/dashboard/v1/reading_pb', () => ({ PublicReadingDashboardService: {} }))
-jest.mock('@/lib/gen/dashboard/v1/games_pb', () => ({ PublicGamesDashboardService: {} }))
+vi.mock('@/lib/gen/dashboard/v1/reading_pb', () => ({ PublicReadingDashboardService: {} }))
+vi.mock('@/lib/gen/dashboard/v1/games_pb', () => ({ PublicGamesDashboardService: {} }))
 
 import useSWR from 'swr'
 import {
@@ -38,14 +38,14 @@ import {
   useSharedRecentlyActiveGames
 } from '@/hooks/useDashboardShare'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 describe('useDashboardShare hooks', () => {
   beforeEach(() => {
     mockUseSWR.mockReset()
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
     mockUseSWR.mockReturnValue({ data: undefined })
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('useDashboardShare queries the dashboard-scoped share key', async () => {

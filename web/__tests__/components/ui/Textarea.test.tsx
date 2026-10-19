@@ -21,7 +21,7 @@ describe('Textarea', () => {
   })
 
   it('forwards change events', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(<Textarea aria-label="notes" value="" onChange={onChange} />)
     fireEvent.change(screen.getByLabelText('notes'), { target: { value: 'x' } })
     expect(onChange).toHaveBeenCalled()

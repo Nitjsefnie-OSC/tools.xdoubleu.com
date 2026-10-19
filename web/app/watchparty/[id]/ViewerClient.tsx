@@ -1,5 +1,3 @@
-'use client'
-
 import { useRef } from 'react'
 import { useWatchPartyRTC } from '@/hooks/useWatchPartyRTC'
 import WatchPartyRoom from '@/components/watchparty/WatchPartyRoom'

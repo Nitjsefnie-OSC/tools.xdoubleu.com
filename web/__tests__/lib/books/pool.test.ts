@@ -11,7 +11,7 @@ describe('runPool', () => {
   })
 
   it('resolves immediately for an empty list', async () => {
-    const worker = jest.fn()
+    const worker = vi.fn()
     await runPool([], 4, worker)
     expect(worker).not.toHaveBeenCalled()
   })

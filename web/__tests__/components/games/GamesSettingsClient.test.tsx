@@ -1,9 +1,9 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const mockSaveSettings = jest.fn()
+const mockSaveSettings = vi.fn()
 
-jest.mock('@/hooks/useGames', () => ({
+vi.mock('@/hooks/useGames', () => ({
   useIntegrations: () => ({
     data: { integrations: { steamUserId: '12345678' } },
     isLoading: false,
@@ -12,9 +12,9 @@ jest.mock('@/hooks/useGames', () => ({
   useSaveIntegrations: () => mockSaveSettings
 }))
 
-jest.mock('swr', () => ({ __esModule: true, mutate: jest.fn(), default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, mutate: vi.fn(), default: vi.fn() }))
 
-jest.mock('@/lib/gen/games/v1/games_pb', () => ({
+vi.mock('@/lib/gen/games/v1/games_pb', () => ({
   Integrations: {}
 }))
 

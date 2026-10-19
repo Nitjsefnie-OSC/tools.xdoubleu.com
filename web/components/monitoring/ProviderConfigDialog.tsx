@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { useProviderOptions, useSetProviderConfig } from '@/hooks/useMonitoring'
 import type { ProviderConfigInput } from '@/hooks/useMonitoring'

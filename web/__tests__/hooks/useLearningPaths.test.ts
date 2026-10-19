@@ -1,20 +1,20 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
 const mockClient = {
-  listLearningPaths: jest.fn().mockResolvedValue({ learningPaths: [{ id: 'lp-1' }], hasMore: true })
+  listLearningPaths: vi.fn().mockResolvedValue({ learningPaths: [{ id: 'lp-1' }], hasMore: true })
 }
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => mockClient)
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => mockClient)
 }))
-jest.mock('@/lib/gen/learningpaths/v1/learningpaths_pb', () => ({
+vi.mock('@/lib/gen/learningpaths/v1/learningpaths_pb', () => ({
   LearningPathsService: {}
 }))
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn().mockResolvedValue({ status: () => 'sent' }),
-  flushOutbox: jest.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn().mockResolvedValue({ status: () => 'sent' }),
+  flushOutbox: vi.fn().mockResolvedValue(undefined)
 }))
-jest.mock('@/lib/learningpaths/offlineWrites', () => ({
+vi.mock('@/lib/learningpaths/offlineWrites', () => ({
   recordItemProgressWrite: { id: 'progress' },
   setPausedWrite: { id: 'paused' }
 }))
@@ -33,7 +33,7 @@ import {
   useFetchLearningPathsPage
 } from '@/hooks/useLearningPaths'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 beforeEach(() => {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes

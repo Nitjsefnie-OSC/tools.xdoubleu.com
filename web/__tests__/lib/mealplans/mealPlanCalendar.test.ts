@@ -14,9 +14,9 @@ describe('mealPlanCalendar', () => {
     })
 
     it('should start from today at offset 0', () => {
-      jest.useFakeTimers()
+      vi.useFakeTimers()
       // June 3 2026 is a Wednesday; local-time constructor avoids UTC shifts.
-      jest.setSystemTime(new Date(2026, 5, 3, 12, 0, 0))
+      vi.setSystemTime(new Date(2026, 5, 3, 12, 0, 0))
       try {
         const dates = getWeekDates(0)
         expect(formatMealDate(dates[0])).toBe('2026-06-03')
@@ -27,21 +27,21 @@ describe('mealPlanCalendar', () => {
           expect(diff).toBe(1)
         }
       } finally {
-        jest.useRealTimers()
+        vi.useRealTimers()
       }
     })
 
     it('should start from today regardless of weekday', () => {
-      jest.useFakeTimers()
+      vi.useFakeTimers()
       try {
         // Sunday
-        jest.setSystemTime(new Date(2026, 5, 7, 12, 0, 0))
+        vi.setSystemTime(new Date(2026, 5, 7, 12, 0, 0))
         expect(formatMealDate(getWeekDates(0)[0])).toBe('2026-06-07')
         // Monday
-        jest.setSystemTime(new Date(2026, 5, 1, 12, 0, 0))
+        vi.setSystemTime(new Date(2026, 5, 1, 12, 0, 0))
         expect(formatMealDate(getWeekDates(0)[0])).toBe('2026-06-01')
       } finally {
-        jest.useRealTimers()
+        vi.useRealTimers()
       }
     })
 

@@ -1,6 +1,7 @@
+import { useRouteParams } from '@/hooks/navigation'
 import PresenterClient from './PresenterClient'
 
-export default async function PresenterPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default function PresenterPage() {
+  const { id } = useRouteParams<{ id: string }>()
   return <PresenterClient id={id} />
 }

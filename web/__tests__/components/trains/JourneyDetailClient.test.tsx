@@ -1,13 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 
-const mockMutate = jest.fn()
-const mockUseJourneyDetail = jest.fn()
-const mockUseJourneyLive = jest.fn()
+const mockMutate = vi.fn()
+const mockUseJourneyDetail = vi.fn()
+const mockUseJourneyLive = vi.fn()
 
-jest.mock('@/hooks/useTrains', () => ({
+vi.mock('@/hooks/useTrains', () => ({
   useJourneyDetail: (journeyId: string) => mockUseJourneyDetail(journeyId)
 }))
-jest.mock('@/hooks/useJourneySocket', () => ({
+vi.mock('@/hooks/useJourneySocket', () => ({
   useJourneyLive: (journeyId: string, refetch: () => void) => mockUseJourneyLive(journeyId, refetch)
 }))
 

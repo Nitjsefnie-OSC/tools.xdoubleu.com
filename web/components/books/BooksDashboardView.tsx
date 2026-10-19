@@ -1,5 +1,3 @@
-'use client'
-
 import { Fragment, type ReactNode } from 'react'
 import type { LibraryResponse, UserBook } from '@/lib/gen/books/v1/library_pb'
 import { StatTile } from '@/components/ui/stat'

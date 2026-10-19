@@ -1,14 +1,14 @@
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: jest.fn(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
+  fetchOrNull: vi.fn(async () => null)
 }))
 
-jest.mock('@/app/games/[id]/SteamGameClient', () => (props: { id: string }) => (
+vi.mock('@/app/games/[id]/SteamGameClient', () => (props: { id: string }) => (
   <div data-testid="steam-game-client">{props.id}</div>
 ))
 

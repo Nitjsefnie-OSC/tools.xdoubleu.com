@@ -1,17 +1,17 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const mockUseGatewayStatus = jest.fn()
-jest.mock('@/hooks/useKoboGateway', () => ({
+const mockUseGatewayStatus = vi.fn()
+vi.mock('@/hooks/useKoboGateway', () => ({
   useGatewayStatus: () => mockUseGatewayStatus()
 }))
 
-jest.mock('@/components/books/KoboGatewaySetup', () => ({
+vi.mock('@/components/books/KoboGatewaySetup', () => ({
   __esModule: true,
   default: () => <div data-testid="mock-gateway-setup" />
 }))
 
-jest.mock('@/components/books/KoboGatewayDownload', () => ({
+vi.mock('@/components/books/KoboGatewayDownload', () => ({
   __esModule: true,
   default: () => <div data-testid="mock-gateway-download" />
 }))

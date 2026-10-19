@@ -1,11 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ConnectError, Code } from '@connectrpc/connect'
 
-const createFeed = jest.fn()
-jest.mock('@/hooks/useFeeds', () => ({
+const createFeed = vi.fn()
+vi.mock('@/hooks/useFeeds', () => ({
   useCreateFeed: () => createFeed
 }))
-jest.mock('@/lib/gen/feeds/v1/feeds_pb', () => ({
+vi.mock('@/lib/gen/feeds/v1/feeds_pb', () => ({
   FeedKind: { RSS: 1, EMAIL: 2, SCRAPE: 3 }
 }))
 
@@ -13,12 +13,12 @@ import AddFeedForm from '@/components/feeds/AddFeedForm'
 
 describe('AddFeedForm', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('subscribes to a feed and reports that the import is in progress', async () => {
     createFeed.mockResolvedValue({})
-    const onAdded = jest.fn()
+    const onAdded = vi.fn()
     render(<AddFeedForm onAdded={onAdded} />)
 
     fireEvent.change(screen.getByLabelText('Feed URL'), {
@@ -135,7 +135,7 @@ describe('AddFeedForm', () => {
   })
 
   it('copies the inbound address to the clipboard', async () => {
-    const writeText = jest.fn()
+    const writeText = vi.fn()
     Object.assign(navigator, { clipboard: { writeText } })
     createFeed.mockResolvedValue({ feed: { inboundAddress: 'abc123@mail.example.com' } })
     render(<AddFeedForm />)

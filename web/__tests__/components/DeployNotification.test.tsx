@@ -1,15 +1,15 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-const mockUseSWR = jest.fn()
-const mockGetRelease = jest.fn()
+const mockUseSWR = vi.fn()
+const mockGetRelease = vi.fn()
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   __esModule: true,
   default: (...args: unknown[]) => mockUseSWR(...args)
 }))
 
-jest.mock('@/lib/env', () => ({
+vi.mock('@/lib/env', () => ({
   getRelease: () => mockGetRelease()
 }))
 

@@ -1,7 +1,5 @@
-'use client'
-
 import { useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { useSteam } from '@/hooks/useGames'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'

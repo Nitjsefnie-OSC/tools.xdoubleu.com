@@ -10,11 +10,11 @@ function makeUserBook(finishedAt: string[]) {
 
 describe('ytdProgress', () => {
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date(`${YEAR}-06-13T12:00:00Z`))
+    vi.useFakeTimers().setSystemTime(new Date(`${YEAR}-06-13T12:00:00Z`))
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('returns empty series and zero total when no finished books', () => {

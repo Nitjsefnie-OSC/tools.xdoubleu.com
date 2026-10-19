@@ -1,17 +1,10 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/hooks/useLearningPaths', () => ({
-  useLearningPaths: jest.fn(),
-  useFetchLearningPathsPage: jest.fn(() => jest.fn())
+vi.mock('@/hooks/useLearningPaths', () => ({
+  useLearningPaths: vi.fn(),
+  useFetchLearningPathsPage: vi.fn(() => vi.fn())
 }))
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
 
 import LearningPathsListClient from '@/components/learningpaths/LearningPathsListClient'
 import { useLearningPaths } from '@/hooks/useLearningPaths'
@@ -29,16 +22,16 @@ function mockLearningPaths(value: {
   error?: Error
   isLoading: boolean
 }) {
-  jest.mocked(useLearningPaths).mockReturnValue({
+  vi.mocked(useLearningPaths).mockReturnValue({
     data: value.data,
     error: value.error,
     isLoading: value.isLoading,
     isValidating: false,
-    mutate: jest.fn(async () => undefined)
+    mutate: vi.fn(async () => undefined)
   })
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('LearningPathsListClient', () => {
   it('shows a loading state', () => {

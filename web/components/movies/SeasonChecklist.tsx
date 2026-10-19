@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { Season } from '@/lib/gen/movies/v1/movies_pb'
 import { useMoviesActions } from '@/hooks/useMovies'

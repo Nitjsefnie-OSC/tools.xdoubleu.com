@@ -1,30 +1,30 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/components/feeds/FeedReaderClient', () => () => <div data-testid="feed-reader" />)
+vi.mock('@/components/feeds/FeedReaderClient', () => () => <div data-testid="feed-reader" />)
 
-jest.mock('@/components/feeds/FeedsHeader', () => () => <div data-testid="feeds-header" />)
+vi.mock('@/components/feeds/FeedsHeader', () => () => <div data-testid="feeds-header" />)
 
-jest.mock('@/components/feeds/FeedRuleSuggestionsCard', () => () => (
+vi.mock('@/components/feeds/FeedRuleSuggestionsCard', () => () => (
   <div data-testid="feed-rule-suggestions" />
 ))
 
 const mockServerClient = {
-  listFeedItems: jest.fn(),
-  listFeeds: jest.fn(),
-  getFilterRuleSuggestions: jest.fn()
+  listFeedItems: vi.fn(),
+  listFeeds: vi.fn(),
+  getFilterRuleSuggestions: vi.fn()
 }
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => mockServerClient)
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => mockServerClient)
 }))
 
-const mockFetchOrNull = jest.fn<Promise<unknown>, [() => unknown]>(async () => null)
-jest.mock('@/lib/server/fetchers', () => ({
+const mockFetchOrNull = vi.fn<Promise<unknown>, [() => unknown]>(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => unknown) => mockFetchOrNull(fn)
 }))
 
 const fallbackProps: Record<string, unknown>[] = []
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({
     children,

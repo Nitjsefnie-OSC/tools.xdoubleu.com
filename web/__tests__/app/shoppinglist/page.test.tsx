@@ -1,26 +1,26 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const getCustomList = jest.fn().mockResolvedValue({})
-const listCategories = jest.fn().mockResolvedValue({})
+const getCustomList = vi.fn().mockResolvedValue({})
+const listCategories = vi.fn().mockResolvedValue({})
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({
     getCustomList: (...args: unknown[]) => getCustomList(...args),
     listCategories: (...args: unknown[]) => listCategories(...args)
   }))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => Promise<unknown>) => fn()
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
-jest.mock('@/components/shoppinglist/ShoppingListPageClient', () => ({
+vi.mock('@/components/shoppinglist/ShoppingListPageClient', () => ({
   __esModule: true,
   default: () => <div data-testid="client" />
 }))

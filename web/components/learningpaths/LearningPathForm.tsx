@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useCreateLearningPath, useUpdateLearningPath } from '@/hooks/useLearningPaths'
 import type { CreateLearningPathInput, UpdateLearningPathInput } from '@/hooks/useLearningPaths'

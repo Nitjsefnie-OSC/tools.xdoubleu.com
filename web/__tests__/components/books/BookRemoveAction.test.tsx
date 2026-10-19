@@ -4,16 +4,16 @@ import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 import BookRemoveAction from '@/components/books/BookRemoveAction'
 
-const mockRemoveBook = jest.fn()
-const mockUpdateBookStatus = jest.fn()
-const mockMutate = jest.fn()
+const mockRemoveBook = vi.fn()
+const mockUpdateBookStatus = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useRemoveBook: () => mockRemoveBook,
   useUpdateBookStatus: () => mockUpdateBookStatus
 }))
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
@@ -49,7 +49,7 @@ describe('BookRemoveAction', () => {
   it('calls removeBook and onSaved on confirm', async () => {
     mockRemoveBook.mockResolvedValue({})
     mockMutate.mockResolvedValue(undefined)
-    const onSaved = jest.fn()
+    const onSaved = vi.fn()
     render(<BookRemoveAction userBook={makeBook('Dune')} onSaved={onSaved} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Dune from library' }))

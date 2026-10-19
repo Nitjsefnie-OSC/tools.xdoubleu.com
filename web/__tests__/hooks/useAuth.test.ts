@@ -1,26 +1,26 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => ({
-    signIn: jest.fn(),
-    signOut: jest.fn(),
-    forgotPassword: jest.fn(),
-    exchangeToken: jest.fn(),
-    updatePassword: jest.fn(),
-    resetPassword: jest.fn(),
-    regenerateRecoveryCodes: jest.fn(),
-    mFAChallenge: jest.fn(),
-    mFAEnroll: jest.fn(),
-    mFAEnrollVerify: jest.fn(),
-    mFAUnenroll: jest.fn(),
-    getCurrentUser: jest.fn()
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => ({
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    forgotPassword: vi.fn(),
+    exchangeToken: vi.fn(),
+    updatePassword: vi.fn(),
+    resetPassword: vi.fn(),
+    regenerateRecoveryCodes: vi.fn(),
+    mFAChallenge: vi.fn(),
+    mFAEnroll: vi.fn(),
+    mFAEnrollVerify: vi.fn(),
+    mFAUnenroll: vi.fn(),
+    getCurrentUser: vi.fn()
   }))
 }))
-jest.mock('@/lib/gen/auth/v1/auth_pb', () => ({
+vi.mock('@/lib/gen/auth/v1/auth_pb', () => ({
   AuthService: {}
 }))
-jest.mock('@/lib/gen/dashboard/v1/dashboard_pb', () => ({
+vi.mock('@/lib/gen/dashboard/v1/dashboard_pb', () => ({
   DashboardService: {}
 }))
 
@@ -42,13 +42,13 @@ import {
   useCurrentUser
 } from '@/hooks/useAuth'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
-const mockCreateServiceClient = jest.mocked(createServiceClient)
+const mockCreateServiceClient = vi.mocked(createServiceClient)
 
 describe('useSignIn', () => {
   it('returns a function that calls client.signIn', () => {
-    const mockSignIn = jest.fn().mockResolvedValue({})
+    const mockSignIn = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValue({ signIn: mockSignIn })
 
@@ -65,7 +65,7 @@ describe('useSignIn', () => {
 
 describe('useSignOut', () => {
   it('returns a function that calls client.signOut', () => {
-    const mockSignOut = jest.fn().mockResolvedValue({})
+    const mockSignOut = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValue({ signOut: mockSignOut })
 
@@ -77,7 +77,7 @@ describe('useSignOut', () => {
 
 describe('useForgotPassword', () => {
   it('returns a function that calls client.forgotPassword', () => {
-    const mockForgotPassword = jest.fn().mockResolvedValue({})
+    const mockForgotPassword = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       forgotPassword: mockForgotPassword
@@ -91,7 +91,7 @@ describe('useForgotPassword', () => {
 
 describe('useExchangeToken', () => {
   it('returns a function that calls client.exchangeToken', () => {
-    const mockExchangeToken = jest.fn().mockResolvedValue({})
+    const mockExchangeToken = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       exchangeToken: mockExchangeToken
@@ -108,7 +108,7 @@ describe('useExchangeToken', () => {
 
 describe('useUpdatePassword', () => {
   it('returns a function that calls client.updatePassword', () => {
-    const mockUpdatePassword = jest.fn().mockResolvedValue({})
+    const mockUpdatePassword = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       updatePassword: mockUpdatePassword
@@ -125,7 +125,7 @@ describe('useUpdatePassword', () => {
 
 describe('useResetPassword', () => {
   it('returns a function that calls client.resetPassword', () => {
-    const mockResetPassword = jest.fn().mockResolvedValue({})
+    const mockResetPassword = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       resetPassword: mockResetPassword
@@ -142,7 +142,7 @@ describe('useResetPassword', () => {
 
 describe('useRegenerateRecoveryCodes', () => {
   it('returns a function that calls client.regenerateRecoveryCodes', () => {
-    const mockRegenerateRecoveryCodes = jest.fn().mockResolvedValue({})
+    const mockRegenerateRecoveryCodes = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       regenerateRecoveryCodes: mockRegenerateRecoveryCodes
@@ -156,7 +156,7 @@ describe('useRegenerateRecoveryCodes', () => {
 
 describe('useUpdateDisplayName', () => {
   it('returns a function that calls client.setDisplayName', () => {
-    const mockSetDisplayName = jest.fn().mockResolvedValue({})
+    const mockSetDisplayName = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       setDisplayName: mockSetDisplayName
@@ -170,7 +170,7 @@ describe('useUpdateDisplayName', () => {
 
 describe('useMFAEnroll', () => {
   it('returns a function that calls client.mFAEnroll', () => {
-    const mockMFAEnroll = jest.fn().mockResolvedValue({})
+    const mockMFAEnroll = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       mFAEnroll: mockMFAEnroll
@@ -184,7 +184,7 @@ describe('useMFAEnroll', () => {
 
 describe('useMFAEnrollVerify', () => {
   it('returns a function that calls client.mFAEnrollVerify', () => {
-    const mockMFAEnrollVerify = jest.fn().mockResolvedValue({})
+    const mockMFAEnrollVerify = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       mFAEnrollVerify: mockMFAEnrollVerify
@@ -201,7 +201,7 @@ describe('useMFAEnrollVerify', () => {
 
 describe('useMFAUnenroll', () => {
   it('returns a function that calls client.mFAUnenroll', () => {
-    const mockMFAUnenroll = jest.fn().mockResolvedValue({})
+    const mockMFAUnenroll = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       mFAUnenroll: mockMFAUnenroll
@@ -215,7 +215,7 @@ describe('useMFAUnenroll', () => {
 
 describe('useMFAChallenge', () => {
   it('returns a function that calls client.mFAChallenge', () => {
-    const mockMFAChallenge = jest.fn().mockResolvedValue({})
+    const mockMFAChallenge = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       mFAChallenge: mockMFAChallenge

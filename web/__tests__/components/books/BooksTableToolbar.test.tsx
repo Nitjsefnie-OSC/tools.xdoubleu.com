@@ -27,12 +27,12 @@ function renderToolbar(
     <BooksTableToolbar
       columns={ALL_COLUMNS}
       visibleColumns={ALL_VISIBLE}
-      onToggleColumn={jest.fn()}
+      onToggleColumn={vi.fn()}
       filters={EMPTY_FILTERS}
-      onToggleOwnership={jest.fn()}
-      onToggleFormat={jest.fn()}
-      onToggleKobo={jest.fn()}
-      onClearFilters={jest.fn()}
+      onToggleOwnership={vi.fn()}
+      onToggleFormat={vi.fn()}
+      onToggleKobo={vi.fn()}
+      onClearFilters={vi.fn()}
       {...overrides}
     />
   )
@@ -69,7 +69,7 @@ describe('BooksTableToolbar', () => {
     })
 
     it('calls onToggleColumn when a checkbox is changed', () => {
-      const onToggleColumn = jest.fn()
+      const onToggleColumn = vi.fn()
       renderToolbar({ onToggleColumn })
       fireEvent.click(screen.getByRole('button', { name: 'Columns' }))
       fireEvent.click(screen.getByRole('checkbox', { name: 'ISBN' }))
@@ -108,7 +108,7 @@ describe('BooksTableToolbar', () => {
     })
 
     it('calls onToggleOwnership with own-bol when Kobo store is clicked', () => {
-      const onToggleOwnership = jest.fn()
+      const onToggleOwnership = vi.fn()
       renderToolbar({ onToggleOwnership })
       fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
       fireEvent.click(screen.getByRole('checkbox', { name: 'Kobo store' }))
@@ -127,7 +127,7 @@ describe('BooksTableToolbar', () => {
     })
 
     it('calls onToggleOwnership with own-physical when Physical is clicked', () => {
-      const onToggleOwnership = jest.fn()
+      const onToggleOwnership = vi.fn()
       renderToolbar({ onToggleOwnership })
       fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
       fireEvent.click(screen.getByRole('checkbox', { name: 'Physical' }))
@@ -135,7 +135,7 @@ describe('BooksTableToolbar', () => {
     })
 
     it('calls onToggleFormat with epub when EPUB is clicked', () => {
-      const onToggleFormat = jest.fn()
+      const onToggleFormat = vi.fn()
       renderToolbar({ onToggleFormat })
       fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
       fireEvent.click(screen.getByRole('checkbox', { name: 'EPUB' }))
@@ -160,7 +160,7 @@ describe('BooksTableToolbar', () => {
     })
 
     it('calls onClearFilters when Clear filters is clicked', () => {
-      const onClearFilters = jest.fn()
+      const onClearFilters = vi.fn()
       const activeFilters: LibraryFilters = {
         ownership: new Set(['own-physical']),
         format: new Set(),
@@ -183,7 +183,7 @@ describe('BooksTableToolbar', () => {
     })
 
     it('calls onToggleKobo with kobo-sync when Synced to Kobo is clicked', () => {
-      const onToggleKobo = jest.fn()
+      const onToggleKobo = vi.fn()
       renderToolbar({ onToggleKobo })
       fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
       fireEvent.click(screen.getByRole('checkbox', { name: 'Synced to Kobo' }))

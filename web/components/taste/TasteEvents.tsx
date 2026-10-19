@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, useState } from 'react'
 import type { Event } from '@/lib/gen/taste/v1/taste_pb'
 import { useFetchTasteEventsPage, useTasteEvents } from '@/hooks/useTaste'

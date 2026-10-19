@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import TrainsAttribution from '@/components/trains/TrainsAttribution'
 
-const mockUseTrainsFeedInfo = jest.fn()
-jest.mock('@/hooks/useTrains', () => ({
+const mockUseTrainsFeedInfo = vi.fn()
+vi.mock('@/hooks/useTrains', () => ({
   useTrainsFeedInfo: () => mockUseTrainsFeedInfo()
 }))
 

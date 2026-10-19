@@ -1,5 +1,3 @@
-'use client'
-
 import ListSwitch from '@/components/ListSwitch'
 import TasteEvents from '@/components/taste/TasteEvents'
 import TasteProfile from '@/components/taste/TasteProfile'

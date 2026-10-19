@@ -11,7 +11,7 @@ import {
   tocItems
 } from '@/lib/books/readium'
 
-jest.mock(
+vi.mock(
   '@readium/shared',
   () => {
     class LocatorLocations {
@@ -36,7 +36,7 @@ jest.mock(
       LocatorLocations,
       HttpFetcher: class {},
       Manifest: {
-        deserialize: (json: unknown) => (json ? { setSelfLink: jest.fn(), json } : undefined)
+        deserialize: (json: unknown) => (json ? { setSelfLink: vi.fn(), json } : undefined)
       },
       Publication: class {
         manifest: unknown
@@ -49,8 +49,8 @@ jest.mock(
   { virtual: true }
 )
 
-const mockWebPubFetch = jest.fn()
-jest.mock('@/lib/books/webpubCache', () => ({
+const mockWebPubFetch = vi.fn()
+vi.mock('@/lib/books/webpubCache', () => ({
   webPubBaseUrl: (id: string) => `https://api.test/books/api/book/${id}/webpub/`,
   webPubFetch: (...args: unknown[]) => mockWebPubFetch(...args)
 }))

@@ -3,11 +3,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError } from '@connectrpc/connect'
 
-const mockRefresh = jest.fn()
+const mockRefresh = vi.fn()
 
-jest.mock('@/hooks/useTaste', () => ({
-  useTasteProfile: jest.fn(),
-  useRefreshTasteProfile: jest.fn(() => mockRefresh)
+vi.mock('@/hooks/useTaste', () => ({
+  useTasteProfile: vi.fn(),
+  useRefreshTasteProfile: vi.fn(() => mockRefresh)
 }))
 
 import TasteProfile from '@/components/taste/TasteProfile'
@@ -16,7 +16,7 @@ import { GetProfileResponseSchema, ProfileSectionsSchema } from '@/lib/gen/taste
 
 function mockProfile(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useTasteProfile).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useTasteProfile).mockReturnValue({ isLoading: false, ...value })
 }
 
 const sections = create(ProfileSectionsSchema, {
@@ -34,7 +34,7 @@ const written = create(GetProfileResponseSchema, {
   generatedAt: '2026-10-01T10:00:00Z'
 })
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('TasteProfile', () => {
   it('shows loading and error states without data', () => {
@@ -59,7 +59,7 @@ describe('TasteProfile', () => {
   })
 
   it('keeps repeated bullets apart', () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockProfile({
       data: create(GetProfileResponseSchema, {
         ...written,

@@ -1,18 +1,18 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-jest.mock('@/hooks/useGames', () => ({
-  useSteam: jest.fn(),
-  useSteamProgress: jest.fn()
+vi.mock('@/hooks/useGames', () => ({
+  useSteam: vi.fn(),
+  useSteamProgress: vi.fn()
 }))
 
-jest.mock('@/components/games/SteamDistributionChart', () => {
+vi.mock('@/components/games/SteamDistributionChart', () => {
   return function MockSteamDistributionChart() {
     return <div data-testid="distribution-chart" />
   }
 })
 
-jest.mock('@/components/games/SteamProgressChart', () => {
+vi.mock('@/components/games/SteamProgressChart', () => {
   return function MockSteamProgressChart() {
     return <div data-testid="progress-chart" />
   }
@@ -23,8 +23,8 @@ import { useSteam, useSteamProgress } from '@/hooks/useGames'
 import { create } from '@bufbuild/protobuf'
 import { GetSteamResponseSchema, SteamResponseSchema } from '@/lib/gen/games/v1/games_pb'
 
-const mockUseSteam = jest.mocked(useSteam)
-const mockUseSteamProgress = jest.mocked(useSteamProgress)
+const mockUseSteam = vi.mocked(useSteam)
+const mockUseSteamProgress = vi.mocked(useSteamProgress)
 
 function mockSteam() {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
@@ -51,7 +51,7 @@ function mockProgress(data: { labels: string[]; values: string[] } = { labels: [
 
 describe('GamesStatsPanel', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('does not fetch or render stats until opened', () => {

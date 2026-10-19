@@ -2,10 +2,10 @@ import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockSetRating = jest.fn()
+const mockSetRating = vi.fn()
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMoviesActions: jest.fn(() => ({ setRating: mockSetRating }))
+vi.mock('@/hooks/useMovies', () => ({
+  useMoviesActions: vi.fn(() => ({ setRating: mockSetRating }))
 }))
 
 import MovieRating from '@/components/movies/MovieRating'
@@ -14,7 +14,7 @@ import { BacklogEntrySchema } from '@/lib/gen/movies/v1/movies_pb'
 const entry = (status: string, rating?: number) =>
   create(BacklogEntrySchema, { id: 'm-1', title: 'Dune', status, rating })
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('MovieRating', () => {
   it('stays hidden until watched or rated', () => {

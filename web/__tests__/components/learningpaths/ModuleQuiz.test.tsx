@@ -45,12 +45,12 @@ function click(button: HTMLElement) {
 
 describe('ModuleQuiz', () => {
   it('renders nothing for a module without a quiz', () => {
-    const { container } = render(<ModuleQuiz module={moduleWithoutQuiz()} onPassed={jest.fn()} />)
+    const { container } = render(<ModuleQuiz module={moduleWithoutQuiz()} onPassed={vi.fn()} />)
     expect(container).toBeEmptyDOMElement()
   })
 
   it('shows the questions with options and a disabled check button until all answered', () => {
-    render(<ModuleQuiz module={moduleWithQuiz()} onPassed={jest.fn()} />)
+    render(<ModuleQuiz module={moduleWithQuiz()} onPassed={vi.fn()} />)
     expect(screen.getByText(/^2 questions/)).toBeInTheDocument()
     expect(screen.getByText('1. Q1')).toBeInTheDocument()
     expect(screen.getByText('2. Q2')).toBeInTheDocument()
@@ -58,7 +58,7 @@ describe('ModuleQuiz', () => {
   })
 
   it('does not reveal right/wrong until answers are checked', () => {
-    render(<ModuleQuiz module={moduleWithQuiz()} onPassed={jest.fn()} />)
+    render(<ModuleQuiz module={moduleWithQuiz()} onPassed={vi.fn()} />)
     click(screen.getByRole('button', { name: /^b$/ }))
     expect(screen.getByRole('button', { name: /^b$/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.queryByText('Correct')).toBeNull()
@@ -66,7 +66,7 @@ describe('ModuleQuiz', () => {
   })
 
   it('lets an answer be changed before checking', () => {
-    render(<ModuleQuiz module={moduleWithQuiz()} onPassed={jest.fn()} />)
+    render(<ModuleQuiz module={moduleWithQuiz()} onPassed={vi.fn()} />)
     click(screen.getByRole('button', { name: /^b$/ }))
     click(screen.getByRole('button', { name: /^a$/ }))
     expect(screen.getByRole('button', { name: /^a$/ })).toHaveAttribute('aria-pressed', 'true')
@@ -74,7 +74,7 @@ describe('ModuleQuiz', () => {
   })
 
   it('completes the checkpoint on a passing attempt', async () => {
-    const onPassed = jest.fn()
+    const onPassed = vi.fn()
     render(<ModuleQuiz module={moduleWithQuiz()} onPassed={onPassed} />)
     click(screen.getByRole('button', { name: /^a$/ }))
     click(screen.getByRole('button', { name: /^y$/ }))
@@ -86,7 +86,7 @@ describe('ModuleQuiz', () => {
   })
 
   it('grades on a failing attempt, locks answers, and allows a retake', () => {
-    const onPassed = jest.fn()
+    const onPassed = vi.fn()
     render(<ModuleQuiz module={moduleWithQuiz()} onPassed={onPassed} />)
     click(screen.getByRole('button', { name: /^b$/ }))
     click(screen.getByRole('button', { name: /^y$/ }))
@@ -107,7 +107,7 @@ describe('ModuleQuiz', () => {
 
   it('shows a saving state while the pass is recorded', async () => {
     let resolve: () => void = () => {}
-    const onPassed = jest.fn(() => new Promise<void>((r) => (resolve = r)))
+    const onPassed = vi.fn(() => new Promise<void>((r) => (resolve = r)))
     render(<ModuleQuiz module={moduleWithQuiz()} onPassed={onPassed} />)
     click(screen.getByRole('button', { name: /^a$/ }))
     click(screen.getByRole('button', { name: /^y$/ }))
@@ -121,7 +121,7 @@ describe('ModuleQuiz', () => {
   it('shows a completed summary when the checkpoint is already complete', () => {
     const mod = moduleWithQuiz()
     mod.items[1].completed = true
-    render(<ModuleQuiz module={mod} onPassed={jest.fn()} />)
+    render(<ModuleQuiz module={mod} onPassed={vi.fn()} />)
     expect(screen.getByText('Passed — module complete')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Check answers' })).toBeNull()
   })

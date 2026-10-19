@@ -1,21 +1,15 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const push = jest.fn()
+const push = vi.fn()
 let mockOnSave: (id: string, synced: boolean) => void = () => {}
 let mockOnCancel: () => void = () => {}
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ push })
 }))
 
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
-
-jest.mock('@/components/recipes/RecipeForm', () => ({
+vi.mock('@/components/recipes/RecipeForm', () => ({
   __esModule: true,
   default: ({
     onSave,

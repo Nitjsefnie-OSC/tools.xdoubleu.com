@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import { Navigate } from 'react-router'
 
 export default function LearningPathsPage() {
-  redirect('/learningpaths/list')
+  return <Navigate to="/learningpaths/list" replace />
 }

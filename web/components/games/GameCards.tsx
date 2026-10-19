@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import type { Game } from '@/lib/gen/games/v1/games_pb'
 import { LinkCard } from '@/components/ui/link-card'
 import GameFavouriteButton from '@/components/games/GameFavouriteButton'
@@ -21,7 +20,7 @@ export function GameCard({
       actions={showFavourite && <GameFavouriteButton game={game} className="text-lg" />}
     >
       {game.imageUrl && (
-        <Image
+        <img
           src={game.imageUrl}
           alt={game.name}
           width={32}

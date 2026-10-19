@@ -4,14 +4,14 @@ import { create, type MessageInitShape } from '@bufbuild/protobuf'
 import RemoveBookDialog from '@/components/books/RemoveBookDialog'
 import { UserBookSchema, type UserBook } from '@/lib/gen/books/v1/library_pb'
 
-const mockRemoveBook = jest.fn()
-const mockMutate = jest.fn()
+const mockRemoveBook = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useRemoveBook: () => mockRemoveBook
 }))
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
@@ -30,8 +30,8 @@ function makeUserBook(overrides: MessageInitShape<typeof UserBookSchema> = {}): 
 function renderDialog({
   userBook = makeUserBook(),
   open = true,
-  onOpenChange = jest.fn(),
-  onRemoved = jest.fn(),
+  onOpenChange = vi.fn(),
+  onRemoved = vi.fn(),
   title = 'My Book'
 }: {
   userBook?: UserBook
@@ -69,7 +69,7 @@ describe('RemoveBookDialog', () => {
   })
 
   it('calls onOpenChange(false) on cancel', () => {
-    const onOpenChange = jest.fn()
+    const onOpenChange = vi.fn()
     renderDialog({ onOpenChange })
     fireEvent.click(screen.getByText('Cancel'))
     expect(onOpenChange).toHaveBeenCalledWith(false)
@@ -78,8 +78,8 @@ describe('RemoveBookDialog', () => {
   it('calls removeBook and mutate on confirm', async () => {
     mockRemoveBook.mockResolvedValue({})
     mockMutate.mockResolvedValue(undefined)
-    const onOpenChange = jest.fn()
-    const onRemoved = jest.fn()
+    const onOpenChange = vi.fn()
+    const onRemoved = vi.fn()
     renderDialog({ onOpenChange, onRemoved })
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }))

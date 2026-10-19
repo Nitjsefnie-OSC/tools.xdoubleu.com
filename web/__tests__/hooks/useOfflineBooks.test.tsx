@@ -2,12 +2,12 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { renderToString } from 'react-dom/server'
 import { useOfflineBookFile, useStoredBookIds, useStoredBookVersion } from '@/hooks/useOfflineBooks'
 
-const mockOpenBookFile = jest.fn()
-const mockStoredBookIds = jest.fn()
-const mockStoredBookVersion = jest.fn()
+const mockOpenBookFile = vi.fn()
+const mockStoredBookIds = vi.fn()
+const mockStoredBookVersion = vi.fn()
 const storedListeners = new Set<() => void>()
 
-jest.mock('@/lib/books/offlineBooks', () => ({
+vi.mock('@/lib/books/offlineBooks', () => ({
   openBookFile: (...args: unknown[]) => mockOpenBookFile(...args),
   storedBookIds: () => mockStoredBookIds(),
   storedBookVersion: (...args: unknown[]) => mockStoredBookVersion(...args),
@@ -18,7 +18,7 @@ jest.mock('@/lib/books/offlineBooks', () => ({
 }))
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockStoredBookIds.mockResolvedValue(new Set())
 })
 

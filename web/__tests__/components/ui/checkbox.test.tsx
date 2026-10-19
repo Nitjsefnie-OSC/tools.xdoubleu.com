@@ -9,7 +9,7 @@ describe('Checkbox', () => {
   })
 
   it('renders a checked checkbox when checked prop is set', () => {
-    render(<Checkbox checked onChange={jest.fn()} />)
+    render(<Checkbox checked onChange={vi.fn()} />)
     expect(screen.getByRole('checkbox')).toBeChecked()
   })
 
@@ -19,14 +19,14 @@ describe('Checkbox', () => {
   })
 
   it('calls onChange when clicked', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(<Checkbox onChange={onChange} />)
     fireEvent.click(screen.getByRole('checkbox'))
     expect(onChange).toHaveBeenCalledTimes(1)
   })
 
   it('does not call onChange when disabled', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(<Checkbox disabled onChange={onChange} />)
     const checkbox = screen.getByRole('checkbox')
     expect(checkbox).toBeDisabled()

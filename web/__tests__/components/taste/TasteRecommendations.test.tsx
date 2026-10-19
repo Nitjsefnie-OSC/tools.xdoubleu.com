@@ -1,20 +1,21 @@
+import type { Mock } from 'vitest'
 import React from 'react'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError } from '@connectrpc/connect'
 
-const mockRefresh = jest.fn()
+const mockRefresh = vi.fn()
 
-jest.mock('@/hooks/useTaste', () => ({
-  useTasteRecommendations: jest.fn(),
-  useSetEmailNewPicks: jest.fn(),
-  useRefreshTastePicks: jest.fn(() => mockRefresh)
+vi.mock('@/hooks/useTaste', () => ({
+  useTasteRecommendations: vi.fn(),
+  useSetEmailNewPicks: vi.fn(),
+  useRefreshTastePicks: vi.fn(() => mockRefresh)
 }))
-jest.mock('@/components/taste/PickActions', () => ({
+vi.mock('@/components/taste/PickActions', () => ({
   __esModule: true,
   default: ({ pick }: { pick: { id: string } }) => <div data-testid="actions" data-id={pick.id} />
 }))
-jest.mock('@/components/taste/PickArtwork', () => ({
+vi.mock('@/components/taste/PickArtwork', () => ({
   __esModule: true,
   default: ({ url, title }: { url: string; title: string }) => (
     <div data-testid="artwork" data-url={url} data-title={title} />
@@ -31,7 +32,7 @@ import {
 
 function mockPicks(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useTasteRecommendations).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useTasteRecommendations).mockReturnValue({ isLoading: false, ...value })
 }
 
 const hyperion = create(RecommendationSchema, {
@@ -54,12 +55,12 @@ const hyperion = create(RecommendationSchema, {
 })
 const bare = create(RecommendationSchema, { id: 'r2', domain: 'podcasts', title: 'Radiolab' })
 
-let setEmailNewPicks: jest.Mock
+let setEmailNewPicks: Mock
 
 beforeEach(() => {
-  jest.clearAllMocks()
-  setEmailNewPicks = jest.fn().mockResolvedValue(undefined)
-  jest.mocked(useSetEmailNewPicks).mockReturnValue(setEmailNewPicks)
+  vi.clearAllMocks()
+  setEmailNewPicks = vi.fn().mockResolvedValue(undefined)
+  vi.mocked(useSetEmailNewPicks).mockReturnValue(setEmailNewPicks)
 })
 
 describe('TasteRecommendations', () => {
@@ -102,7 +103,7 @@ describe('TasteRecommendations', () => {
   })
 
   it('keeps repeated source links apart', () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const twice = create(SourceSchema, { url: 'https://a.example/1' })
     mockPicks({
       data: create(ListRecommendationsResponseSchema, {

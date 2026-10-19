@@ -1,7 +1,5 @@
-'use client'
-
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from '@/hooks/navigation'
 import { create } from '@bufbuild/protobuf'
 import { mutate as globalMutate } from 'swr'
 import { useSteamGame, useRefreshSteamGame } from '@/hooks/useGames'

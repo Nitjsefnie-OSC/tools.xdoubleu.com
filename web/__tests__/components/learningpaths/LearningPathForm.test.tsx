@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest'
 import React from 'react'
 import { create } from '@bufbuild/protobuf'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
@@ -9,17 +10,17 @@ import {
   ResourceSchema
 } from '@/lib/gen/learningpaths/v1/learningpaths_pb'
 
-const mockCreateLearningPath = jest.fn()
-const mockUpdateLearningPath = jest.fn()
+const mockCreateLearningPath = vi.fn()
+const mockUpdateLearningPath = vi.fn()
 
-jest.mock('@/hooks/useLearningPaths', () => ({
+vi.mock('@/hooks/useLearningPaths', () => ({
   useCreateLearningPath: () => mockCreateLearningPath,
   useUpdateLearningPath: () => mockUpdateLearningPath
 }))
 
 // Thin stand-in so the form's link/unlink wiring can be tested without
 // driving the picker's search UI (covered by its own tests).
-jest.mock('@/components/learningpaths/ResourceLinkPicker', () => {
+vi.mock('@/components/learningpaths/ResourceLinkPicker', () => {
   const MockResourceLinkPicker = (props: {
     linkedBook?: { id: string; title: string }
     linkedFeedItem?: { id: string; title: string }
@@ -52,11 +53,11 @@ jest.mock('@/components/learningpaths/ResourceLinkPicker', () => {
   }
 })
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('LearningPathForm (new)', () => {
   it('renders empty form fields', () => {
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
     expect(screen.getByText('Title')).toBeInTheDocument()
     expect(screen.getByText('Goal')).toBeInTheDocument()
     expect(screen.getByText('Recurring routine')).toBeInTheDocument()
@@ -68,7 +69,7 @@ describe('LearningPathForm (new)', () => {
   it('disables Save and Cancel with a pending label while saving', async () => {
     let resolve: (v: unknown) => void = () => {}
     mockCreateLearningPath.mockReturnValue(new Promise((r) => (resolve = r)))
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
     fireEvent.submit(screen.getByRole('button', { name: 'Save Learning Path' }).closest('form')!)
     expect(await screen.findByRole('button', { name: 'Saving…' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
@@ -76,14 +77,14 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('calls onCancel when Cancel is clicked', () => {
-    const onCancel = jest.fn()
-    render(<LearningPathForm onSave={jest.fn()} onCancel={onCancel} />)
+    const onCancel = vi.fn()
+    render(<LearningPathForm onSave={vi.fn()} onCancel={onCancel} />)
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(onCancel).toHaveBeenCalled()
   })
 
   it('adds and removes a module', () => {
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Add Module' }))
     expect(screen.getAllByPlaceholderText('Module title (e.g. Month 1)')).toHaveLength(2)
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove module' })[0])
@@ -91,7 +92,7 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('adds and removes an item within a module', () => {
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Add Item' }))
     expect(screen.getAllByPlaceholderText('Description')).toHaveLength(2)
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove item' })[0])
@@ -99,7 +100,7 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('adds and removes a resource', () => {
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Add Resource' }))
     expect(screen.getAllByPlaceholderText('e.g. Book: The Go Programming Language')).toHaveLength(2)
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove resource' })[0])
@@ -107,9 +108,9 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('links a book to a resource and submits its id', async () => {
-    const onSave = jest.fn()
+    const onSave = vi.fn()
     mockCreateLearningPath.mockResolvedValue({ learningPath: { id: 'new-id' } })
-    render(<LearningPathForm onSave={onSave} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={onSave} onCancel={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Mock link book' }))
     expect(screen.getByText('Linked book: Dune')).toBeInTheDocument()
@@ -127,7 +128,7 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('links a feed item, which clears a previously linked book on the same resource', () => {
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Mock link book' }))
     expect(screen.getByText('Linked book: Dune')).toBeInTheDocument()
@@ -138,7 +139,7 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('unlinks a resource', () => {
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Mock link book' }))
     expect(screen.getByText('Linked book: Dune')).toBeInTheDocument()
@@ -149,7 +150,7 @@ describe('LearningPathForm (new)', () => {
 
   it('includes a resource with only a linked book (no text) in the submitted payload', async () => {
     mockCreateLearningPath.mockResolvedValue({ learningPath: { id: 'new-id' } })
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Mock link book' }))
     fireEvent.submit(screen.getByRole('button', { name: 'Save Learning Path' }).closest('form')!)
@@ -164,9 +165,9 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('links a book to an item and submits its id', async () => {
-    const onSave = jest.fn()
+    const onSave = vi.fn()
     mockCreateLearningPath.mockResolvedValue({ learningPath: { id: 'new-id' } })
-    render(<LearningPathForm onSave={onSave} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={onSave} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByPlaceholderText('Module title (e.g. Month 1)'), {
       target: { value: 'M1' }
@@ -194,7 +195,7 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('unlinks a book from an item', () => {
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Link book' }))
     fireEvent.click(screen.getByRole('button', { name: 'Mock pick item book' }))
@@ -206,9 +207,9 @@ describe('LearningPathForm (new)', () => {
   })
 
   it('calls createLearningPath and onSave on submit, dropping empty rows', async () => {
-    const onSave = jest.fn()
+    const onSave = vi.fn()
     mockCreateLearningPath.mockResolvedValue({ learningPath: { id: 'new-id' } })
-    render(<LearningPathForm onSave={onSave} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={onSave} onCancel={vi.fn()} />)
 
     const titleInput = screen.getAllByRole('textbox')[0]
     fireEvent.change(titleInput, { target: { value: 'Learn Go' } })
@@ -260,7 +261,7 @@ describe('LearningPathForm (edit)', () => {
   })
 
   it('pre-fills fields from the given learning path', () => {
-    render(<LearningPathForm learningPath={learningPath} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm learningPath={learningPath} onSave={vi.fn()} onCancel={vi.fn()} />)
     expect(screen.getByDisplayValue('Existing Path')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Existing goal')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Daily')).toBeInTheDocument()
@@ -288,14 +289,14 @@ describe('LearningPathForm (edit)', () => {
         })
       ]
     })
-    render(<LearningPathForm learningPath={withBookItem} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm learningPath={withBookItem} onSave={vi.fn()} onCancel={vi.fn()} />)
     expect(screen.getByText('📚 Dune')).toBeInTheDocument()
   })
 
   it('calls updateLearningPath preserving the completed flag on submit', async () => {
-    const onSave = jest.fn()
+    const onSave = vi.fn()
     mockUpdateLearningPath.mockResolvedValue({ learningPath: { id: 'lp-1' } })
-    render(<LearningPathForm learningPath={learningPath} onSave={onSave} onCancel={jest.fn()} />)
+    render(<LearningPathForm learningPath={learningPath} onSave={onSave} onCancel={vi.fn()} />)
 
     fireEvent.submit(screen.getByRole('button', { name: 'Save Learning Path' }).closest('form')!)
 
@@ -335,7 +336,7 @@ describe('LearningPathForm (edit)', () => {
     })
     mockUpdateLearningPath.mockResolvedValue({ learningPath: { id: 'lp-1' } })
     render(
-      <LearningPathForm learningPath={withQuizAndDue} onSave={jest.fn()} onCancel={jest.fn()} />
+      <LearningPathForm learningPath={withQuizAndDue} onSave={vi.fn()} onCancel={vi.fn()} />
     )
 
     fireEvent.submit(screen.getByRole('button', { name: 'Save Learning Path' }).closest('form')!)
@@ -371,7 +372,7 @@ describe('LearningPathForm (edit)', () => {
       ]
     })
     mockUpdateLearningPath.mockResolvedValue({ learningPath: { id: 'lp-1' } })
-    render(<LearningPathForm learningPath={withTypes} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm learningPath={withTypes} onSave={vi.fn()} onCancel={vi.fn()} />)
 
     expect(screen.getByLabelText('read')).toHaveValue('every day at 20:00')
     fireEvent.change(screen.getByLabelText('checkpoint'), {
@@ -390,7 +391,7 @@ describe('LearningPathForm (edit)', () => {
 
   it('submits the goal and routine entered through their labelled fields', async () => {
     mockCreateLearningPath.mockResolvedValue({ learningPath: { id: 'new-id' } })
-    render(<LearningPathForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<LearningPathForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Learn Go' } })
     fireEvent.change(screen.getByLabelText('Goal'), { target: { value: 'Ship it' } })

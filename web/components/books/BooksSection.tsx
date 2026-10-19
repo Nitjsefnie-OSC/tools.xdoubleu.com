@@ -1,6 +1,4 @@
-'use client'
-
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from '@/hooks/navigation'
 import { mutate } from 'swr'
 import { useLibrary } from '@/hooks/useBooks'
 import BookSearchBar from '@/components/books/BookSearchBar'
@@ -21,7 +19,7 @@ export default function BooksSection() {
     } else {
       params.delete('q')
     }
-    router.replace(`/books/library${params.size ? `?${params}` : ''}`, { scroll: false })
+    router.replace(`/books/library${params.size ? `?${params}` : ''}`)
   }
 
   const library = libraryData?.library

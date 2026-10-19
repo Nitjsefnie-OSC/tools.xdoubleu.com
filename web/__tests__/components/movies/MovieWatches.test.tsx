@@ -3,13 +3,13 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
 const actions = {
-  addWatchDate: jest.fn(),
-  editWatchDate: jest.fn(),
-  removeWatchDate: jest.fn()
+  addWatchDate: vi.fn(),
+  editWatchDate: vi.fn(),
+  removeWatchDate: vi.fn()
 }
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMoviesActions: jest.fn(() => actions)
+vi.mock('@/hooks/useMovies', () => ({
+  useMoviesActions: vi.fn(() => actions)
 }))
 
 import MovieWatches from '@/components/movies/MovieWatches'
@@ -17,7 +17,7 @@ import { BacklogEntrySchema } from '@/lib/gen/movies/v1/movies_pb'
 
 const movie = create(BacklogEntrySchema, { id: 'm-1', mediaType: 'movie', watchedAt: [''] })
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('MovieWatches', () => {
   it("edits the movie's own watches", async () => {

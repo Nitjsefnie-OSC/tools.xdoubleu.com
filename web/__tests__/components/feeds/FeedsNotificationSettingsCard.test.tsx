@@ -3,14 +3,14 @@ import { render, screen } from '@testing-library/react'
 import { GetNotificationSettingsResponseSchema } from '@/lib/gen/observability/v1/observability_pb'
 import FeedsNotificationSettingsCard from '@/components/feeds/FeedsNotificationSettingsCard'
 
-const mockUseNotificationSettings = jest.fn()
-jest.mock('@/hooks/useMonitoring', () => ({
+const mockUseNotificationSettings = vi.fn()
+vi.mock('@/hooks/useMonitoring', () => ({
   useNotificationSettings: () => mockUseNotificationSettings(),
-  useUpdateNotificationSettings: () => jest.fn()
+  useUpdateNotificationSettings: () => vi.fn()
 }))
 
-const mockUseCurrentUser = jest.fn()
-jest.mock('@/hooks/useAuth', () => ({
+const mockUseCurrentUser = vi.fn()
+vi.mock('@/hooks/useAuth', () => ({
   useCurrentUser: () => mockUseCurrentUser()
 }))
 

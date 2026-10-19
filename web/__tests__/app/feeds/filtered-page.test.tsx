@@ -1,30 +1,30 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const mockClient = jest.fn((props: { initialFeedId?: string }) => (
+const mockClient = vi.fn((props: { initialFeedId?: string }) => (
   <div data-testid="filtered-client">{props.initialFeedId ?? 'all'}</div>
 ))
-jest.mock('@/components/feeds/FeedFilteredItemsClient', () => ({
+vi.mock('@/components/feeds/FeedFilteredItemsClient', () => ({
   __esModule: true,
   default: (props: { initialFeedId?: string }) => mockClient(props)
 }))
 
-const listFeedItems = jest.fn()
-const listFeeds = jest.fn()
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({ listFeedItems, listFeeds }))
+const listFeedItems = vi.fn()
+const listFeeds = vi.fn()
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({ listFeedItems, listFeeds }))
 }))
 
 let mockFetched: unknown = null
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: jest.fn(async (fn: () => unknown) => {
+vi.mock('@/lib/server/fetchers', () => ({
+  fetchOrNull: vi.fn(async (fn: () => unknown) => {
     fn()
     return mockFetched
   })
 }))
 
-const mockFallback = jest.fn()
-jest.mock('@/components/SWRFallback', () => ({
+const mockFallback = vi.fn()
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({
     children,
@@ -43,7 +43,7 @@ import { swrKeys } from '@/lib/swrKeys'
 
 describe('FeedFilteredPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockFetched = null
   })
 

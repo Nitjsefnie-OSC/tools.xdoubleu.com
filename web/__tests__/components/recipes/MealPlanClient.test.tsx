@@ -1,45 +1,39 @@
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 
-jest.mock('@/hooks/useMealPlans', () => ({
-  useMealPlan: jest.fn(),
-  useAddMeal: jest.fn(),
-  useDeleteMeal: jest.fn(),
-  useSharePlan: jest.fn(),
-  useUnsharePlan: jest.fn()
+vi.mock('@/hooks/useMealPlans', () => ({
+  useMealPlan: vi.fn(),
+  useAddMeal: vi.fn(),
+  useDeleteMeal: vi.fn(),
+  useSharePlan: vi.fn(),
+  useUnsharePlan: vi.fn()
 }))
 
-jest.mock('@/hooks/useRecipes', () => ({
-  useRecipes: jest.fn()
+vi.mock('@/hooks/useRecipes', () => ({
+  useRecipes: vi.fn()
 }))
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+vi.mock('@/hooks/navigation', () => ({
+  useRouter: vi.fn()
 }))
 
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
-
-jest.mock('@/components/mealplans/MealPlanCalendar', () => {
+vi.mock('@/components/mealplans/MealPlanCalendar', () => {
   return function MockCalendar() {
     return <div data-testid="meal-plan-calendar">calendar-mock</div>
   }
 })
 
-jest.mock('@/lib/env', () => ({ getApiUrl: () => 'http://localhost' }))
+vi.mock('@/lib/env', () => ({ getApiUrl: () => 'http://localhost' }))
 
 import MealPlanClient from '@/app/mealplans/[id]/MealPlanClient'
 import { useMealPlan } from '@/hooks/useMealPlans'
 import { useRecipes } from '@/hooks/useRecipes'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { create } from '@bufbuild/protobuf'
 import { PlanSchema, GetPlanResponseSchema } from '@/lib/gen/mealplans/v1/mealplans_pb'
 import { RecipeSchema, ListRecipesResponseSchema } from '@/lib/gen/recipes/v1/recipes_pb'
 
-const mockRouter = { push: jest.fn() }
+const mockRouter = { push: vi.fn() }
 const mockPlan = create(PlanSchema, {
   id: 'plan-1',
   name: 'Test Plan',
@@ -51,11 +45,11 @@ const mockRecipes = [
 ]
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // @ts-expect-error -- mock router returns partial AppRouterInstance
-  jest.mocked(useRouter).mockReturnValue(mockRouter)
+  vi.mocked(useRouter).mockReturnValue(mockRouter)
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-  jest.mocked(useMealPlan).mockReturnValue({
+  vi.mocked(useMealPlan).mockReturnValue({
     data: create(GetPlanResponseSchema, {
       plan: mockPlan,
       isOwner: true,
@@ -67,7 +61,7 @@ beforeEach(() => {
     isLoading: false
   })
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-  jest.mocked(useRecipes).mockReturnValue({
+  vi.mocked(useRecipes).mockReturnValue({
     data: create(ListRecipesResponseSchema, { recipes: mockRecipes }),
     error: undefined,
     isLoading: false

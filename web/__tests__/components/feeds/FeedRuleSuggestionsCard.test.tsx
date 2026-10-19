@@ -3,14 +3,14 @@ import { ConnectError, Code } from '@connectrpc/connect'
 import FeedRuleSuggestionsCard from '@/components/feeds/FeedRuleSuggestionsCard'
 import { FilterRuleKind } from '@/lib/gen/feeds/v1/feeds_pb'
 
-const mockUseSuggestions = jest.fn()
-const mockCreate = jest.fn()
-const mockDismiss = jest.fn()
-jest.mock('@/hooks/useFeedRuleSuggestions', () => ({
+const mockUseSuggestions = vi.fn()
+const mockCreate = vi.fn()
+const mockDismiss = vi.fn()
+vi.mock('@/hooks/useFeedRuleSuggestions', () => ({
   useFilterRuleSuggestions: () => mockUseSuggestions(),
   useDismissFilterRuleSuggestion: () => mockDismiss
 }))
-jest.mock('@/hooks/useFeeds', () => ({
+vi.mock('@/hooks/useFeeds', () => ({
   useCreateFilterRule: () => mockCreate
 }))
 
@@ -39,7 +39,7 @@ const rowButton = (index: number, name: string) =>
 
 describe('FeedRuleSuggestionsCard', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUseSuggestions.mockReturnValue({ data: { suggestions } })
   })
 

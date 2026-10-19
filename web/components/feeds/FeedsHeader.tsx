@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { useFeeds } from '@/hooks/useFeeds'
 import { useCurrentUser } from '@/hooks/useAuth'

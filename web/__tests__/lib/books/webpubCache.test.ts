@@ -1,4 +1,4 @@
-/** @jest-environment node */
+/** @vitest-environment node */
 import {
   evictAllWebPubs,
   evictWebPub,
@@ -8,30 +8,30 @@ import {
   webPubFetch
 } from '@/lib/books/webpubCache'
 
-jest.mock('@/lib/env', () => ({ getApiUrl: () => 'https://api.test' }))
+vi.mock('@/lib/env', () => ({ getApiUrl: () => 'https://api.test' }))
 
 const store = new Map<string, Response>()
 const cache = {
-  put: jest.fn(async (req: Request, res: Response) => void store.set(req.url, res)),
-  match: jest.fn(async (req: Request | string) =>
+  put: vi.fn(async (req: Request, res: Response) => void store.set(req.url, res)),
+  match: vi.fn(async (req: Request | string) =>
     store.get(typeof req === 'string' ? req : req.url)?.clone()
   ),
-  keys: jest.fn(async () => [...store.keys()].map((url) => new Request(url))),
-  delete: jest.fn(async (req: Request) => store.delete(req.url))
+  keys: vi.fn(async () => [...store.keys()].map((url) => new Request(url))),
+  delete: vi.fn(async (req: Request) => store.delete(req.url))
 }
 const caches = {
-  open: jest.fn(async () => cache),
-  delete: jest.fn(async () => true)
+  open: vi.fn(async () => cache),
+  delete: vi.fn(async () => true)
 }
 const flush = () => new Promise((r) => setTimeout(r, 0))
 
 const base = 'https://api.test/books/api/book/b1/webpub/'
 const realFetch = global.fetch
-const fetchMock = jest.fn()
+const fetchMock = vi.fn()
 
 beforeEach(() => {
   store.clear()
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   Object.defineProperty(globalThis, 'caches', { value: caches, configurable: true })
   global.fetch = fetchMock
 })

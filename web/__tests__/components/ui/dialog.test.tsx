@@ -32,13 +32,13 @@ describe('DialogFooter', () => {
 describe('ConfirmDialog', () => {
   const baseProps = {
     open: true,
-    onOpenChange: jest.fn(),
+    onOpenChange: vi.fn(),
     title: 'Remove book',
-    onConfirm: jest.fn()
+    onConfirm: vi.fn()
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('renders nothing while closed', () => {
@@ -105,7 +105,7 @@ describe('ConfirmDialog', () => {
 describe('DialogClose', () => {
   it('defaults to a labelled × with a 44px target', () => {
     render(
-      <Dialog open onOpenChange={jest.fn()}>
+      <Dialog open onOpenChange={vi.fn()}>
         <DialogContent side="sheet">
           <DialogTitle>Sheet</DialogTitle>
           <DialogClose />
@@ -128,7 +128,7 @@ describe('DialogContent sheet', () => {
     const viewport = Object.assign(new EventTarget(), { height: window.innerHeight, offsetTop: 0 })
     Object.defineProperty(window, 'visualViewport', { value: viewport, configurable: true })
     render(
-      <Dialog open onOpenChange={jest.fn()}>
+      <Dialog open onOpenChange={vi.fn()}>
         <DialogContent side="sheet">
           <DialogTitle>Sheet</DialogTitle>
         </DialogContent>
@@ -147,7 +147,7 @@ describe('DialogContent sheet', () => {
 
   it('leaves other sides without a keyboard inset', () => {
     render(
-      <Dialog open onOpenChange={jest.fn()}>
+      <Dialog open onOpenChange={vi.fn()}>
         <DialogContent>
           <DialogTitle>Centered</DialogTitle>
         </DialogContent>
@@ -159,7 +159,7 @@ describe('DialogContent sheet', () => {
 
 describe('DialogContent right', () => {
   it('stays open on an outside pointer-down', async () => {
-    const onOpenChange = jest.fn()
+    const onOpenChange = vi.fn()
     render(
       <Dialog open onOpenChange={onOpenChange}>
         <DialogContent side="right">

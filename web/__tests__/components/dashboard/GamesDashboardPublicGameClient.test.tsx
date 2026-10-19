@@ -4,17 +4,11 @@ import { create } from '@bufbuild/protobuf'
 import { GameSchema, AchievementSchema, SteamGameResponseSchema } from '@/lib/gen/games/v1/games_pb'
 import { GetSharedSteamGameResponseSchema } from '@/lib/gen/dashboard/v1/games_pb'
 
-const mockUseSharedSteamGame = jest.fn()
+const mockUseSharedSteamGame = vi.fn()
 
-jest.mock('@/hooks/useDashboardShare', () => ({
+vi.mock('@/hooks/useDashboardShare', () => ({
   useSharedSteamGame: () => mockUseSharedSteamGame()
 }))
-
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
 
 import GamesDashboardPublicGameClient from '@/components/dashboard/GamesDashboardPublicGameClient'
 
@@ -50,7 +44,7 @@ function makeGame() {
 }
 
 describe('GamesDashboardPublicGameClient', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it('renders the game with favourite marker and last synced state', () => {
     mockUseSharedSteamGame.mockReturnValue({ data: makeGame() })

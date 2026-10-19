@@ -1,13 +1,13 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
-const mockUploadBookFile = jest.fn()
+const mockUploadBookFile = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useUploadBookFile: () => mockUploadBookFile
 }))
 
-jest.mock('@/lib/books/zipFiles', () => ({
+vi.mock('@/lib/books/zipFiles', () => ({
   // Keep in sync with MAX_UPLOAD_BYTES in web/lib/backlog/zipFiles.ts.
   MAX_UPLOAD_BYTES: 250 * 1024 * 1024,
   isBookFile: (f: File) =>

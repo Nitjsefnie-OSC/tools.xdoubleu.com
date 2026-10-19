@@ -5,13 +5,13 @@ describe('usePaginatedList', () => {
   it('starts with the initial page', () => {
     // Stable across re-renders, as the hook requires.
     const initial = { items: [1, 2], hasMore: true }
-    const { result } = renderHook(() => usePaginatedList(initial, jest.fn()))
+    const { result } = renderHook(() => usePaginatedList(initial, vi.fn()))
     expect(result.current.items).toEqual([1, 2])
     expect(result.current.hasMore).toBe(true)
   })
 
   it('appends the next page and updates hasMore on loadMore', async () => {
-    const fetchPage = jest.fn().mockResolvedValue({ items: [3], hasMore: false })
+    const fetchPage = vi.fn().mockResolvedValue({ items: [3], hasMore: false })
     const initial = { items: [1, 2], hasMore: true }
     const { result } = renderHook(() => usePaginatedList(initial, fetchPage))
 
@@ -27,7 +27,7 @@ describe('usePaginatedList', () => {
   it('resets to a new initial page when it changes', () => {
     const { result, rerender } = renderHook(
       ({ initial }: { initial: { items: number[]; hasMore: boolean } }) =>
-        usePaginatedList(initial, jest.fn()),
+        usePaginatedList(initial, vi.fn()),
       { initialProps: { initial: { items: [1], hasMore: true } } }
     )
     expect(result.current.items).toEqual([1])
@@ -39,7 +39,7 @@ describe('usePaginatedList', () => {
 
   it('merges a revalidated first page instead of dropping loaded pages, when the leading items still match', async () => {
     // Revalidation returns fresh objects for the same items.
-    const fetchPage = jest.fn().mockResolvedValue({ items: [{ id: '3' }], hasMore: false })
+    const fetchPage = vi.fn().mockResolvedValue({ items: [{ id: '3' }], hasMore: false })
     const { result, rerender } = renderHook(
       ({ initial }: { initial: { items: { id: string }[]; hasMore: boolean } }) =>
         usePaginatedList(initial, fetchPage, (a, b) => a.id === b.id),
@@ -57,7 +57,7 @@ describe('usePaginatedList', () => {
   })
 
   it('still fully resets when the revalidated leading items genuinely differ', async () => {
-    const fetchPage = jest.fn().mockResolvedValue({ items: [{ id: '3' }], hasMore: false })
+    const fetchPage = vi.fn().mockResolvedValue({ items: [{ id: '3' }], hasMore: false })
     const { result, rerender } = renderHook(
       ({ initial }: { initial: { items: { id: string }[]; hasMore: boolean } }) =>
         usePaginatedList(initial, fetchPage, (a, b) => a.id === b.id),
@@ -76,7 +76,7 @@ describe('usePaginatedList', () => {
   })
 
   it('resets to empty when the revalidated first page has no items (#913)', () => {
-    const fetchPage = jest.fn()
+    const fetchPage = vi.fn()
     const { result, rerender } = renderHook(
       ({ initial }: { initial: { items: { id: string }[]; hasMore: boolean } }) =>
         usePaginatedList(initial, fetchPage, (a, b) => a.id === b.id),

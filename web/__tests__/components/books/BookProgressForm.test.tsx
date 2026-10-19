@@ -3,32 +3,32 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-const mockUpdateProgress = jest.fn()
-const mockMutate = jest.fn()
+const mockUpdateProgress = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
+vi.mock('swr', () => ({
+  ...vi.requireActual('swr'),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
 const mockPhysicalCopy: { data?: Record<string, unknown> } = { data: undefined }
 const mockReadingState: { data: unknown } = { data: undefined }
-const mockUpdatePhysicalCopy = jest.fn()
-jest.mock('@/hooks/usePhysicalCopy', () => ({
+const mockUpdatePhysicalCopy = vi.fn()
+vi.mock('@/hooks/usePhysicalCopy', () => ({
   usePhysicalCopy: () => mockPhysicalCopy,
   useUpdatePhysicalCopy: () => mockUpdatePhysicalCopy
 }))
 
-jest.mock('@/hooks/useReadingState', () => ({
+vi.mock('@/hooks/useReadingState', () => ({
   useReadingState: (bookId: string | null) => (bookId ? mockReadingState : { data: undefined })
 }))
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useUpdateProgress: () => mockUpdateProgress
 }))
 
-const mockTrack = jest.fn()
-jest.mock('@/lib/analytics', () => ({
+const mockTrack = vi.fn()
+vi.mock('@/lib/analytics', () => ({
   track: (...args: unknown[]) => mockTrack(...args)
 }))
 
@@ -141,7 +141,7 @@ describe('BookProgressForm', () => {
   })
 
   it('clicking Cancel calls onClose and resets without saving', () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     render(<BookProgressForm userBook={makeBook({ currentPage: 50 })} onClose={onClose} />)
 
     fireEvent.change(screen.getByLabelText('Current page'), { target: { value: '99' } })
@@ -169,7 +169,7 @@ describe('BookProgressForm', () => {
   })
 
   it('calls onClose after a successful save', async () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     render(<BookProgressForm userBook={makeBook()} onClose={onClose} />)
 
     fireEvent.keyDown(screen.getByLabelText('Current page'), { key: 'Enter' })
@@ -180,7 +180,7 @@ describe('BookProgressForm', () => {
   })
 
   it('calls onSaved after a successful save', async () => {
-    const onSaved = jest.fn()
+    const onSaved = vi.fn()
     render(<BookProgressForm userBook={makeBook()} onSaved={onSaved} />)
 
     fireEvent.keyDown(screen.getByLabelText('Current page'), { key: 'Enter' })
@@ -191,7 +191,7 @@ describe('BookProgressForm', () => {
   })
 
   it('pressing Escape calls onClose and resets without saving', () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     render(<BookProgressForm userBook={makeBook({ currentPage: 50 })} onClose={onClose} />)
 
     const input = screen.getByLabelText('Current page')
@@ -249,7 +249,7 @@ describe('BookProgressForm', () => {
 
   it('keeps the form open if the save fails', async () => {
     mockUpdateProgress.mockRejectedValueOnce(new Error('network error'))
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     render(<BookProgressForm userBook={makeBook()} onClose={onClose} />)
 
     fireEvent.keyDown(screen.getByLabelText('Current page'), { key: 'Enter' })
@@ -264,7 +264,7 @@ describe('BookProgressForm', () => {
     render(<BookProgressForm userBook={makeBook({ currentPage: 50 })} />)
 
     const input = screen.getByLabelText('Current page') as HTMLInputElement
-    const selectSpy = jest.spyOn(input, 'select')
+    const selectSpy = vi.spyOn(input, 'select')
     fireEvent.focus(input)
 
     expect(selectSpy).toHaveBeenCalled()

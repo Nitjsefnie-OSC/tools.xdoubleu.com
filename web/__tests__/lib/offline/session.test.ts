@@ -8,17 +8,17 @@ import { clearStore, getOwner, pruneEntries, setOwner } from '@/lib/offline/stor
 import { logger } from '@/lib/logger'
 import { resetOutbox } from '@/lib/offline/outbox'
 
-jest.mock('@/lib/offline/store', () => ({
-  clearStore: jest.fn(async () => {}),
-  getOwner: jest.fn(),
-  pruneEntries: jest.fn(async () => {}),
-  setOwner: jest.fn(async () => {})
+vi.mock('@/lib/offline/store', () => ({
+  clearStore: vi.fn(async () => {}),
+  getOwner: vi.fn(),
+  pruneEntries: vi.fn(async () => {}),
+  setOwner: vi.fn(async () => {})
 }))
-jest.mock('@/lib/logger', () => ({ logger: { warn: jest.fn() } }))
-jest.mock('@/lib/offline/outbox', () => ({ resetOutbox: jest.fn() }))
+vi.mock('@/lib/logger', () => ({ logger: { warn: vi.fn() } }))
+vi.mock('@/lib/offline/outbox', () => ({ resetOutbox: vi.fn() }))
 
-const postMessage = jest.fn()
-const register = jest.fn()
+const postMessage = vi.fn()
+const register = vi.fn()
 
 function installServiceWorker() {
   Object.defineProperty(navigator, 'serviceWorker', {
@@ -36,10 +36,10 @@ function setNodeEnv(value: string) {
 }
 
 describe('offline session', () => {
-  const cachesDelete = jest.fn(async () => true)
+  const cachesDelete = vi.fn(async () => true)
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     installServiceWorker()
     Object.defineProperty(globalThis, 'caches', {
       value: { delete: cachesDelete },
@@ -83,7 +83,7 @@ describe('offline session', () => {
   })
 
   it('clears data saved for another user before claiming it', async () => {
-    jest.mocked(getOwner).mockResolvedValue('someone-else')
+    vi.mocked(getOwner).mockResolvedValue('someone-else')
 
     await claimOfflineData('me')
 
@@ -93,7 +93,7 @@ describe('offline session', () => {
   })
 
   it('keeps data already owned by the user', async () => {
-    jest.mocked(getOwner).mockResolvedValue('me')
+    vi.mocked(getOwner).mockResolvedValue('me')
 
     await claimOfflineData('me')
 
@@ -102,7 +102,7 @@ describe('offline session', () => {
   })
 
   it('claims unowned data without clearing it', async () => {
-    jest.mocked(getOwner).mockResolvedValue(undefined)
+    vi.mocked(getOwner).mockResolvedValue(undefined)
 
     await claimOfflineData('me')
 

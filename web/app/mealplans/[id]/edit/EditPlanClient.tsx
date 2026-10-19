@@ -1,6 +1,4 @@
-'use client'
-
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { useMealPlan } from '@/hooks/useMealPlans'
 import PlanForm from '@/components/mealplans/PlanForm'
 import { PageContainer } from '@/components/ui/page-container'

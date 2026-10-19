@@ -1,66 +1,66 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
 // Return a stable fake checksum so tests don't depend on real crypto.subtle.
-jest.mock('@/lib/books/checksum', () => ({
-  sha256Hex: jest.fn().mockResolvedValue('aabbccdd')
+vi.mock('@/lib/books/checksum', () => ({
+  sha256Hex: vi.fn().mockResolvedValue('aabbccdd')
 }))
 // No-op the 3 req/s limiter so retry tests stay fast.
-jest.mock('@/lib/books/rateLimiter', () => ({
+vi.mock('@/lib/books/rateLimiter', () => ({
   createRateLimiter: () => async () => {}
 }))
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => ({
-    getBooksProgress: jest.fn().mockResolvedValue({}),
-    importBooks: jest.fn().mockResolvedValue({}),
-    createBookUpload: jest.fn().mockResolvedValue({
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => ({
+    getBooksProgress: vi.fn().mockResolvedValue({}),
+    importBooks: vi.fn().mockResolvedValue({}),
+    createBookUpload: vi.fn().mockResolvedValue({
       uploadId: 'users/u1/uploads/uuid.epub',
       url: 'https://r2.example.com/put',
       alreadyExists: false
     }),
-    finalizeBookUpload: jest.fn().mockResolvedValue({}),
-    enableKoboSync: jest.fn().mockResolvedValue({ kepubStatus: 'converting' }),
-    requestKEPUBConversion: jest.fn().mockResolvedValue({ kepubStatus: 'converting' }),
-    getKEPUBStatus: jest.fn().mockResolvedValue({ hasEpub: true, kepubStatus: 'ready' }),
-    registerKoboDevice: jest.fn().mockResolvedValue({ device: { id: 'd1' }, rawToken: 'abc123' }),
-    listKoboDevices: jest.fn().mockResolvedValue({ devices: [] }),
-    disconnectKoboDevice: jest.fn().mockResolvedValue({}),
-    getBookFile: jest.fn().mockResolvedValue({ url: 'https://r2.example.com/file.pdf' }),
-    getBookContent: jest.fn().mockResolvedValue({ html: '<p>Body</p>' }),
-    searchLibrary: jest.fn().mockResolvedValue({ books: [] }),
-    searchExternal: jest.fn().mockResolvedValue({ results: [] }),
-    setBookISBN: jest.fn().mockResolvedValue({}),
-    updateBook: jest.fn().mockResolvedValue({}),
-    listResyncProposals: jest.fn().mockResolvedValue({ proposals: [] }),
-    applyResyncChoice: jest.fn().mockResolvedValue({}),
-    getBookSources: jest.fn().mockResolvedValue({ proposal: undefined }),
-    applyBookSource: jest.fn().mockResolvedValue({}),
-    getExternalBook: jest.fn().mockResolvedValue({ result: undefined }),
-    startResync: jest.fn().mockResolvedValue({}),
-    cancelResync: jest.fn().mockResolvedValue({})
+    finalizeBookUpload: vi.fn().mockResolvedValue({}),
+    enableKoboSync: vi.fn().mockResolvedValue({ kepubStatus: 'converting' }),
+    requestKEPUBConversion: vi.fn().mockResolvedValue({ kepubStatus: 'converting' }),
+    getKEPUBStatus: vi.fn().mockResolvedValue({ hasEpub: true, kepubStatus: 'ready' }),
+    registerKoboDevice: vi.fn().mockResolvedValue({ device: { id: 'd1' }, rawToken: 'abc123' }),
+    listKoboDevices: vi.fn().mockResolvedValue({ devices: [] }),
+    disconnectKoboDevice: vi.fn().mockResolvedValue({}),
+    getBookFile: vi.fn().mockResolvedValue({ url: 'https://r2.example.com/file.pdf' }),
+    getBookContent: vi.fn().mockResolvedValue({ html: '<p>Body</p>' }),
+    searchLibrary: vi.fn().mockResolvedValue({ books: [] }),
+    searchExternal: vi.fn().mockResolvedValue({ results: [] }),
+    setBookISBN: vi.fn().mockResolvedValue({}),
+    updateBook: vi.fn().mockResolvedValue({}),
+    listResyncProposals: vi.fn().mockResolvedValue({ proposals: [] }),
+    applyResyncChoice: vi.fn().mockResolvedValue({}),
+    getBookSources: vi.fn().mockResolvedValue({ proposal: undefined }),
+    applyBookSource: vi.fn().mockResolvedValue({}),
+    getExternalBook: vi.fn().mockResolvedValue({ result: undefined }),
+    startResync: vi.fn().mockResolvedValue({}),
+    cancelResync: vi.fn().mockResolvedValue({})
   }))
 }))
-jest.mock('@/lib/gen/books/v1/library_pb', () => ({
+vi.mock('@/lib/gen/books/v1/library_pb', () => ({
   LibraryService: {},
   CreateBookRequestSchema: {},
   UpdateBookStatusRequestSchema: {},
   UpdateProgressRequestSchema: {}
 }))
-jest.mock('@/lib/gen/books/v1/files_pb', () => ({ BookFilesService: {} }))
-jest.mock('@/lib/gen/books/v1/kobo_pb', () => ({ KoboService: {} }))
-jest.mock('@/lib/gen/books/v1/catalog_pb', () => ({
+vi.mock('@/lib/gen/books/v1/files_pb', () => ({ BookFilesService: {} }))
+vi.mock('@/lib/gen/books/v1/kobo_pb', () => ({ KoboService: {} }))
+vi.mock('@/lib/gen/books/v1/catalog_pb', () => ({
   CatalogService: {},
   UpdateBookRequestSchema: {}
 }))
-jest.mock('@/lib/env', () => ({ getApiUrl: () => 'https://api.test' }))
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn(async () => ({ status: () => 'sent' })),
-  sendWrite: jest.fn(async (pending: Promise<unknown>) => {
+vi.mock('@/lib/env', () => ({ getApiUrl: () => 'https://api.test' }))
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn(async () => ({ status: () => 'sent' })),
+  sendWrite: vi.fn(async (pending: Promise<unknown>) => {
     await pending
     return 'sent'
   })
 }))
-jest.mock('@/lib/books/offlineWrites', () => ({
+vi.mock('@/lib/books/offlineWrites', () => ({
   removeBookWrite: { id: 'removeBook' },
   setBookISBNWrite: { id: 'setBookISBN' },
   setBookTagWrite: { id: 'setBookTag' },
@@ -116,8 +116,8 @@ import {
   updateProgressWrite
 } from '@/lib/books/offlineWrites'
 
-const mockUseSWR = jest.mocked(useSWR)
-const mockCreateServiceClient = jest.mocked(createServiceClient)
+const mockUseSWR = vi.mocked(useSWR)
+const mockCreateServiceClient = vi.mocked(createServiceClient)
 
 beforeEach(() => {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
@@ -133,7 +133,7 @@ describe('useLibrary', () => {
   })
 
   it('fetcher calls client.getLibrary', async () => {
-    const mockClient = { getLibrary: jest.fn().mockResolvedValue({}) }
+    const mockClient = { getLibrary: vi.fn().mockResolvedValue({}) }
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce(mockClient)
     renderHook(() => useLibrary())
@@ -163,7 +163,7 @@ describe('useBooksProgress', () => {
   })
 
   it('fetcher calls client.getBooksProgress', async () => {
-    const mockClient = { getBooksProgress: jest.fn().mockResolvedValue({}) }
+    const mockClient = { getBooksProgress: vi.fn().mockResolvedValue({}) }
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce(mockClient)
     renderHook(() => useBooksProgress('2024-01-01', '2024-12-31'))
@@ -244,7 +244,7 @@ describe('useUpdateBook', () => {
 
 describe('useStartResync', () => {
   it('calls client.startResync with force=false by default', async () => {
-    const mockStart = jest.fn().mockResolvedValue({})
+    const mockStart = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ startResync: mockStart })
     const { result } = renderHook(() => useStartResync())
@@ -253,7 +253,7 @@ describe('useStartResync', () => {
   })
 
   it('calls client.startResync with force=true when requested', async () => {
-    const mockStart = jest.fn().mockResolvedValue({})
+    const mockStart = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ startResync: mockStart })
     const { result } = renderHook(() => useStartResync())
@@ -264,7 +264,7 @@ describe('useStartResync', () => {
 
 describe('useCancelResync', () => {
   it('calls client.cancelResync with no args', async () => {
-    const mockCancel = jest.fn().mockResolvedValue({})
+    const mockCancel = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ cancelResync: mockCancel })
     const { result } = renderHook(() => useCancelResync())
@@ -280,7 +280,7 @@ describe('useResyncProposals', () => {
   })
 
   it('fetcher calls client.listResyncProposals', async () => {
-    const mockList = jest.fn().mockResolvedValue({ proposals: [] })
+    const mockList = vi.fn().mockResolvedValue({ proposals: [] })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ listResyncProposals: mockList })
     renderHook(() => useResyncProposals())
@@ -297,7 +297,7 @@ describe('useApplyResyncChoice', () => {
   })
 
   it('calls client.applyResyncChoice with bookId and source', async () => {
-    const mockApply = jest.fn().mockResolvedValue({})
+    const mockApply = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ applyResyncChoice: mockApply })
     const { result } = renderHook(() => useApplyResyncChoice())
@@ -329,7 +329,7 @@ describe('useBookSources', () => {
   })
 
   it('fetcher calls client.getBookSources', async () => {
-    const mockGet = jest.fn().mockResolvedValue({ proposal: undefined })
+    const mockGet = vi.fn().mockResolvedValue({ proposal: undefined })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ getBookSources: mockGet })
     renderHook(() => useBookSources('book-1', true))
@@ -343,7 +343,7 @@ describe('useBookSources', () => {
   })
 
   it('fetcher forwards the override terms', async () => {
-    const mockGet = jest.fn().mockResolvedValue({ proposal: undefined })
+    const mockGet = vi.fn().mockResolvedValue({ proposal: undefined })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ getBookSources: mockGet })
     renderHook(() => useBookSources('book-1', true, { title: 'T', author: 'A' }))
@@ -375,7 +375,7 @@ describe('useExternalBook', () => {
   })
 
   it('fetcher calls client.getExternalBook', async () => {
-    const mockGet = jest.fn().mockResolvedValue({ result: undefined })
+    const mockGet = vi.fn().mockResolvedValue({ result: undefined })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ getExternalBook: mockGet })
     renderHook(() => useExternalBook('hardcover', 'OL1W'))
@@ -392,7 +392,7 @@ describe('useApplyBookSource', () => {
   })
 
   it('calls client.applyBookSource with bookId, source, and index', async () => {
-    const mockApply = jest.fn().mockResolvedValue({})
+    const mockApply = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ applyBookSource: mockApply })
     const { result } = renderHook(() => useApplyBookSource())
@@ -407,7 +407,7 @@ describe('useApplyBookSource', () => {
   })
 
   it('forwards a non-zero index and the override terms', async () => {
-    const mockApply = jest.fn().mockResolvedValue({})
+    const mockApply = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ applyBookSource: mockApply })
     const { result } = renderHook(() => useApplyBookSource())
@@ -424,7 +424,7 @@ describe('useApplyBookSource', () => {
 
 describe('useSourceStats', () => {
   it('uses the bookSourceStats key and fetches stats', async () => {
-    const mockGet = jest.fn().mockResolvedValue({ sources: [] })
+    const mockGet = vi.fn().mockResolvedValue({ sources: [] })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ getSourceStats: mockGet })
     renderHook(() => useSourceStats())
@@ -437,7 +437,7 @@ describe('useSourceStats', () => {
 
 describe('useCreateShelf', () => {
   it('calls client.createShelf with name', () => {
-    const mockCreate = jest.fn().mockResolvedValue({})
+    const mockCreate = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ createShelf: mockCreate })
     const { result } = renderHook(() => useCreateShelf())
@@ -460,7 +460,7 @@ describe('useImportBooks', () => {
   })
 
   it('encodes csv and calls client.importBooks', () => {
-    const mockImportBooks = jest.fn().mockResolvedValue({})
+    const mockImportBooks = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ importBooks: mockImportBooks })
     const { result } = renderHook(() => useImportBooks())
@@ -472,8 +472,8 @@ describe('useImportBooks', () => {
 
 describe('library writes go through the outbox', () => {
   beforeEach(() => {
-    jest.mocked(enqueueWrite).mockClear()
-    jest.mocked(sendWrite).mockClear()
+    vi.mocked(enqueueWrite).mockClear()
+    vi.mocked(sendWrite).mockClear()
   })
 
   it('useUpdateBookStatus stamps the change with the time it was made', async () => {
@@ -520,16 +520,16 @@ describe('useUploadBookFile', () => {
   })
 
   it('sends checksum in createBookUpload and performs PUT then finalizeBookUpload', async () => {
-    const mockCreate = jest.fn().mockResolvedValue({
+    const mockCreate = vi.fn().mockResolvedValue({
       uploadId: 'users/u1/uploads/uuid.epub',
       url: 'https://r2.example.com/put',
       alreadyExists: false
     })
-    const mockFinalize = jest.fn().mockResolvedValue({})
+    const mockFinalize = vi.fn().mockResolvedValue({})
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn().mockResolvedValue({ ok: true })
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
     const { result } = renderHook(() => useUploadBookFile())
     const file = new File(['data'], 'book.epub', { type: 'application/epub+zip' })
@@ -558,16 +558,16 @@ describe('useUploadBookFile', () => {
   })
 
   it('falls back to application/octet-stream when the file has no type', async () => {
-    const mockCreate = jest.fn().mockResolvedValue({
+    const mockCreate = vi.fn().mockResolvedValue({
       uploadId: 'users/u1/uploads/uuid',
       url: 'https://r2.example.com/put',
       alreadyExists: false
     })
-    const mockFinalize = jest.fn().mockResolvedValue({})
+    const mockFinalize = vi.fn().mockResolvedValue({})
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn().mockResolvedValue({ ok: true })
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
     const { result } = renderHook(() => useUploadBookFile())
     const file = new File(['data'], 'book')
@@ -586,16 +586,16 @@ describe('useUploadBookFile', () => {
   })
 
   it('forwards a title/author override to finalizeBookUpload', async () => {
-    const mockCreate = jest.fn().mockResolvedValue({
+    const mockCreate = vi.fn().mockResolvedValue({
       uploadId: 'users/u1/uploads/uuid.pdf',
       url: 'https://r2.example.com/put',
       alreadyExists: false
     })
-    const mockFinalize = jest.fn().mockResolvedValue({})
+    const mockFinalize = vi.fn().mockResolvedValue({})
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn().mockResolvedValue({ ok: true })
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
     const { result } = renderHook(() => useUploadBookFile())
     const file = new File(['data'], 'no-meta.pdf', { type: 'application/pdf' })
@@ -610,16 +610,16 @@ describe('useUploadBookFile', () => {
   })
 
   it('skips the PUT when server reports alreadyExists', async () => {
-    const mockCreate = jest.fn().mockResolvedValue({
+    const mockCreate = vi.fn().mockResolvedValue({
       uploadId: '',
       url: '',
       alreadyExists: true
     })
-    const mockFinalize = jest.fn().mockResolvedValue({})
+    const mockFinalize = vi.fn().mockResolvedValue({})
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn()
+    global.fetch = vi.fn()
 
     const { result } = renderHook(() => useUploadBookFile())
     const file = new File(['data'], 'book.epub', { type: 'application/epub+zip' })
@@ -647,7 +647,7 @@ describe('useUploadBookFile', () => {
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn().mockResolvedValue({ ok: true })
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
     const { result } = renderHook(() => useUploadBookFile())
     // No type: exercises the application/octet-stream fallback.
@@ -688,7 +688,7 @@ describe('useUploadBookFile', () => {
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 })
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 })
 
     const { result } = renderHook(() => useUploadBookFile())
     const file = new File(['data'], 'book.epub', { type: 'application/epub+zip' })
@@ -696,8 +696,8 @@ describe('useUploadBookFile', () => {
   })
 
   it('does not retry a non-Connect error from createBookUpload', async () => {
-    const mockCreate = jest.fn().mockRejectedValue(new Error('network down'))
-    const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: jest.fn() }
+    const mockCreate = vi.fn().mockRejectedValue(new Error('network down'))
+    const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: vi.fn() }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
 
@@ -708,16 +708,16 @@ describe('useUploadBookFile', () => {
   })
 
   it('rethrows a non-rate-limit finalize error unchanged', async () => {
-    const mockCreate = jest.fn().mockResolvedValue({
+    const mockCreate = vi.fn().mockResolvedValue({
       uploadId: 'users/u1/uploads/uuid.epub',
       url: 'https://r2.example.com/put',
       alreadyExists: false
     })
-    const mockFinalize = jest.fn().mockRejectedValue(new ConnectError('malformed epub'))
+    const mockFinalize = vi.fn().mockRejectedValue(new ConnectError('malformed epub'))
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn().mockResolvedValue({ ok: true })
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
     const { result } = renderHook(() => useUploadBookFile())
     const file = new File(['data'], 'book.epub', { type: 'application/epub+zip' })
@@ -725,15 +725,15 @@ describe('useUploadBookFile', () => {
   })
 
   it('throws when the R2 PUT fails', async () => {
-    const mockCreate = jest.fn().mockResolvedValue({
+    const mockCreate = vi.fn().mockResolvedValue({
       uploadId: 'users/u1/uploads/uuid.epub',
       url: 'https://r2.example.com/put',
       alreadyExists: false
     })
-    const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: jest.fn() }
+    const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: vi.fn() }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 403 })
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 403 })
 
     const { result } = renderHook(() => useUploadBookFile())
     const file = new File(['data'], 'book.epub', { type: 'application/epub+zip' })
@@ -749,11 +749,11 @@ describe('useUploadBookFile', () => {
         url: 'https://r2.example.com/put',
         alreadyExists: false
       })
-    const mockFinalize = jest.fn().mockResolvedValue({})
+    const mockFinalize = vi.fn().mockResolvedValue({})
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
-    global.fetch = jest.fn().mockResolvedValue({ ok: true })
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
     const { result } = renderHook(() => useUploadBookFile())
     const file = new File(['data'], 'book.epub', { type: 'application/epub+zip' })
@@ -767,7 +767,7 @@ describe('useUploadBookFile', () => {
     const mockCreate = jest
       .fn()
       .mockRejectedValue(new ConnectError('rate limit exceeded', Code.ResourceExhausted))
-    const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: jest.fn() }
+    const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: vi.fn() }
     // @ts-expect-error -- partial mock client; only upload methods needed for this test
     mockCreateServiceClient.mockReturnValueOnce(partialClient)
 
@@ -785,7 +785,7 @@ describe('useEnableKoboSync', () => {
   })
 
   it('calls client.enableKoboSync with bookId', () => {
-    const mockEnable = jest.fn().mockResolvedValue({ kepubStatus: 'converting' })
+    const mockEnable = vi.fn().mockResolvedValue({ kepubStatus: 'converting' })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ enableKoboSync: mockEnable })
     const { result } = renderHook(() => useEnableKoboSync())
@@ -820,7 +820,7 @@ describe('useListKoboDevices', () => {
   })
 
   it('fetcher calls client.listKoboDevices', async () => {
-    const mockList = jest.fn().mockResolvedValue({ devices: [] })
+    const mockList = vi.fn().mockResolvedValue({ devices: [] })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ listKoboDevices: mockList })
     renderHook(() => useListKoboDevices())
@@ -837,7 +837,7 @@ describe('useDisconnectKoboDevice', () => {
   })
 
   it('calls client.disconnectKoboDevice with id', () => {
-    const mockDisconnect = jest.fn().mockResolvedValue({})
+    const mockDisconnect = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ disconnectKoboDevice: mockDisconnect })
     const { result } = renderHook(() => useDisconnectKoboDevice())
@@ -862,7 +862,7 @@ describe('useKEPUBStatus', () => {
   })
 
   it('fetcher calls client.getKEPUBStatus', async () => {
-    const mockGetStatus = jest.fn().mockResolvedValue({ hasEpub: true, kepubStatus: 'ready' })
+    const mockGetStatus = vi.fn().mockResolvedValue({ hasEpub: true, kepubStatus: 'ready' })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ getKEPUBStatus: mockGetStatus })
     renderHook(() => useKEPUBStatus('book-abc'))
@@ -884,7 +884,7 @@ describe('useGetBookContent', () => {
   })
 
   it('fetcher calls client.getBookContent with bookId', async () => {
-    const mockGetContent = jest.fn().mockResolvedValue({ html: '<p>Body</p>' })
+    const mockGetContent = vi.fn().mockResolvedValue({ html: '<p>Body</p>' })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ getBookContent: mockGetContent })
     renderHook(() => useGetBookContent('book-abc'))
@@ -896,7 +896,7 @@ describe('useGetBookContent', () => {
 
 describe('useRequestKEPUBConversion', () => {
   it('returns a function that calls client.requestKEPUBConversion', async () => {
-    const mockConvert = jest.fn().mockResolvedValue({ kepubStatus: 'converting' })
+    const mockConvert = vi.fn().mockResolvedValue({ kepubStatus: 'converting' })
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ requestKEPUBConversion: mockConvert })
     const { result } = renderHook(() => useRequestKEPUBConversion())

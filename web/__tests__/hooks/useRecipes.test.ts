@@ -1,18 +1,18 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
 const mockClient = {
-  listRecipes: jest.fn().mockResolvedValue({ recipes: [{ id: 'r-1' }], hasMore: true })
+  listRecipes: vi.fn().mockResolvedValue({ recipes: [{ id: 'r-1' }], hasMore: true })
 }
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => mockClient)
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => mockClient)
 }))
 let mockStatus = 'sent'
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn(async () => ({ status: () => mockStatus })),
-  flushOutbox: jest.fn().mockResolvedValue(undefined),
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn(async () => ({ status: () => mockStatus })),
+  flushOutbox: vi.fn().mockResolvedValue(undefined),
   // Mirrors the real sendWrite over the mocked handle.
-  sendWrite: jest.fn(async (pending: Promise<{ status: () => string }>) => {
+  sendWrite: vi.fn(async (pending: Promise<{ status: () => string }>) => {
     const status = (await pending).status()
     if (status === 'failed') throw new Error('The server rejected the change')
     return status
@@ -35,7 +35,7 @@ import {
   useFetchRecipesPage
 } from '@/hooks/useRecipes'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 beforeEach(() => {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes

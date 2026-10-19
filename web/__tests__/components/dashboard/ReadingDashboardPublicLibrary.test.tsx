@@ -9,9 +9,9 @@ import {
 } from '@/lib/gen/books/v1/library_pb'
 import { GetSharedLibraryResponseSchema } from '@/lib/gen/dashboard/v1/reading_pb'
 
-const mockUseSharedLibrary = jest.fn()
+const mockUseSharedLibrary = vi.fn()
 
-jest.mock('@/hooks/useDashboardShare', () => ({
+vi.mock('@/hooks/useDashboardShare', () => ({
   useSharedLibrary: () => mockUseSharedLibrary()
 }))
 
@@ -59,7 +59,7 @@ function makeLibrary() {
 
 describe('ReadingDashboardPublicLibrary', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('shows custom shelves and tags in the sidebar', () => {

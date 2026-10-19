@@ -18,7 +18,7 @@ describe('offline status', () => {
   })
 
   it('tracks connectivity while subscribed', () => {
-    const listener = jest.fn()
+    const listener = vi.fn()
     const unsubscribe = subscribe(listener)
 
     setOnline(false)
@@ -34,7 +34,7 @@ describe('offline status', () => {
   })
 
   it('keeps the oldest served-from-cache time until a live fetch', () => {
-    const listener = jest.fn()
+    const listener = vi.fn()
     const unsubscribe = subscribe(listener)
 
     markServedFromCache(200)

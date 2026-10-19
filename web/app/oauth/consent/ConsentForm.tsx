@@ -1,9 +1,7 @@
-'use client'
-
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { approveAuthorization, denyAuthorization } from './actions'
+import { decideAuthorization } from '@/lib/oauth2as/consentClient'
 
 interface ConsentFormProps {
   requestQuery: string
@@ -25,20 +23,26 @@ export default function ConsentForm({
   clientName,
   scope
 }: ConsentFormProps) {
-  const [pending, startTransition] = useTransition()
+  const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const scopes = scope.split(' ').filter(Boolean)
 
-  function decide(action: () => Promise<void>) {
+  async function decide(decision: 'allow' | 'deny') {
     setError(null)
-    startTransition(async () => {
-      try {
-        await action()
-      } catch {
-        setError('Something went wrong. Please try again.')
-      }
-    })
+    setPending(true)
+    try {
+      const location = await decideAuthorization(
+        new URLSearchParams(requestQuery),
+        decision,
+        decision === 'allow' ? consentToken : undefined
+      )
+      // Leaves the app for the client's redirect_uri; stay disabled meanwhile.
+      window.location.assign(location)
+    } catch {
+      setError('Something went wrong. Please try again.')
+      setPending(false)
+    }
   }
 
   return (
@@ -65,7 +69,7 @@ export default function ConsentForm({
           <Button
             className="flex-1"
             disabled={pending}
-            onClick={() => decide(() => approveAuthorization(requestQuery, consentToken))}
+            onClick={() => void decide('allow')}
           >
             Approve
           </Button>
@@ -73,7 +77,7 @@ export default function ConsentForm({
             variant="secondary"
             className="flex-1"
             disabled={pending}
-            onClick={() => decide(() => denyAuthorization(requestQuery))}
+            onClick={() => void decide('deny')}
           >
             Deny
           </Button>

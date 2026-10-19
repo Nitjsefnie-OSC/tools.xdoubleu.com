@@ -6,19 +6,19 @@ import { dismissFailed, getOutboxSnapshot, type OutboxState } from '@/lib/offlin
 const listeners = new Set<() => void>()
 let mockOutbox: OutboxState = { pending: 0, failed: [], authBlocked: false }
 
-jest.mock('@/lib/offline/outbox', () => ({
+vi.mock('@/lib/offline/outbox', () => ({
   subscribeOutbox: (l: () => void) => {
     listeners.add(l)
     return () => listeners.delete(l)
   },
-  getOutboxSnapshot: jest.fn(() => mockOutbox),
+  getOutboxSnapshot: vi.fn(() => mockOutbox),
   getOutboxServerSnapshot: () => ({ pending: 0, failed: [], authBlocked: false }),
-  dismissFailed: jest.fn(async () => {})
+  dismissFailed: vi.fn(async () => {})
 }))
 
 function setOutbox(next: OutboxState) {
   mockOutbox = next
-  jest.mocked(getOutboxSnapshot).mockImplementation(() => mockOutbox)
+  vi.mocked(getOutboxSnapshot).mockImplementation(() => mockOutbox)
   listeners.forEach((l) => l())
 }
 
@@ -34,7 +34,7 @@ describe('OfflineBanner', () => {
       setOnline(true)
       setOutbox({ pending: 0, failed: [], authBlocked: false })
     })
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('renders nothing while online with live data and nothing queued', () => {
@@ -43,7 +43,7 @@ describe('OfflineBanner', () => {
   })
 
   it('shows offline state, queued writes and the age of the saved data', () => {
-    jest.useFakeTimers({ now: 10 * 60_000 })
+    vi.useFakeTimers({ now: 10 * 60_000 })
     render(<OfflineBanner />)
 
     act(() => setOnline(false))
@@ -57,7 +57,7 @@ describe('OfflineBanner', () => {
       'Offline · 2 changes waiting to sync · showing data saved 5 min ago'
     )
 
-    act(() => jest.advanceTimersByTime(60_000))
+    act(() => vi.advanceTimersByTime(60_000))
     expect(screen.getByRole('status')).toHaveTextContent('6 min ago')
   })
 

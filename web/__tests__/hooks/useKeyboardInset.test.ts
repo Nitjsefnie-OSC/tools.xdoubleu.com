@@ -63,7 +63,7 @@ describe('useKeyboardInset', () => {
 
   it('stops listening on unmount', () => {
     const viewport = installViewport()
-    const remove = jest.spyOn(viewport, 'removeEventListener')
+    const remove = vi.spyOn(viewport, 'removeEventListener')
     const { unmount } = renderHook(() => useKeyboardInset())
 
     unmount()

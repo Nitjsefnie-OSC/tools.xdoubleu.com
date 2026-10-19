@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useSourceStats, useBooksInExactSources } from '@/hooks/useBooks'
 import { SOURCE_LABELS } from '@/components/books/SourceCompare'

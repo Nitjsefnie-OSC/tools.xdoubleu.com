@@ -1,13 +1,13 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const listCategories = jest.fn().mockResolvedValue({})
-const listItemNames = jest.fn().mockResolvedValue({})
-const listItemCategories = jest.fn().mockResolvedValue({})
-const listStores = jest.fn().mockResolvedValue({})
+const listCategories = vi.fn().mockResolvedValue({})
+const listItemNames = vi.fn().mockResolvedValue({})
+const listItemCategories = vi.fn().mockResolvedValue({})
+const listStores = vi.fn().mockResolvedValue({})
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({
     listCategories: (...args: unknown[]) => listCategories(...args),
     listItemNames: (...args: unknown[]) => listItemNames(...args),
     listItemCategories: (...args: unknown[]) => listItemCategories(...args),
@@ -15,24 +15,24 @@ jest.mock('@/lib/server/client', () => ({
   }))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => Promise<unknown>) => fn()
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
-jest.mock('@/components/shoppinglist/CategoryManager', () => ({
+vi.mock('@/components/shoppinglist/CategoryManager', () => ({
   __esModule: true,
   default: () => <div data-testid="client" />
 }))
-jest.mock('@/components/shoppinglist/ItemCatalog', () => ({
+vi.mock('@/components/shoppinglist/ItemCatalog', () => ({
   __esModule: true,
   default: () => <div data-testid="item-catalog" />
 }))
-jest.mock('@/components/shoppinglist/StoreManager', () => ({
+vi.mock('@/components/shoppinglist/StoreManager', () => ({
   __esModule: true,
   default: () => <div data-testid="store-manager" />
 }))

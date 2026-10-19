@@ -1,8 +1,5 @@
-'use client'
-
 import type { ReactNode } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
+import { Link } from '@/components/ui/link'
 import type { RecentGame, SteamResponse } from '@/lib/gen/games/v1/games_pb'
 import { StatTile } from '@/components/ui/stat'
 import SteamDistributionChart from '@/components/games/SteamDistributionChart'
@@ -21,7 +18,7 @@ function RecentGameCard({ game, href }: { game: RecentGame; href: string }) {
     <Link href={href} className={cn(interactiveCardClass, 'relative flex gap-3 p-4')}>
       <CardLinkStatus />
       {game.imageUrl && (
-        <Image
+        <img
           src={game.imageUrl}
           alt={game.name}
           width={32}

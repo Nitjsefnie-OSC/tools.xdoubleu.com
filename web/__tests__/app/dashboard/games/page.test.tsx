@@ -1,22 +1,16 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
-
-jest.mock('@/components/dashboard/GamesDashboard', () => () => (
+vi.mock('@/components/dashboard/GamesDashboard', () => () => (
   <div data-testid="games-dashboard" />
 ))
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: jest.fn(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
+  fetchOrNull: vi.fn(async () => null)
 }))
 
 import GamesDashboardPage from '@/app/dashboard/games/page'

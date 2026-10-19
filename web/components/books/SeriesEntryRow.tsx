@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { SeriesEntry } from '@/lib/gen/books/v1/library_pb'
 import BookCover from '@/components/books/BookCover'

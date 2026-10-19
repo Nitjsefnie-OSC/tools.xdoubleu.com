@@ -1,7 +1,5 @@
-'use client'
-
 import { useMemo } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { useRecipes, useFetchRecipesPage } from '@/hooks/useRecipes'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import type { Recipe } from '@/lib/gen/recipes/v1/recipes_pb'

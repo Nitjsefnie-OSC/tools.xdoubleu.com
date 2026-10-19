@@ -1,16 +1,16 @@
 /**
- * @jest-environment node
+ * @vitest-environment node
  */
 import { logger } from '@/lib/logger'
 
-const mockFetch = jest.fn()
+const mockFetch = vi.fn()
 
 describe('logger (server)', () => {
   const originalSecret = process.env.OBSERVABILITY_INGEST_SECRET
   const originalApiUrl = process.env.API_URL
 
   beforeEach(() => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     mockFetch.mockReset()
     mockFetch.mockResolvedValue({ ok: true })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
@@ -20,19 +20,19 @@ describe('logger (server)', () => {
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
     process.env.OBSERVABILITY_INGEST_SECRET = originalSecret
     process.env.API_URL = originalApiUrl
   })
 
   it('logs locally and batches a debounced POST to the api ingest endpoint', async () => {
-    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {})
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
 
     logger.info('hello', { foo: 'bar' })
     expect(infoSpy).toHaveBeenCalledWith('hello', { foo: 'bar' })
     expect(mockFetch).not.toHaveBeenCalled()
 
-    jest.advanceTimersByTime(2000)
+    vi.advanceTimersByTime(2000)
     await Promise.resolve()
     await Promise.resolve()
 
@@ -58,10 +58,10 @@ describe('logger (server)', () => {
 
   it('does not send when no ingest secret is configured', async () => {
     process.env.OBSERVABILITY_INGEST_SECRET = ''
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     logger.error('failed')
-    jest.advanceTimersByTime(2000)
+    vi.advanceTimersByTime(2000)
     await Promise.resolve()
 
     expect(mockFetch).not.toHaveBeenCalled()
@@ -70,10 +70,10 @@ describe('logger (server)', () => {
 
   it('swallows a failed upstream fetch', async () => {
     mockFetch.mockRejectedValue(new Error('network down'))
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
     logger.warn('uh oh')
-    jest.advanceTimersByTime(2000)
+    vi.advanceTimersByTime(2000)
     await Promise.resolve()
     await Promise.resolve()
 
@@ -82,7 +82,7 @@ describe('logger (server)', () => {
   })
 
   it('flushes immediately once the batch reaches its max size', () => {
-    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {})
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
 
     for (let i = 0; i < 25; i++) {
       logger.debug(`entry ${i}`)

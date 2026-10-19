@@ -17,7 +17,7 @@ if (typeof AbortSignal.timeout !== 'function') {
   })
 }
 
-const mockFetch = jest.fn()
+const mockFetch = vi.fn()
 
 beforeEach(() => {
   mockFetch.mockReset()

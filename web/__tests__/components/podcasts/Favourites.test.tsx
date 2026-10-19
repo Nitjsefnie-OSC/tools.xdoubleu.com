@@ -2,13 +2,13 @@ import React from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockRemove = jest.fn()
+const mockRemove = vi.fn()
 
-jest.mock('@/hooks/usePodcasts', () => ({
-  usePodcastFavourites: jest.fn(),
-  usePodcastActions: jest.fn(() => ({ remove: mockRemove }))
+vi.mock('@/hooks/usePodcasts', () => ({
+  usePodcastFavourites: vi.fn(),
+  usePodcastActions: vi.fn(() => ({ remove: mockRemove }))
 }))
-jest.mock('@/components/podcasts/ShowArtwork', () => ({
+vi.mock('@/components/podcasts/ShowArtwork', () => ({
   __esModule: true,
   default: () => <div data-testid="artwork" />
 }))
@@ -26,11 +26,11 @@ const list = create(ListFavouritesResponseSchema, {
 
 function mockFavourites(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(usePodcastFavourites).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(usePodcastFavourites).mockReturnValue({ isLoading: false, ...value })
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockRemove.mockResolvedValue(undefined)
 })
 

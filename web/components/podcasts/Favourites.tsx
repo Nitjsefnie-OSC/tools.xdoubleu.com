@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { Favourite } from '@/lib/gen/podcasts/v1/podcasts_pb'
 import { usePodcastActions, usePodcastFavourites } from '@/hooks/usePodcasts'

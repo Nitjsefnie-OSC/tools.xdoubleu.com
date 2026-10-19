@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { UserBook } from '@/lib/gen/books/v1/library_pb'
 import { Button } from '@/components/ui/button'

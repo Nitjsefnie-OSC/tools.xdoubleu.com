@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, useState } from 'react'
 import { useSWRConfig } from 'swr'
 import type { Recipe } from '@/lib/gen/recipes/v1/recipes_pb'

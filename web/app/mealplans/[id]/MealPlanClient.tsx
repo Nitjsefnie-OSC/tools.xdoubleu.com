@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { getApiUrl } from '@/lib/env'
 import { useMealPlan } from '@/hooks/useMealPlans'

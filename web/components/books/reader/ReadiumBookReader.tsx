@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
 import { EpubNavigator, EpubPreferences } from '@readium/navigator'
 import { Link, type Locator, type Publication, type TimelineItem } from '@readium/shared'

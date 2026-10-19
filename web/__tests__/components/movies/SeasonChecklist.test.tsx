@@ -3,14 +3,14 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
 const actions = {
-  setSeasonWatched: jest.fn(),
-  addWatchDate: jest.fn(),
-  editWatchDate: jest.fn(),
-  removeWatchDate: jest.fn()
+  setSeasonWatched: vi.fn(),
+  addWatchDate: vi.fn(),
+  editWatchDate: vi.fn(),
+  removeWatchDate: vi.fn()
 }
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMoviesActions: jest.fn(() => actions)
+vi.mock('@/hooks/useMovies', () => ({
+  useMoviesActions: vi.fn(() => actions)
 }))
 
 import SeasonChecklist from '@/components/movies/SeasonChecklist'
@@ -29,7 +29,7 @@ const seasons = [
   create(SeasonSchema, { number: 2, name: '', airDate: '2099-01-01', aired: false })
 ]
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('SeasonChecklist', () => {
   it('renders nothing for no seasons', () => {

@@ -1,12 +1,12 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const mockUseAutomatedActions = jest.fn()
-jest.mock('@/hooks/useMonitoring', () => ({
+const mockUseAutomatedActions = vi.fn()
+vi.mock('@/hooks/useMonitoring', () => ({
   useAutomatedActions: () => mockUseAutomatedActions()
 }))
 
-jest.mock('@/components/monitoring/AutomatedActionsCard', () => ({
+vi.mock('@/components/monitoring/AutomatedActionsCard', () => ({
   __esModule: true,
   default: ({ data }: { data?: unknown }) => (
     <div data-testid="automated-actions-card">{data ? 'has-data' : 'no-data'}</div>

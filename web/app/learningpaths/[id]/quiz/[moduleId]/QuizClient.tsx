@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { useLearningPath, useRecordItemProgress } from '@/hooks/useLearningPaths'
 import ModuleQuiz from '@/components/learningpaths/ModuleQuiz'
 import { Button } from '@/components/ui/button'

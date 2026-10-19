@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/components/monitoring/ObservabilityClient', () => () => (
+vi.mock('@/components/monitoring/ObservabilityClient', () => () => (
   <div data-testid="observability-client" />
 ))
 

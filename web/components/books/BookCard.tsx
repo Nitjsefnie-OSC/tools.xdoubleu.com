@@ -1,7 +1,5 @@
-'use client'
-
 import { useId, useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import type { UserBook } from '@/lib/gen/books/v1/library_pb'
 import BookCover from '@/components/books/BookCover'
 import BookProgressEditor from '@/components/books/BookProgressEditor'

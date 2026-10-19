@@ -52,7 +52,7 @@ describe('Combobox', () => {
   })
 
   it('selects a suggestion on click and fills the input', () => {
-    const onSelect = jest.fn()
+    const onSelect = vi.fn()
     render(<Harness suggestions={suggestions} onSelect={onSelect} />)
     fireEvent.change(screen.getByLabelText('picker'), { target: { value: 'ap' } })
     fireEvent.mouseDown(screen.getByText('Apricot'))
@@ -61,7 +61,7 @@ describe('Combobox', () => {
   })
 
   it('snaps to an exact case-insensitive match on blur', async () => {
-    const onSelect = jest.fn()
+    const onSelect = vi.fn()
     render(<Harness suggestions={suggestions} onSelect={onSelect} />)
     const input = screen.getByLabelText('picker')
     fireEvent.change(input, { target: { value: 'banana' } })
@@ -70,7 +70,7 @@ describe('Combobox', () => {
   })
 
   it('navigates with arrow keys and selects with Enter', () => {
-    const onSelect = jest.fn()
+    const onSelect = vi.fn()
     render(<Harness suggestions={suggestions} onSelect={onSelect} />)
     const input = screen.getByLabelText('picker')
     fireEvent.change(input, { target: { value: 'ap' } })

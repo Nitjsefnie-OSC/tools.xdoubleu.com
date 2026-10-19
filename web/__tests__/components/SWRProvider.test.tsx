@@ -8,13 +8,13 @@ import { claimOfflineData } from '@/lib/offline/session'
 import { GetCurrentUserResponseSchema } from '@/lib/gen/auth/v1/auth_pb'
 import type { GetCurrentUserResponse } from '@/lib/gen/auth/v1/auth_pb'
 
-jest.mock('@/lib/offline/session', () => ({
-  claimOfflineData: jest.fn(async () => {})
+vi.mock('@/lib/offline/session', () => ({
+  claimOfflineData: vi.fn(async () => {})
 }))
 
-jest.mock('posthog-js', () => ({
+vi.mock('posthog-js', () => ({
   __esModule: true,
-  default: { identify: jest.fn(), get_distinct_id: jest.fn(() => 'anon-id') }
+  default: { identify: vi.fn(), get_distinct_id: vi.fn(() => 'anon-id') }
 }))
 
 function Probe() {
@@ -27,8 +27,8 @@ function Probe() {
 
 describe('SWRProvider', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.mocked(posthog.get_distinct_id).mockReturnValue('anon-id')
+    vi.clearAllMocks()
+    vi.mocked(posthog.get_distinct_id).mockReturnValue('anon-id')
   })
 
   it('identifies the PostHog distinct_id with the current user id', () => {
@@ -56,7 +56,7 @@ describe('SWRProvider', () => {
       hasMfa: false,
       userId: 'user-123'
     })
-    jest.mocked(posthog.get_distinct_id).mockReturnValue('user-123')
+    vi.mocked(posthog.get_distinct_id).mockReturnValue('user-123')
 
     render(
       <SWRProvider currentUser={user}>
@@ -88,7 +88,7 @@ describe('SWRProvider', () => {
     )
     expect(posthog.identify).toHaveBeenCalledWith('user-a')
 
-    jest.mocked(posthog.get_distinct_id).mockReturnValue('user-a')
+    vi.mocked(posthog.get_distinct_id).mockReturnValue('user-a')
     rerender(
       <SWRProvider currentUser={userB}>
         <Probe />

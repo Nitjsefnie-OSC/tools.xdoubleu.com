@@ -1,11 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const inviteToFamily = jest.fn().mockResolvedValue({})
-const acceptFamilyInvite = jest.fn().mockResolvedValue({})
-const declineFamilyInvite = jest.fn().mockResolvedValue({})
-const leaveFamily = jest.fn().mockResolvedValue({})
-const setFamilyDisplayName = jest.fn().mockResolvedValue({})
+const inviteToFamily = vi.fn().mockResolvedValue({})
+const acceptFamilyInvite = vi.fn().mockResolvedValue({})
+const declineFamilyInvite = vi.fn().mockResolvedValue({})
+const leaveFamily = vi.fn().mockResolvedValue({})
+const setFamilyDisplayName = vi.fn().mockResolvedValue({})
 
 let mockData: {
   members: { userId: string; email: string; displayName?: string }[]
@@ -15,7 +15,7 @@ let mockData: {
 let mockIsLoading = false
 let mockError: Error | undefined
 
-jest.mock('@/hooks/useFamily', () => ({
+vi.mock('@/hooks/useFamily', () => ({
   useFamily: () => ({
     data: mockData,
     isLoading: mockIsLoading,
@@ -28,12 +28,12 @@ jest.mock('@/hooks/useFamily', () => ({
   useLeaveFamily: () => leaveFamily
 }))
 
-jest.mock('swr', () => ({ __esModule: true, mutate: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, mutate: vi.fn() }))
 
 import FamilyPageClient from '@/components/family/FamilyPageClient'
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockData = { members: [], incomingInvite: undefined }
   mockIsLoading = false
   mockError = undefined

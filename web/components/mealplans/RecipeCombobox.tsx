@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { Recipe } from '@/lib/gen/recipes/v1/recipes_pb'
 import { Combobox } from '@/components/ui/combobox'

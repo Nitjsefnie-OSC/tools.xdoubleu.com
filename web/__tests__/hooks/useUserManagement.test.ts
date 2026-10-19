@@ -1,14 +1,14 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => ({
-    listUsers: jest.fn(),
-    setRole: jest.fn(),
-    setAppAccess: jest.fn()
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => ({
+    listUsers: vi.fn(),
+    setRole: vi.fn(),
+    setAppAccess: vi.fn()
   }))
 }))
-jest.mock('@/lib/gen/access/v1/access_pb', () => ({
+vi.mock('@/lib/gen/access/v1/access_pb', () => ({
   AccessService: {}
 }))
 
@@ -16,8 +16,8 @@ import useSWR from 'swr'
 import { createServiceClient } from '@/lib/client'
 import { useUsers, useSetRole, useSetAppAccess } from '@/hooks/useUserManagement'
 
-const mockUseSWR = jest.mocked(useSWR)
-const mockCreateServiceClient = jest.mocked(createServiceClient)
+const mockUseSWR = vi.mocked(useSWR)
+const mockCreateServiceClient = vi.mocked(createServiceClient)
 
 beforeEach(() => {
   mockUseSWR.mockReturnValue(
@@ -46,7 +46,7 @@ describe('useUsers', () => {
 
 describe('useSetRole', () => {
   it('returns a function that calls client.setRole', () => {
-    const mockSetRole = jest.fn().mockResolvedValue({})
+    const mockSetRole = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValue({ setRole: mockSetRole })
 
@@ -58,7 +58,7 @@ describe('useSetRole', () => {
 
 describe('useSetAppAccess', () => {
   it('returns a function that calls client.setAppAccess', () => {
-    const mockSetAppAccess = jest.fn().mockResolvedValue({})
+    const mockSetAppAccess = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValue({ setAppAccess: mockSetAppAccess })
 

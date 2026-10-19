@@ -1,6 +1,4 @@
-'use client'
-
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { useRecipe } from '@/hooks/useRecipes'
 import RecipeForm from '@/components/recipes/RecipeForm'
 import { PageContainer } from '@/components/ui/page-container'

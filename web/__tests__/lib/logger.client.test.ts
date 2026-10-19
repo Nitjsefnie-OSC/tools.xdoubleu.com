@@ -1,10 +1,10 @@
 import { logger } from '@/lib/logger'
 
-const mockFetch = jest.fn()
+const mockFetch = vi.fn()
 
 describe('logger (client)', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     mockFetch.mockReset()
     mockFetch.mockResolvedValue({ ok: true })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
@@ -12,14 +12,14 @@ describe('logger (client)', () => {
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('posts to the local /logs route instead of the api directly', async () => {
-    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {})
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
 
     logger.info('from the browser')
-    jest.advanceTimersByTime(2000)
+    vi.advanceTimersByTime(2000)
     await Promise.resolve()
     await Promise.resolve()
 

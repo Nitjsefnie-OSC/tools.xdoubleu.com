@@ -4,8 +4,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import RecipeForm from '@/components/recipes/RecipeForm'
 import { RecipeSchema, IngredientSchema } from '@/lib/gen/recipes/v1/recipes_pb'
 
-const mockCreateRecipe = jest.fn()
-const mockUpdateRecipe = jest.fn()
+const mockCreateRecipe = vi.fn()
+const mockUpdateRecipe = vi.fn()
 
 const mockShopping = {
   itemNames: [] as { name: string; categoryId: string; excluded: boolean }[],
@@ -13,15 +13,15 @@ const mockShopping = {
   aliases: {} as Record<string, string>,
   units: [] as { name: string; unit: string; recipeIds: string[] }[]
 }
-const mockQueueItemCategory = jest.fn().mockResolvedValue(undefined)
-const mockQueueCategory = jest.fn()
+const mockQueueItemCategory = vi.fn().mockResolvedValue(undefined)
+const mockQueueCategory = vi.fn()
 
-jest.mock('@/hooks/useRecipes', () => ({
+vi.mock('@/hooks/useRecipes', () => ({
   useCreateRecipe: () => mockCreateRecipe,
   useUpdateRecipe: () => mockUpdateRecipe
 }))
 
-jest.mock('@/hooks/useShoppingList', () => ({
+vi.mock('@/hooks/useShoppingList', () => ({
   useItemNames: () => ({ data: { names: mockShopping.itemNames } }),
   useCategories: () => ({ data: { categories: mockShopping.categories } }),
   useItemAliases: () => mockShopping.aliases,
@@ -30,12 +30,12 @@ jest.mock('@/hooks/useShoppingList', () => ({
   queueItemCategory: (...args: unknown[]) => mockQueueItemCategory(...args)
 }))
 
-jest.mock('@/lib/recipes/parseFraction', () => ({
+vi.mock('@/lib/recipes/parseFraction', () => ({
   parseFraction: (s: string) => parseFloat(s) || 0
 }))
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockShopping.itemNames = []
   mockShopping.aliases = {}
   mockShopping.units = []
@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe('RecipeForm (new recipe)', () => {
   it('renders form fields for a new recipe', () => {
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
     expect(screen.getByText('Recipe Name')).toBeInTheDocument()
     expect(screen.getByText('Servings')).toBeInTheDocument()
     expect(screen.getByText('Ingredients')).toBeInTheDocument()
@@ -57,7 +57,7 @@ describe('RecipeForm (new recipe)', () => {
   })
 
   it('gives the amount and category controls phone-sized tap targets', () => {
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
     const amount = screen.getByPlaceholderText('e.g. 1/3')
     expect(amount).toHaveClass('min-w-0', 'flex-1', 'sm:w-16', 'sm:flex-none')
     expect(amount).not.toHaveClass('w-16')
@@ -66,16 +66,16 @@ describe('RecipeForm (new recipe)', () => {
   })
 
   it('calls onCancel when Cancel is clicked', () => {
-    const onCancel = jest.fn()
-    render(<RecipeForm onSave={jest.fn()} onCancel={onCancel} />)
+    const onCancel = vi.fn()
+    render(<RecipeForm onSave={vi.fn()} onCancel={onCancel} />)
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(onCancel).toHaveBeenCalled()
   })
 
   it('calls createRecipe and onSave on submit', async () => {
-    const onSave = jest.fn()
+    const onSave = vi.fn()
     mockCreateRecipe.mockResolvedValue({ id: 'new-id', synced: true })
-    render(<RecipeForm onSave={onSave} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={onSave} onCancel={vi.fn()} />)
 
     const nameInputs = screen.getAllByRole('textbox')
     fireEvent.change(nameInputs[0], { target: { value: 'Pasta' } })
@@ -88,10 +88,10 @@ describe('RecipeForm (new recipe)', () => {
   })
 
   it('stays on the form when the server rejects the recipe', async () => {
-    const onSave = jest.fn()
-    const error = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const onSave = vi.fn()
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockCreateRecipe.mockRejectedValue(new Error('The server rejected the change'))
-    render(<RecipeForm onSave={onSave} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={onSave} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'Pasta' } })
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
@@ -103,7 +103,7 @@ describe('RecipeForm (new recipe)', () => {
 
   it('sends batchServings when set', async () => {
     mockCreateRecipe.mockResolvedValue({ id: 'new-id', synced: true })
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByPlaceholderText('e.g. 10'), { target: { value: '10' } })
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
@@ -115,7 +115,7 @@ describe('RecipeForm (new recipe)', () => {
 
   it('omits batchServings when field is empty', async () => {
     mockCreateRecipe.mockResolvedValue({ id: 'new-id', synced: true })
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
 
@@ -128,7 +128,7 @@ describe('RecipeForm (new recipe)', () => {
 
   it('sends isDraft when the Draft box is checked', async () => {
     mockCreateRecipe.mockResolvedValue({ id: 'new-id', synced: true })
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.click(screen.getByLabelText('Draft'))
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
@@ -140,7 +140,7 @@ describe('RecipeForm (new recipe)', () => {
 
   it('defaults isDraft to false for a new recipe', async () => {
     mockCreateRecipe.mockResolvedValue({ id: 'new-id', synced: true })
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
 
@@ -150,7 +150,7 @@ describe('RecipeForm (new recipe)', () => {
   })
 
   it('adds a new ingredient row when Add Ingredient clicked', () => {
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
     const initialRows = screen.getAllByPlaceholderText('Name')
     fireEvent.click(screen.getByRole('button', { name: 'Add Ingredient' }))
     const afterRows = screen.getAllByPlaceholderText('Name')
@@ -158,7 +158,7 @@ describe('RecipeForm (new recipe)', () => {
   })
 
   it('removes an ingredient row when Remove clicked', () => {
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
     // A second row makes Remove appear.
     fireEvent.click(screen.getByRole('button', { name: 'Add Ingredient' }))
     const removeButtons = screen.getAllByRole('button', { name: 'Remove' })
@@ -172,7 +172,7 @@ describe('RecipeForm (new recipe)', () => {
       { name: 'tomato', categoryId: 'cat-produce', excluded: false },
       { name: 'milk', categoryId: 'cat-dairy', excluded: false }
     ]
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'tom' } })
     expect(screen.getByText('tomato')).toBeInTheDocument()
@@ -187,7 +187,7 @@ describe('RecipeForm (new recipe)', () => {
 
   it('assigns a selected existing category to a new ingredient on save', async () => {
     mockCreateRecipe.mockResolvedValue({ id: 'r-9', synced: true })
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'carrot' } })
     fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'cat-produce' } })
@@ -199,7 +199,7 @@ describe('RecipeForm (new recipe)', () => {
   it('creates a new category inline and assigns it on save', async () => {
     mockCreateRecipe.mockResolvedValue({ id: 'r-9', synced: true })
     mockQueueCategory.mockResolvedValue('cat-bakery')
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'eggs' } })
     fireEvent.change(screen.getByLabelText('Category'), { target: { value: '__new__' } })
@@ -215,7 +215,7 @@ describe('RecipeForm (new recipe)', () => {
   it('does not re-write a category that already matches the catalog', async () => {
     mockShopping.itemNames = [{ name: 'tomato', categoryId: 'cat-produce', excluded: false }]
     mockCreateRecipe.mockResolvedValue({ id: 'r-9', synced: true })
-    render(<RecipeForm onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'tom' } })
     fireEvent.mouseDown(screen.getByText('tomato'))
@@ -238,7 +238,7 @@ describe('RecipeForm (edit recipe)', () => {
   })
 
   it('pre-fills fields from existing recipe including batchServings', () => {
-    render(<RecipeForm recipe={existingRecipe} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm recipe={existingRecipe} onSave={vi.fn()} onCancel={vi.fn()} />)
     const nameInputEl = screen.getAllByRole('textbox')[0]
     if (!(nameInputEl instanceof HTMLInputElement)) throw new Error('expected HTMLInputElement')
     expect(nameInputEl.value).toBe('Spaghetti')
@@ -249,7 +249,7 @@ describe('RecipeForm (edit recipe)', () => {
 
   it('sends updated isDraft on submit', async () => {
     mockUpdateRecipe.mockResolvedValue({})
-    render(<RecipeForm recipe={existingRecipe} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm recipe={existingRecipe} onSave={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.click(screen.getByLabelText('Draft'))
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
@@ -265,7 +265,7 @@ describe('RecipeForm (edit recipe)', () => {
       { name: 'spaghetti', unit: 'pak', recipeIds: ['r-2'] },
       { name: 'spaghetti', unit: 'g', recipeIds: ['r-1'] }
     ]
-    render(<RecipeForm recipe={existingRecipe} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm recipe={existingRecipe} onSave={vi.fn()} onCancel={vi.fn()} />)
     // Its own "g" doesn't count as another recipe's unit.
     expect(screen.getByText('Other recipes use pasta in: pak')).toBeInTheDocument()
 
@@ -276,7 +276,7 @@ describe('RecipeForm (edit recipe)', () => {
   it('still saves with a unit warning showing', async () => {
     mockShopping.units = [{ name: 'pasta', unit: '', recipeIds: ['r-2'] }]
     mockUpdateRecipe.mockResolvedValue({})
-    render(<RecipeForm recipe={existingRecipe} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm recipe={existingRecipe} onSave={vi.fn()} onCancel={vi.fn()} />)
     expect(screen.getByText('Other recipes use pasta in: no unit')).toBeInTheDocument()
 
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
@@ -285,16 +285,16 @@ describe('RecipeForm (edit recipe)', () => {
 
   it('pre-fills the ingredient category from the catalog', async () => {
     mockShopping.itemNames = [{ name: 'pasta', categoryId: 'cat-dairy', excluded: false }]
-    render(<RecipeForm recipe={existingRecipe} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<RecipeForm recipe={existingRecipe} onSave={vi.fn()} onCancel={vi.fn()} />)
     await waitFor(() =>
       expect((screen.getByLabelText('Category') as HTMLSelectElement).value).toBe('cat-dairy')
     )
   })
 
   it('sends updated batchServings on submit', async () => {
-    const onSave = jest.fn()
+    const onSave = vi.fn()
     mockUpdateRecipe.mockResolvedValue({})
-    render(<RecipeForm recipe={existingRecipe} onSave={onSave} onCancel={jest.fn()} />)
+    render(<RecipeForm recipe={existingRecipe} onSave={onSave} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByPlaceholderText('e.g. 10'), { target: { value: '12' } })
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
@@ -305,9 +305,9 @@ describe('RecipeForm (edit recipe)', () => {
   })
 
   it('clears batchServings when field is emptied', async () => {
-    const onSave = jest.fn()
+    const onSave = vi.fn()
     mockUpdateRecipe.mockResolvedValue({})
-    render(<RecipeForm recipe={existingRecipe} onSave={onSave} onCancel={jest.fn()} />)
+    render(<RecipeForm recipe={existingRecipe} onSave={onSave} onCancel={vi.fn()} />)
 
     fireEvent.change(screen.getByPlaceholderText('e.g. 10'), { target: { value: '' } })
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
@@ -320,9 +320,9 @@ describe('RecipeForm (edit recipe)', () => {
   })
 
   it('calls updateRecipe and onSave on submit', async () => {
-    const onSave = jest.fn()
+    const onSave = vi.fn()
     mockUpdateRecipe.mockResolvedValue({})
-    render(<RecipeForm recipe={existingRecipe} onSave={onSave} onCancel={jest.fn()} />)
+    render(<RecipeForm recipe={existingRecipe} onSave={onSave} onCancel={vi.fn()} />)
     fireEvent.submit(screen.getByRole('button', { name: 'Save Recipe' }).closest('form')!)
 
     await waitFor(() => {

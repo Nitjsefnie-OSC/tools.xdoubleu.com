@@ -21,9 +21,9 @@ import {
   updateReadingProgressWrite
 } from '@/lib/books/offlineWrites'
 
-jest.mock('@/lib/client', () => ({
-  transport: { unary: jest.fn(async () => ({})) },
-  keepaliveTransport: { unary: jest.fn(async () => ({})) }
+vi.mock('@/lib/client', () => ({
+  transport: { unary: vi.fn(async () => ({})) },
+  keepaliveTransport: { unary: vi.fn(async () => ({})) }
 }))
 
 function run<I extends DescMessage>(

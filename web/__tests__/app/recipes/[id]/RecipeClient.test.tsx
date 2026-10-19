@@ -1,29 +1,23 @@
 import React from 'react'
 import { render, screen, within, fireEvent, waitFor } from '@testing-library/react'
 
-jest.mock('@/hooks/useRecipes', () => ({
-  useRecipe: jest.fn(),
-  useDeleteRecipe: jest.fn()
+vi.mock('@/hooks/useRecipes', () => ({
+  useRecipe: vi.fn(),
+  useDeleteRecipe: vi.fn()
 }))
 
-jest.mock('@/hooks/useWakeLock', () => ({
-  useWakeLock: jest.fn()
+vi.mock('@/hooks/useWakeLock', () => ({
+  useWakeLock: vi.fn()
 }))
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+vi.mock('@/hooks/navigation', () => ({
+  useRouter: vi.fn()
 }))
-
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
 
 import RecipeClient from '@/app/recipes/[id]/RecipeClient'
 import { useRecipe, useDeleteRecipe } from '@/hooks/useRecipes'
 import { useWakeLock } from '@/hooks/useWakeLock'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { create } from '@bufbuild/protobuf'
 import {
   RecipeSchema,
@@ -32,16 +26,16 @@ import {
   ScaledIngredientSchema
 } from '@/lib/gen/recipes/v1/recipes_pb'
 
-const mockRouter = { push: jest.fn() }
+const mockRouter = { push: vi.fn() }
 
-const mockToggleCookingMode = jest.fn()
+const mockToggleCookingMode = vi.fn()
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // @ts-expect-error -- partial mock
-  jest.mocked(useRouter).mockReturnValue(mockRouter)
-  jest.mocked(useDeleteRecipe).mockReturnValue(jest.fn())
-  jest.mocked(useWakeLock).mockReturnValue({
+  vi.mocked(useRouter).mockReturnValue(mockRouter)
+  vi.mocked(useDeleteRecipe).mockReturnValue(vi.fn())
+  vi.mocked(useWakeLock).mockReturnValue({
     isActive: false,
     isSupported: true,
     toggle: mockToggleCookingMode
@@ -50,24 +44,24 @@ beforeEach(() => {
 
 describe('RecipeClient', () => {
   it('shows loading state', () => {
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: undefined,
       isLoading: true,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
     render(<RecipeClient id="r1" />)
     expect(screen.getByText('Loading recipe…')).toBeInTheDocument()
   })
 
   it('shows error state', () => {
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: undefined,
       isLoading: false,
       isValidating: false,
       error: new Error('fail'),
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
     render(<RecipeClient id="r1" />)
     expect(screen.getByText('Failed to load recipe.')).toBeInTheDocument()
@@ -83,12 +77,12 @@ describe('RecipeClient', () => {
         create(IngredientSchema, { id: 'i2', name: 'Egg', amount: 2, unit: '', sortOrder: 2 })
       ]
     })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -129,12 +123,12 @@ describe('RecipeClient', () => {
         })
       ]
     })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -176,12 +170,12 @@ describe('RecipeClient', () => {
         })
       ]
     })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -215,12 +209,12 @@ describe('RecipeClient', () => {
         })
       ]
     })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -255,12 +249,12 @@ describe('RecipeClient', () => {
         })
       ]
     })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -299,7 +293,7 @@ describe('RecipeClient', () => {
       create(ScaledIngredientSchema, { name: 'Onion', amount: '2', unit: '' }),
       create(ScaledIngredientSchema, { name: 'Beef', amount: '1000', unit: 'g' })
     ]
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, {
         recipe,
         isOwner: false,
@@ -308,7 +302,7 @@ describe('RecipeClient', () => {
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -318,12 +312,12 @@ describe('RecipeClient', () => {
 
   it('shows a Cooking Mode toggle when the Wake Lock API is supported', async () => {
     const recipe = create(RecipeSchema, { id: 'r1', name: 'Pasta', baseServings: 2 })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -333,18 +327,18 @@ describe('RecipeClient', () => {
   })
 
   it('shows the active label once cooking mode is on', () => {
-    jest.mocked(useWakeLock).mockReturnValue({
+    vi.mocked(useWakeLock).mockReturnValue({
       isActive: true,
       isSupported: true,
       toggle: mockToggleCookingMode
     })
     const recipe = create(RecipeSchema, { id: 'r1', name: 'Pasta', baseServings: 2 })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -352,18 +346,18 @@ describe('RecipeClient', () => {
   })
 
   it('hides the Cooking Mode toggle when the Wake Lock API is unsupported', () => {
-    jest.mocked(useWakeLock).mockReturnValue({
+    vi.mocked(useWakeLock).mockReturnValue({
       isActive: false,
       isSupported: false,
       toggle: mockToggleCookingMode
     })
     const recipe = create(RecipeSchema, { id: 'r1', name: 'Pasta', baseServings: 2 })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -372,12 +366,12 @@ describe('RecipeClient', () => {
 
   it('shows a Draft badge for a draft recipe', () => {
     const recipe = create(RecipeSchema, { id: 'r1', name: 'Pasta', baseServings: 2, isDraft: true })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -386,12 +380,12 @@ describe('RecipeClient', () => {
 
   it('omits the Draft badge for a proven recipe', () => {
     const recipe = create(RecipeSchema, { id: 'r1', name: 'Pasta', baseServings: 2 })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -399,15 +393,15 @@ describe('RecipeClient', () => {
   })
 
   it('lets an owner edit and confirm or cancel deletion from the header', async () => {
-    const deleteRecipe = jest.fn().mockResolvedValue(undefined)
-    jest.mocked(useDeleteRecipe).mockReturnValue(deleteRecipe)
+    const deleteRecipe = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useDeleteRecipe).mockReturnValue(deleteRecipe)
     const recipe = create(RecipeSchema, {
       id: 'r1',
       name: 'Pasta',
       baseServings: 2,
       batchServings: 10
     })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, {
         recipe,
         isOwner: true,
@@ -417,7 +411,7 @@ describe('RecipeClient', () => {
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)
@@ -436,12 +430,12 @@ describe('RecipeClient', () => {
 
   it('scales servings from the numeric servings field', () => {
     const recipe = create(RecipeSchema, { id: 'r1', name: 'Pasta', baseServings: 2 })
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe, isOwner: false, scaledIngredients: [] }),
       isLoading: false,
       isValidating: false,
       error: undefined,
-      mutate: jest.fn()
+      mutate: vi.fn()
     })
 
     render(<RecipeClient id="r1" />)

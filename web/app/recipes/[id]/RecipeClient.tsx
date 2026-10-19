@@ -1,8 +1,6 @@
-'use client'
-
 import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { Link } from '@/components/ui/link'
+import { useRouter } from '@/hooks/navigation'
 import { useRecipe, useDeleteRecipe } from '@/hooks/useRecipes'
 import type { DeleteRecipeInput } from '@/hooks/useRecipes'
 import { useWakeLock } from '@/hooks/useWakeLock'

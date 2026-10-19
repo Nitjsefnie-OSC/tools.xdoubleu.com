@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useSteam, useSteamProgress } from '@/hooks/useGames'
 import { StatTile } from '@/components/ui/stat'

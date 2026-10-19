@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { ToggleIconButton } from '@/components/ui/toggle-icon-button'
 import { useUpdateItem } from '@/hooks/useFeeds'

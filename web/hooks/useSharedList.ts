@@ -1,4 +1,4 @@
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from '@/hooks/navigation'
 import { isSharedList, LIST_PARAM } from '@/lib/listScope'
 
 /** Whether the URL selects the family's shared list (?list=shared). */

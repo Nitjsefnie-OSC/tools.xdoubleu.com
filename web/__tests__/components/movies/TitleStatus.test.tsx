@@ -2,10 +2,10 @@ import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockSetStatus = jest.fn()
+const mockSetStatus = vi.fn()
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMoviesActions: jest.fn(() => ({ setStatus: mockSetStatus }))
+vi.mock('@/hooks/useMovies', () => ({
+  useMoviesActions: vi.fn(() => ({ setStatus: mockSetStatus }))
 }))
 
 import TitleStatus from '@/components/movies/TitleStatus'
@@ -24,7 +24,7 @@ function choose(status: string) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockSetStatus.mockResolvedValue(undefined)
 })
 

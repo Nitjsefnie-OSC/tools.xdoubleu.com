@@ -21,7 +21,7 @@ describe('RatingStars', () => {
   })
 
   it('rates, and clears when the current rating is clicked', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(<RatingStars value={3} onChange={onChange} />)
     expect(screen.getByLabelText('3 out of 5 stars')).toBeInTheDocument()
 
@@ -32,7 +32,7 @@ describe('RatingStars', () => {
   })
 
   it('previews the hovered rating until the pointer leaves', () => {
-    render(<RatingStars value={1} onChange={jest.fn()} size="md" />)
+    render(<RatingStars value={1} onChange={vi.fn()} size="md" />)
     const fifth = screen.getByRole('button', { name: 'Rate 5 stars' })
     expect(fifth).toHaveClass('text-border', 'text-xl')
 
@@ -44,22 +44,22 @@ describe('RatingStars', () => {
   })
 
   it('drops a tapped preview so a cleared rating shows empty', () => {
-    const { rerender } = render(<RatingStars value={3} onChange={jest.fn()} />)
+    const { rerender } = render(<RatingStars value={3} onChange={vi.fn()} />)
     const third = screen.getByRole('button', { name: 'Rate 3 stars' })
     fireEvent.mouseEnter(third)
     fireEvent.click(third)
-    rerender(<RatingStars value={0} onChange={jest.fn()} />)
+    rerender(<RatingStars value={0} onChange={vi.fn()} />)
     expect(third).toHaveClass('text-border')
     expect(screen.getByRole('group', { name: 'No rating' })).toBeInTheDocument()
   })
 
   it('locks its stars while disabled', () => {
-    render(<RatingStars value={0} onChange={jest.fn()} disabled />)
+    render(<RatingStars value={0} onChange={vi.fn()} disabled />)
     for (const b of screen.getAllByRole('button')) expect(b).toBeDisabled()
   })
 
   it('is enabled by default', () => {
-    render(<RatingStars value={0} onChange={jest.fn()} />)
+    render(<RatingStars value={0} onChange={vi.fn()} />)
     const star = screen.getByRole('button', { name: 'Rate 2 stars' })
     expect(star).toBeEnabled()
     expect(star).toHaveClass('leading-none', 'hover:text-star')

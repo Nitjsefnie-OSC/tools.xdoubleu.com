@@ -2,7 +2,7 @@ import { render } from '@testing-library/react'
 import { CardLinkStatus } from '@/components/ui/CardLinkStatus'
 
 let pending = false
-jest.mock('next/link', () => ({ useLinkStatus: () => ({ pending }) }))
+vi.mock('@/components/ui/link', () => ({ useLinkPending: () => pending }))
 
 describe('CardLinkStatus', () => {
   it('renders a spinner when the link navigation is pending', () => {

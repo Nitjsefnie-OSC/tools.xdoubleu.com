@@ -1,17 +1,17 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
-const mockEnableKoboSync = jest.fn()
-const mockSetBookTag = jest.fn()
-const mockUseSWR = jest.fn()
-const mockMutate = jest.fn()
+const mockEnableKoboSync = vi.fn()
+const mockSetBookTag = vi.fn()
+const mockUseSWR = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
+vi.mock('swr', () => ({
+  ...vi.requireActual('swr'),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useEnableKoboSync: () => mockEnableKoboSync,
   useSetBookTag: () => mockSetBookTag,
   useKEPUBStatus: (bookId: string | null) => mockUseSWR(bookId)
@@ -67,7 +67,7 @@ describe('KoboSyncToggle', () => {
     setupSWR({ hasEpub: true })
     mockEnableKoboSync.mockResolvedValue({ kepubStatus: 'converting' })
 
-    const onChanged = jest.fn()
+    const onChanged = vi.fn()
     render(<KoboSyncToggle bookId={BOOK_ID} enabled={false} onChanged={onChanged} />)
 
     await act(async () => {
@@ -82,7 +82,7 @@ describe('KoboSyncToggle', () => {
     setupSWR({ hasEpub: true, kepubStatus: 'ready' })
     mockSetBookTag.mockResolvedValue({})
 
-    const onChanged = jest.fn()
+    const onChanged = vi.fn()
     render(<KoboSyncToggle bookId={BOOK_ID} enabled={true} onChanged={onChanged} />)
 
     await act(async () => {

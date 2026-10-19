@@ -3,21 +3,21 @@ import { render, screen } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { GetSharedSteamResponseSchema } from '@/lib/gen/dashboard/v1/games_pb'
 
-jest.mock('@/components/dashboard/GamesDashboardPublicClient', () => () => (
+vi.mock('@/components/dashboard/GamesDashboardPublicClient', () => () => (
   <div data-testid="profile-games" />
 ))
 
-const mockFetchOrNull = jest.fn<Promise<unknown>, [unknown]>(async () => null)
+const mockFetchOrNull = vi.fn<Promise<unknown>, [unknown]>(async () => null)
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => unknown) => mockFetchOrNull(fn)
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
@@ -25,7 +25,7 @@ jest.mock('@/components/SWRFallback', () => ({
 import ProfileGamesPage, { metadata } from '@/app/dashboard/games/[token]/page'
 
 describe('ProfileGamesPage', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it('renders a generic heading and client component when the link is invalid', async () => {
     mockFetchOrNull.mockResolvedValue(null)

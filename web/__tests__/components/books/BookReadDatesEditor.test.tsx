@@ -3,20 +3,20 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-const mockUpdateFinishedAt = jest.fn()
+const mockUpdateFinishedAt = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useUpdateFinishedAt: () => mockUpdateFinishedAt
 }))
 
-jest.mock('swr', () => ({
-  mutate: jest.fn()
+vi.mock('swr', () => ({
+  mutate: vi.fn()
 }))
 
 import BookReadDatesEditor from '@/components/books/BookReadDatesEditor'
 import { mutate as mockMutate } from 'swr'
 
-const mockMutateFn = jest.mocked(mockMutate)
+const mockMutateFn = vi.mocked(mockMutate)
 
 function makeUserBook(overrides = {}) {
   return create(UserBookSchema, {
@@ -33,7 +33,7 @@ function makeUserBook(overrides = {}) {
 
 describe('BookReadDatesEditor', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUpdateFinishedAt.mockResolvedValue(undefined)
   })
 
@@ -110,7 +110,7 @@ describe('BookReadDatesEditor', () => {
   })
 
   it('calls onSaved after a successful save', async () => {
-    const onSaved = jest.fn()
+    const onSaved = vi.fn()
     render(
       <BookReadDatesEditor
         userBook={makeUserBook({ finishedAt: ['2024-01-15T00:00:00Z'] })}

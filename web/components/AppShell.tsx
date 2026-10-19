@@ -5,22 +5,19 @@ import Navbar from '@/components/Navbar'
 import OfflineBanner from '@/components/offline/OfflineBanner'
 import OutboxSync from '@/components/offline/OutboxSync'
 import ServiceWorkerRegistrar from '@/components/offline/ServiceWorkerRegistrar'
-import SWRProvider from '@/components/SWRProvider'
-import { createServerClient } from '@/lib/server/client'
-import { fetchOrNull } from '@/lib/server/fetchers'
-import { AuthService } from '@/lib/gen/auth/v1/auth_pb'
+import SWRProvider, { useSessionEffects } from '@/components/SWRProvider'
+import { useCurrentUser } from '@/hooks/useAuth'
 
-// Split from RootLayout so the current-user fetch streams behind Suspense.
-export default async function AppShell({ children }: { children: React.ReactNode }) {
-  const currentUser = await fetchOrNull(async () =>
-    (await createServerClient(AuthService)).getCurrentUser({})
-  )
+function Shell({ children }: { children: React.ReactNode }) {
+  const { data: currentUser } = useCurrentUser()
+  useSessionEffects(currentUser?.userId)
+
   const booksAccess =
-    currentUser !== null &&
+    currentUser !== undefined &&
     (currentUser.role === 'admin' || currentUser.appAccess.includes('books'))
 
   return (
-    <SWRProvider currentUser={currentUser}>
+    <>
       <Navbar />
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10">
         <div className="w-full">
@@ -33,6 +30,14 @@ export default async function AppShell({ children }: { children: React.ReactNode
       <ServiceWorkerRegistrar />
       <OutboxSync />
       {booksAccess && <OfflineBooksSync />}
+    </>
+  )
+}
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SWRProvider>
+      <Shell>{children}</Shell>
     </SWRProvider>
   )
 }

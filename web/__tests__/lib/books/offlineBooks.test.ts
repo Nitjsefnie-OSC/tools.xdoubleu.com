@@ -1,4 +1,4 @@
-/** @jest-environment node */
+/** @vitest-environment node */
 import 'fake-indexeddb/auto'
 import {
   deleteAllStoredBooks,
@@ -13,19 +13,19 @@ import {
 } from '@/lib/books/offlineBooks'
 import { clearStore, loadBookFile, loadEntry, saveBookFile, saveEntry } from '@/lib/offline/store'
 
-const mockEvictWebPub = jest.fn()
-const mockEvictAllWebPubs = jest.fn()
-jest.mock('@/lib/books/webpubCache', () => ({
+const mockEvictWebPub = vi.fn()
+const mockEvictAllWebPubs = vi.fn()
+vi.mock('@/lib/books/webpubCache', () => ({
   evictWebPub: (...args: unknown[]) => mockEvictWebPub(...args),
   evictAllWebPubs: () => mockEvictAllWebPubs()
 }))
 
-const mockGetBookFile = jest.fn()
-jest.mock('@/lib/client', () => ({
+const mockGetBookFile = vi.fn()
+vi.mock('@/lib/client', () => ({
   createServiceClient: () => ({ getBookFile: mockGetBookFile })
 }))
 
-const fetchMock = jest.spyOn(globalThis, 'fetch')
+const fetchMock = vi.spyOn(globalThis, 'fetch')
 
 const ref = { bookId: 'b1', format: 'epub', version: 'f1:0' }
 
@@ -48,7 +48,7 @@ async function store(version: string, body = 'stored') {
 }
 
 beforeEach(async () => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockEvictWebPub.mockResolvedValue(undefined)
   mockEvictAllWebPubs.mockResolvedValue(undefined)
   await clearStore()
@@ -151,7 +151,7 @@ describe('a wipe during a download', () => {
 
 describe('stored book management', () => {
   it('lists, sizes and deletes stored books, notifying subscribers', async () => {
-    const listener = jest.fn()
+    const listener = vi.fn()
     const unsubscribe = subscribeStoredBooks(listener)
     serve('12345')
 
@@ -186,7 +186,7 @@ describe('stored book management', () => {
       savedAt: 1
     })
     await saveEntry('library', { kept: true })
-    const listener = jest.fn()
+    const listener = vi.fn()
     const unsubscribe = subscribeStoredBooks(listener)
 
     await deleteAllStoredBooks()

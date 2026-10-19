@@ -9,7 +9,7 @@ const groups = [
 
 describe('MealPlanGroupFilter', () => {
   it('renders a checkbox per group with the recipe name', () => {
-    render(<MealPlanGroupFilter groups={groups} excludedGroups={new Set()} onToggle={jest.fn()} />)
+    render(<MealPlanGroupFilter groups={groups} excludedGroups={new Set()} onToggle={vi.fn()} />)
     expect(screen.getByText('Sauce')).toBeInTheDocument()
     expect(screen.getByText('(Pasta)')).toBeInTheDocument()
     expect(screen.getByText('Dressing')).toBeInTheDocument()
@@ -21,7 +21,7 @@ describe('MealPlanGroupFilter', () => {
       <MealPlanGroupFilter
         groups={groups}
         excludedGroups={new Set(['Sauce'])}
-        onToggle={jest.fn()}
+        onToggle={vi.fn()}
       />
     )
     const [sauce, dressing] = screen.getAllByRole('checkbox')
@@ -30,7 +30,7 @@ describe('MealPlanGroupFilter', () => {
   })
 
   it('calls onToggle with the group name when clicked', () => {
-    const onToggle = jest.fn()
+    const onToggle = vi.fn()
     render(<MealPlanGroupFilter groups={groups} excludedGroups={new Set()} onToggle={onToggle} />)
     fireEvent.click(screen.getAllByRole('checkbox')[0])
     expect(onToggle).toHaveBeenCalledWith('Sauce')
@@ -38,7 +38,7 @@ describe('MealPlanGroupFilter', () => {
 
   it('renders nothing when there are no groups', () => {
     const { container } = render(
-      <MealPlanGroupFilter groups={[]} excludedGroups={new Set()} onToggle={jest.fn()} />
+      <MealPlanGroupFilter groups={[]} excludedGroups={new Set()} onToggle={vi.fn()} />
     )
     expect(container).toBeEmptyDOMElement()
   })

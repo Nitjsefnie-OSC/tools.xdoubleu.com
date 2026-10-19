@@ -1,6 +1,6 @@
-const mockRedirect = jest.fn()
+const mockRedirect = vi.fn()
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   redirect: (url: string) => mockRedirect(url)
 }))
 

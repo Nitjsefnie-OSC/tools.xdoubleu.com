@@ -1,5 +1,3 @@
-'use client'
-
 import type { MouseEventHandler, ReactNode, UIEventHandler } from 'react'
 import {
   Dialog,

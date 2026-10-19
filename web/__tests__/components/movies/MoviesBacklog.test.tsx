@@ -2,21 +2,14 @@ import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockSetStatus = jest.fn()
-const mockFetchPage = jest.fn()
+const mockSetStatus = vi.fn()
+const mockFetchPage = vi.fn()
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMoviesBacklog: jest.fn(),
-  useFetchMoviesBacklogPage: jest.fn(() => mockFetchPage),
-  useMoviesActions: jest.fn(() => ({ setStatus: mockSetStatus }))
+vi.mock('@/hooks/useMovies', () => ({
+  useMoviesBacklog: vi.fn(),
+  useFetchMoviesBacklogPage: vi.fn(() => mockFetchPage),
+  useMoviesActions: vi.fn(() => ({ setStatus: mockSetStatus }))
 }))
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
 
 import MoviesBacklog from '@/components/movies/MoviesBacklog'
 import { useMoviesBacklog } from '@/hooks/useMovies'
@@ -30,7 +23,7 @@ const dune = entry('e-3', 'Dune')
 
 function mockBacklog(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useMoviesBacklog).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useMoviesBacklog).mockReturnValue({ isLoading: false, ...value })
 }
 
 const page = (entries: ReturnType<typeof entry>[], hasMore = false) =>
@@ -46,13 +39,13 @@ function deferred() {
   return { promise, resolve, reject }
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('MoviesBacklog filters', () => {
   it('offers every status and type tab and filters by them', () => {
     mockBacklog({ data: page([]) })
     render(<MoviesBacklog />)
-    const last = () => jest.mocked(useMoviesBacklog).mock.lastCall?.[0]
+    const last = () => vi.mocked(useMoviesBacklog).mock.lastCall?.[0]
 
     fireEvent.click(screen.getByRole('tab', { name: 'Watched' }))
     fireEvent.click(screen.getByRole('tab', { name: 'All statuses' }))
@@ -80,14 +73,14 @@ describe('MoviesBacklog filters', () => {
       'Dropped'
     ])
     fireEvent.click(screen.getByRole('tab', { name: 'New seasons' }))
-    expect(jest.mocked(useMoviesBacklog).mock.lastCall?.[0].status).toBe('new')
+    expect(vi.mocked(useMoviesBacklog).mock.lastCall?.[0].status).toBe('new')
   })
 
   it('sorts by rating', () => {
     mockBacklog({ data: page([]) })
     render(<MoviesBacklog />)
     fireEvent.change(screen.getByLabelText('Sort'), { target: { value: 'rating' } })
-    expect(jest.mocked(useMoviesBacklog).mock.lastCall?.[0].sort).toBe('rating')
+    expect(vi.mocked(useMoviesBacklog).mock.lastCall?.[0].sort).toBe('rating')
     expect(screen.getByRole('option', { name: 'Rating' })).toBeInTheDocument()
   })
 })

@@ -2,9 +2,9 @@ import React from 'react'
 import { render, screen, within } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockBarChart = jest.fn()
+const mockBarChart = vi.fn()
 
-jest.mock('recharts', () => ({
+vi.mock('recharts', () => ({
   BarChart: (props: { data: unknown; children: React.ReactNode }) => {
     mockBarChart(props.data)
     return <div>{props.children}</div>
@@ -22,7 +22,7 @@ jest.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }))
 
-jest.mock('@/hooks/useTaste', () => ({ useTasteStats: jest.fn() }))
+vi.mock('@/hooks/useTaste', () => ({ useTasteStats: vi.fn() }))
 
 import TasteStats from '@/components/taste/TasteStats'
 import { useTasteStats } from '@/hooks/useTaste'
@@ -37,7 +37,7 @@ import {
 
 function mockStats(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useTasteStats).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useTasteStats).mockReturnValue({ isLoading: false, ...value })
 }
 
 const domains = ['books', 'feeds', 'games', 'movies', 'series', 'podcasts'].map((domain) =>
@@ -67,7 +67,7 @@ const full = create(GetStatsResponseSchema, {
   topCreators: []
 })
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('TasteStats', () => {
   it('shows loading and error states without data', () => {
@@ -120,7 +120,7 @@ describe('TasteStats', () => {
   })
 
   it('shows the hit rate per domain and track', () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockStats({
       data: create(GetStatsResponseSchema, {
         ...full,

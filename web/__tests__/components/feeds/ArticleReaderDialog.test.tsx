@@ -4,13 +4,13 @@ import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError } from '@connectrpc/connect'
 import { ItemSchema } from '@/lib/gen/feeds/v1/feeds_pb'
 
-const markRead = jest.fn()
-const updateItem = jest.fn()
+const markRead = vi.fn()
+const updateItem = vi.fn()
 
-jest.mock('@/components/feeds/FeedBookmarkButton', () => () => (
+vi.mock('@/components/feeds/FeedBookmarkButton', () => () => (
   <div data-testid="bookmark-button" />
 ))
-jest.mock('@/components/feeds/FeedItemMarkReadButton', () => ({
+vi.mock('@/components/feeds/FeedItemMarkReadButton', () => ({
   __esModule: true,
   default: forwardRef(function MockMarkReadButton(_props: unknown, ref) {
     useImperativeHandle(ref, () => ({ markRead }))
@@ -21,7 +21,7 @@ jest.mock('@/components/feeds/FeedItemMarkReadButton', () => ({
 let mockBody = ''
 let mockLoading = false
 let mockError: unknown = undefined
-jest.mock('@/hooks/useFeeds', () => ({
+vi.mock('@/hooks/useFeeds', () => ({
   useUpdateItem: () => updateItem,
   useFeedItem: (id: string | null) => ({
     data: id && mockBody ? { item: { contentHtml: mockBody } } : undefined,
@@ -55,9 +55,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
     expect(screen.getByRole('list', { name: 'Categories' })).toHaveTextContent('Enterprise AI')
@@ -73,9 +73,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -103,9 +103,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -127,9 +127,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -154,9 +154,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -171,9 +171,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -189,9 +189,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -206,9 +206,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -221,9 +221,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open={false}
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -241,9 +241,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -251,7 +251,7 @@ describe('ArticleReaderDialog', () => {
   })
 
   it('persists the furthest scroll percentage after the debounce window', () => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     try {
       const item = readerItem({
         id: 'item-1',
@@ -262,9 +262,9 @@ describe('ArticleReaderDialog', () => {
         <ArticleReaderDialog
           item={item}
           open
-          onOpenChange={jest.fn()}
-          onMarkRead={jest.fn()}
-          onSettled={jest.fn()}
+          onOpenChange={vi.fn()}
+          onMarkRead={vi.fn()}
+          onSettled={vi.fn()}
         />
       )
 
@@ -275,15 +275,15 @@ describe('ArticleReaderDialog', () => {
       fireEvent.scroll(content, { target: { scrollTop: 200 } })
       expect(updateItem).not.toHaveBeenCalled()
 
-      jest.advanceTimersByTime(1000)
+      vi.advanceTimersByTime(1000)
       expect(updateItem).toHaveBeenCalledWith('item-1', { readProgressPct: 50 })
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   })
 
   it('flushes read progress on unmount without waiting for the debounce', () => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     try {
       const item = readerItem({
         id: 'item-1',
@@ -294,9 +294,9 @@ describe('ArticleReaderDialog', () => {
         <ArticleReaderDialog
           item={item}
           open
-          onOpenChange={jest.fn()}
-          onMarkRead={jest.fn()}
-          onSettled={jest.fn()}
+          onOpenChange={vi.fn()}
+          onMarkRead={vi.fn()}
+          onSettled={vi.fn()}
         />
       )
 
@@ -310,7 +310,7 @@ describe('ArticleReaderDialog', () => {
       unmount()
       expect(updateItem).toHaveBeenCalledWith('item-1', { readProgressPct: 50 })
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   })
 
@@ -325,9 +325,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 
@@ -348,9 +348,9 @@ describe('ArticleReaderDialog', () => {
       <ArticleReaderDialog
         item={item}
         open
-        onOpenChange={jest.fn()}
-        onMarkRead={jest.fn()}
-        onSettled={jest.fn()}
+        onOpenChange={vi.fn()}
+        onMarkRead={vi.fn()}
+        onSettled={vi.fn()}
       />
     )
 

@@ -1,14 +1,6 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: ({ src, width }: { src: string; width: number }) => (
-    // eslint-disable-next-line @next/next/no-img-element -- next/image stand-in
-    <img src={src} alt="" width={width} data-testid="poster" />
-  )
-}))
-
 import MoviePoster from '@/components/movies/MoviePoster'
 
 describe('MoviePoster', () => {

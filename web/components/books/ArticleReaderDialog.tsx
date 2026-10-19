@@ -1,5 +1,3 @@
-'use client'
-
 import ArticleReaderDialog from '@/components/ArticleReaderDialog'
 import { useGetBookContent } from '@/hooks/useBooks'
 import { LoadingState, ErrorState } from '@/components/ui/states'

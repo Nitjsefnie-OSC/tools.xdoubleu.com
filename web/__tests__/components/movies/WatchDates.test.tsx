@@ -5,7 +5,7 @@ import WatchDates from '@/components/movies/WatchDates'
 import { todayISO } from '@/lib/movies/format'
 
 function setup(dates: string[], pending = false) {
-  const handlers = { onAdd: jest.fn(), onEdit: jest.fn(), onRemove: jest.fn() }
+  const handlers = { onAdd: vi.fn(), onEdit: vi.fn(), onRemove: vi.fn() }
   render(<WatchDates idPrefix="w" dates={dates} pending={pending} {...handlers} />)
   return handlers
 }
@@ -22,8 +22,8 @@ describe('WatchDates', () => {
   })
 
   it('follows a saved date that changes under it, dropping any draft', () => {
-    const props = { idPrefix: 'w', pending: false, onAdd: jest.fn(), onRemove: jest.fn() }
-    const onEdit = jest.fn()
+    const props = { idPrefix: 'w', pending: false, onAdd: vi.fn(), onRemove: vi.fn() }
+    const onEdit = vi.fn()
     const { rerender } = render(<WatchDates {...props} onEdit={onEdit} dates={['']} />)
     const input = screen.getByLabelText('Watch 1 date')
     fireEvent.change(input, { target: { value: '0202-01-02' } })

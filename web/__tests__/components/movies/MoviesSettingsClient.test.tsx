@@ -2,27 +2,12 @@ import React from 'react'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockSetServices = jest.fn()
+const mockSetServices = vi.fn()
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMovieSettings: jest.fn(),
-  useAvailableProviders: jest.fn(),
-  useMoviesActions: jest.fn(() => ({ setServices: mockSetServices }))
-}))
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: ({ src }: { src: string }) => (
-    // eslint-disable-next-line @next/next/no-img-element -- next/image stand-in
-    <img src={src} alt="" />
-  )
+vi.mock('@/hooks/useMovies', () => ({
+  useMovieSettings: vi.fn(),
+  useAvailableProviders: vi.fn(),
+  useMoviesActions: vi.fn(() => ({ setServices: mockSetServices }))
 }))
 
 import MoviesSettingsClient from '@/components/movies/MoviesSettingsClient'
@@ -41,7 +26,7 @@ function mockHooks(opts: {
   providersError?: Error
 }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useMovieSettings).mockReturnValue({
+  vi.mocked(useMovieSettings).mockReturnValue({
     data: opts.settingsLoading
       ? undefined
       : create(GetSettingsResponseSchema, { providerIds: opts.picked ?? [] }),
@@ -49,7 +34,7 @@ function mockHooks(opts: {
     error: opts.settingsError
   })
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useAvailableProviders).mockReturnValue({
+  vi.mocked(useAvailableProviders).mockReturnValue({
     data:
       opts.providersLoading || opts.providersError
         ? undefined
@@ -64,7 +49,7 @@ function mockHooks(opts: {
   })
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('MoviesSettingsClient', () => {
   it('lists the providers with the picked ones pressed', () => {

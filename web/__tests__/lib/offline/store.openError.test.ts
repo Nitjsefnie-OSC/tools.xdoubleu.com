@@ -2,7 +2,7 @@ import { listBookFileKeys, listBookFiles, loadEntry } from '@/lib/offline/store'
 
 describe('offline store when IndexedDB fails to open', () => {
   it('resolves to undefined and retries the open next time', async () => {
-    const open = jest.fn(() => {
+    const open = vi.fn(() => {
       const req: { error: null; onerror?: () => void } = { error: null }
       setTimeout(() => req.onerror?.())
       return req

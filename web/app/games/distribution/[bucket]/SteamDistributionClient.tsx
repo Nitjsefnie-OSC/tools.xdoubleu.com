@@ -1,5 +1,3 @@
-'use client'
-
 import { useSteamDistribution } from '@/hooks/useGames'
 import type { GetSteamDistributionResponse } from '@/lib/gen/games/v1/games_pb'
 import { Breadcrumb } from '@/components/ui/breadcrumb'

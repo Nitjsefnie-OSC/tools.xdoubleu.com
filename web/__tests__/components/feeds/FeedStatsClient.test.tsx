@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('recharts', () => ({
+vi.mock('recharts', () => ({
   BarChart: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Bar: () => null,
   XAxis: () => null,
@@ -17,7 +17,7 @@ const feedStatsData: {
   isLoading: boolean
 } = { data: undefined, error: undefined, isLoading: false }
 
-jest.mock('@/hooks/useFeeds', () => ({
+vi.mock('@/hooks/useFeeds', () => ({
   useFeedStats: () => feedStatsData
 }))
 

@@ -5,11 +5,11 @@ import { GetAutomatedActionsResponseSchema } from '@/lib/gen/observability/v1/ob
 import AutomatedActionsCard from '@/components/monitoring/AutomatedActionsCard'
 
 beforeEach(() => {
-  jest.useFakeTimers().setSystemTime(new Date('2026-01-01T12:00:00Z'))
+  vi.useFakeTimers().setSystemTime(new Date('2026-01-01T12:00:00Z'))
 })
 
 afterEach(() => {
-  jest.useRealTimers()
+  vi.useRealTimers()
 })
 
 describe('AutomatedActionsCard', () => {

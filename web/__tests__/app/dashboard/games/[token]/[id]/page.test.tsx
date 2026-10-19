@@ -1,20 +1,20 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const mockGamesDashboardPublicGameClient = jest.fn<React.JSX.Element, [object]>(() => (
+const mockGamesDashboardPublicGameClient = vi.fn<React.JSX.Element, [object]>(() => (
   <div data-testid="profile-game" />
 ))
-jest.mock('@/components/dashboard/GamesDashboardPublicGameClient', () => ({
+vi.mock('@/components/dashboard/GamesDashboardPublicGameClient', () => ({
   __esModule: true,
   default: (props: object) => mockGamesDashboardPublicGameClient(props)
 }))
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: jest.fn(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
+  fetchOrNull: vi.fn(async () => null)
 }))
 
 import ProfileGamePage, { metadata } from '@/app/dashboard/games/[token]/[id]/page'

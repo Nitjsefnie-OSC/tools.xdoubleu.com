@@ -19,7 +19,7 @@ const draft: PhysicalCopyDraft = {
 }
 
 function open(props: Partial<React.ComponentProps<typeof BookPhysicalCopyFields>> = {}) {
-  const onChange = jest.fn()
+  const onChange = vi.fn()
   render(
     <BookPhysicalCopyFields
       draft={draft}

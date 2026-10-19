@@ -1,9 +1,10 @@
+import type { Mock } from 'vitest'
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ResyncWizard from '@/components/books/ResyncWizard'
 
-const mockApplyResyncChoice = jest.fn()
-const mockApplyBookSource = jest.fn()
+const mockApplyResyncChoice = vi.fn()
+const mockApplyBookSource = vi.fn()
 const mockProposalsData: {
   data: { proposals: unknown[] } | undefined
   isLoading: boolean
@@ -20,19 +21,19 @@ const mockSourcesData: {
   isLoading: false,
   error: undefined
 }
-const mockUseBookSources: jest.Mock<typeof mockSourcesData, unknown[]> = jest.fn(
+const mockUseBookSources: Mock<typeof mockSourcesData, unknown[]> = vi.fn(
   () => mockSourcesData
 )
-const mockMutate = jest.fn()
+const mockMutate = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useResyncProposals: () => mockProposalsData,
   useApplyResyncChoice: () => mockApplyResyncChoice,
   useBookSources: (...args: unknown[]) => mockUseBookSources(...args),
   useApplyBookSource: () => mockApplyBookSource
 }))
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 

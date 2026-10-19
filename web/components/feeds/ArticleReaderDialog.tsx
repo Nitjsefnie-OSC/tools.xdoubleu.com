@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
 import ArticleReaderDialog from '@/components/ArticleReaderDialog'
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'

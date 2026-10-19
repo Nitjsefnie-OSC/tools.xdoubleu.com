@@ -1,21 +1,21 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/components/feeds/FeedStatsClient', () => () => <div data-testid="feed-stats-client" />)
+vi.mock('@/components/feeds/FeedStatsClient', () => () => <div data-testid="feed-stats-client" />)
 
 const mockServerClient = {
-  getFeedStats: jest.fn()
+  getFeedStats: vi.fn()
 }
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => mockServerClient)
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => mockServerClient)
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: jest.fn(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
+  fetchOrNull: vi.fn(async () => null)
 }))
 
 const fallbackProps: Record<string, unknown>[] = []
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({
     children,
@@ -47,7 +47,7 @@ describe('FeedStatsPage', () => {
   it('prefetches the stats', async () => {
     const stats = { stats: [], itemsPerDay: [] }
     mockServerClient.getFeedStats.mockResolvedValueOnce(stats)
-    jest.mocked(fetchOrNull).mockImplementationOnce((fetcher) => fetcher())
+    vi.mocked(fetchOrNull).mockImplementationOnce((fetcher) => fetcher())
     render(await FeedStatsPage())
     expect(fallbackProps[0]).toEqual({ [swrKeys.feedStats]: stats })
   })

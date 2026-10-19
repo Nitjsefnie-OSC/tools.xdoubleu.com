@@ -1,8 +1,8 @@
-jest.mock('next/navigation', () => ({
-  redirect: jest.fn()
+vi.mock('@/hooks/navigation', () => ({
+  redirect: vi.fn()
 }))
 
-import { redirect } from 'next/navigation'
+import { redirect } from '@/hooks/navigation'
 import ReadingFeedPage from '@/app/books/feed/page'
 
 describe('ReadingFeedPage', () => {

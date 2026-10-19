@@ -1,7 +1,7 @@
-const mockCapture = jest.fn()
+const mockCapture = vi.fn()
 const mockPostHog = { __loaded: false }
 
-jest.mock('posthog-js', () => ({
+vi.mock('posthog-js', () => ({
   __esModule: true,
   default: {
     get __loaded() {

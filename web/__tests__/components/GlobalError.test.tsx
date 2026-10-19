@@ -1,22 +1,22 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-jest.mock('@sentry/nextjs', () => ({
-  captureException: jest.fn()
+vi.mock('@sentry/react', () => ({
+  captureException: vi.fn()
 }))
 
-import * as Sentry from '@sentry/nextjs'
+import * as Sentry from '@sentry/react'
 import GlobalError from '@/app/global-error'
 
-const mockCaptureException = jest.mocked(Sentry.captureException)
+const mockCaptureException = vi.mocked(Sentry.captureException)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('GlobalError', () => {
   it('renders error UI with message', () => {
     const testError = new Error('Test error message')
-    const mockReset = jest.fn()
+    const mockReset = vi.fn()
 
     render(<GlobalError error={testError} reset={mockReset} />)
 
@@ -27,7 +27,7 @@ describe('GlobalError', () => {
 
   it('calls captureException on mount with the error', async () => {
     const testError = new Error('Specific test error')
-    const mockReset = jest.fn()
+    const mockReset = vi.fn()
 
     render(<GlobalError error={testError} reset={mockReset} />)
 
@@ -39,7 +39,7 @@ describe('GlobalError', () => {
 
   it('re-calls captureException when error changes', async () => {
     const initialError = new Error('Initial error')
-    const mockReset = jest.fn()
+    const mockReset = vi.fn()
 
     const { rerender } = render(<GlobalError error={initialError} reset={mockReset} />)
 
@@ -60,7 +60,7 @@ describe('GlobalError', () => {
     // reset() doesn't re-run the root layout's failed fetch, so retry must
     // reload. jsdom can't spy on reload(); assert reset() isn't used.
     const testError = new Error('Test error')
-    const mockReset = jest.fn()
+    const mockReset = vi.fn()
 
     render(<GlobalError error={testError} reset={mockReset} />)
 

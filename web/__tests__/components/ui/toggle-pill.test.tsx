@@ -4,17 +4,17 @@ import { TogglePill } from '@/components/ui/toggle-pill'
 
 describe('TogglePill', () => {
   it('renders the label', () => {
-    render(<TogglePill label="Physical" active={false} onClick={jest.fn()} />)
+    render(<TogglePill label="Physical" active={false} onClick={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Physical' })).toBeInTheDocument()
   })
 
   it('reflects active state via aria-pressed', () => {
-    render(<TogglePill label="Physical" active={true} onClick={jest.fn()} />)
+    render(<TogglePill label="Physical" active={true} onClick={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Physical' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('reflects inactive state via aria-pressed', () => {
-    render(<TogglePill label="Physical" active={false} onClick={jest.fn()} />)
+    render(<TogglePill label="Physical" active={false} onClick={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Physical' })).toHaveAttribute(
       'aria-pressed',
       'false'
@@ -22,14 +22,14 @@ describe('TogglePill', () => {
   })
 
   it("keeps Button's squared corners", () => {
-    render(<TogglePill label="Physical" active={false} onClick={jest.fn()} />)
+    render(<TogglePill label="Physical" active={false} onClick={vi.fn()} />)
     const pill = screen.getByRole('button', { name: 'Physical' })
     expect(pill).toHaveClass('rounded-xl')
     expect(pill).not.toHaveClass('rounded-full')
   })
 
   it('fires onClick when clicked', () => {
-    const onClick = jest.fn()
+    const onClick = vi.fn()
     render(<TogglePill label="Physical" active={false} onClick={onClick} />)
     fireEvent.click(screen.getByRole('button', { name: 'Physical' }))
     expect(onClick).toHaveBeenCalled()

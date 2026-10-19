@@ -1,5 +1,3 @@
-'use client'
-
 import { DateInput } from '@/components/ui/date-input'
 import { Field } from '@/components/ui/field'
 import { cn } from '@/lib/cn'

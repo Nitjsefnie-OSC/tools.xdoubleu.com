@@ -2,23 +2,23 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import BookSearchBar from '@/components/books/BookSearchBar'
 
-const mockSearchLibrary = jest.fn()
-const mockSearchExternal = jest.fn()
-const mockAddBook = jest.fn()
-const mockRouterPush = jest.fn()
+const mockSearchLibrary = vi.fn()
+const mockSearchExternal = vi.fn()
+const mockAddBook = vi.fn()
+const mockRouterPush = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useSearchLibrary: () => mockSearchLibrary,
   useSearchExternal: () => mockSearchExternal,
   useCreateBook: () => mockAddBook,
   useLibrary: () => ({ data: undefined })
 }))
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ push: mockRouterPush })
 }))
 
-jest.useFakeTimers()
+vi.useFakeTimers()
 
 const EXTERNAL_BOOK = {
   provider: 'hardcover',
@@ -44,7 +44,7 @@ describe('BookSearchBar — standalone mode', () => {
   })
 
   afterEach(() => {
-    jest.clearAllTimers()
+    vi.clearAllTimers()
   })
 
   it('renders search input', () => {
@@ -59,7 +59,7 @@ describe('BookSearchBar — standalone mode', () => {
       target: { value: 'My' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => screen.getByText('My Owned Book'))
     fireEvent.click(screen.getByText('My Owned Book'))
@@ -74,7 +74,7 @@ describe('BookSearchBar — standalone mode', () => {
       target: { value: 'Go' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => {
       expect(mockSearchExternal).toHaveBeenCalledWith('Go')
@@ -90,7 +90,7 @@ describe('BookSearchBar — standalone mode', () => {
       target: { value: 'Go' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => screen.getByText('Go Book'))
     fireEvent.click(screen.getByText('Go Book'))
@@ -110,7 +110,7 @@ describe('BookSearchBar — standalone mode', () => {
       target: { value: 'Go' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => screen.getByText('Linkable Book'))
     expect(screen.queryByText('Go Book')).not.toBeInTheDocument()
@@ -124,7 +124,7 @@ describe('BookSearchBar — standalone mode', () => {
       target: { value: 'Go' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => expect(mockSearchExternal).toHaveBeenCalledWith('Go'))
     expect(screen.queryByText('Go Book')).not.toBeInTheDocument()
@@ -149,32 +149,32 @@ describe('BookSearchBar — controlled mode', () => {
   })
 
   it('renders search input with controlled value', () => {
-    render(<BookSearchBar query="dune" onChange={jest.fn()} />)
+    render(<BookSearchBar query="dune" onChange={vi.fn()} />)
     expect(screen.getByDisplayValue('dune')).toBeInTheDocument()
   })
 
   it('updates the input immediately but debounces onChange', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(<BookSearchBar query="" onChange={onChange} />)
     const input = screen.getByPlaceholderText('Search books…')
     fireEvent.change(input, { target: { value: 'dune' } })
     expect(input).toHaveValue('dune')
     expect(onChange).not.toHaveBeenCalled()
     act(() => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     expect(onChange).toHaveBeenCalledWith('dune')
   })
 
   it('syncs the input from the query prop (browser back/forward)', () => {
-    const { rerender } = render(<BookSearchBar query="dune" onChange={jest.fn()} />)
+    const { rerender } = render(<BookSearchBar query="dune" onChange={vi.fn()} />)
     expect(screen.getByDisplayValue('dune')).toBeInTheDocument()
-    rerender(<BookSearchBar query="foundation" onChange={jest.fn()} />)
+    rerender(<BookSearchBar query="foundation" onChange={vi.fn()} />)
     expect(screen.getByDisplayValue('foundation')).toBeInTheDocument()
   })
 
   it('never searches the library or external providers directly', () => {
-    render(<BookSearchBar query="Go" onChange={jest.fn()} />)
+    render(<BookSearchBar query="Go" onChange={vi.fn()} />)
     expect(mockSearchLibrary).not.toHaveBeenCalled()
     expect(mockSearchExternal).not.toHaveBeenCalled()
   })

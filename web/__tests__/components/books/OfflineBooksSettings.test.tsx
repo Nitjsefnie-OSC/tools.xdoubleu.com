@@ -1,10 +1,10 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import OfflineBooksSettings, { formatStorageSize } from '@/components/books/OfflineBooksSettings'
 
-const mockList = jest.fn()
-const mockDeleteAll = jest.fn()
+const mockList = vi.fn()
+const mockDeleteAll = vi.fn()
 const listeners = new Set<() => void>()
-jest.mock('@/lib/books/offlineBooks', () => ({
+vi.mock('@/lib/books/offlineBooks', () => ({
   listStoredBooks: () => mockList(),
   deleteAllStoredBooks: () => mockDeleteAll(),
   subscribeStoredBooks: (l: () => void) => {
@@ -22,7 +22,7 @@ const file = (bookId: string, format: string, size: number) => ({
 })
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   listeners.clear()
   mockDeleteAll.mockImplementation(async () => {
     mockList.mockResolvedValue([])

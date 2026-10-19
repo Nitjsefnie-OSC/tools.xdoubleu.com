@@ -20,10 +20,10 @@ function makeMeal(overrides: Partial<Record<string, unknown>> = {}) {
 
 function renderChip(props: Partial<React.ComponentProps<typeof MealPlanMealChip>> = {}) {
   const handlers = {
-    onMealClick: jest.fn(),
-    onSwapClick: jest.fn(),
-    onEditClick: jest.fn(),
-    onDeleteMeal: jest.fn()
+    onMealClick: vi.fn(),
+    onSwapClick: vi.fn(),
+    onEditClick: vi.fn(),
+    onDeleteMeal: vi.fn()
   }
   render(
     <MealPlanMealChip
@@ -148,7 +148,7 @@ describe('MealPlanMealChip', () => {
       y: 700,
       toJSON: () => ({})
     }
-    const rectSpy = jest.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(rect)
+    const rectSpy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(rect)
     const originalInnerHeight = window.innerHeight
     Object.defineProperty(window, 'innerHeight', { value: 768, configurable: true })
 

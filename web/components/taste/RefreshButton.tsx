@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { ConnectError } from '@connectrpc/connect'
 import { formatDateTime } from '@/lib/dates'

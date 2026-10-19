@@ -2,18 +2,18 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ConnectError, Code } from '@connectrpc/connect'
 
-const mockUseCurrentUser = jest.fn()
-const mockUpdateDisplayName = jest.fn()
-const mockUpdatePassword = jest.fn()
-const mockMFAEnroll = jest.fn()
-const mockMFAEnrollVerify = jest.fn()
-const mockMFAUnenroll = jest.fn()
-const mockRegenerateRecoveryCodes = jest.fn()
-const mockMutate = jest.fn()
+const mockUseCurrentUser = vi.fn()
+const mockUpdateDisplayName = vi.fn()
+const mockUpdatePassword = vi.fn()
+const mockMFAEnroll = vi.fn()
+const mockMFAEnrollVerify = vi.fn()
+const mockMFAUnenroll = vi.fn()
+const mockRegenerateRecoveryCodes = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('swr', () => ({ mutate: (...args: unknown[]) => mockMutate(...args) }))
+vi.mock('swr', () => ({ mutate: (...args: unknown[]) => mockMutate(...args) }))
 
-jest.mock('@/hooks/useAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useCurrentUser: () => mockUseCurrentUser(),
   useUpdatePassword: () => mockUpdatePassword,
   useUpdateDisplayName: () => mockUpdateDisplayName,
@@ -27,7 +27,7 @@ import SettingsPage from '@/app/settings/page'
 
 describe('SettingsPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUpdateDisplayName.mockResolvedValue({})
     mockUseCurrentUser.mockReturnValue({
       data: { role: 'user', appAccess: [], hasMfa: false, displayName: 'Alice' },

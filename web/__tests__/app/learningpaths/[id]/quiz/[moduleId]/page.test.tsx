@@ -1,22 +1,22 @@
 import React from 'react'
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-const fetchOrNull = jest.fn()
+const fetchOrNull = vi.fn()
 
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => Promise<unknown>) => fetchOrNull(fn)
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
 import { render } from '@testing-library/react'
 
-jest.mock('@/app/learningpaths/[id]/quiz/[moduleId]/QuizClient', () => ({
+vi.mock('@/app/learningpaths/[id]/quiz/[moduleId]/QuizClient', () => ({
   __esModule: true,
   default: ({ id, moduleId }: { id: string; moduleId: string }) => (
     <div data-testid="quiz-client">

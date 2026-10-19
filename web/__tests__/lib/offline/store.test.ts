@@ -1,4 +1,4 @@
-/** @jest-environment node */
+/** @vitest-environment node */
 import 'fake-indexeddb/auto'
 import {
   addFailed,
@@ -39,9 +39,9 @@ describe('offline store', () => {
   })
 
   it('round-trips an entry with its save time', async () => {
-    jest.spyOn(Date, 'now').mockReturnValue(1000)
+    vi.spyOn(Date, 'now').mockReturnValue(1000)
     await saveEntry('k', { n: 1n, bytes: new Uint8Array([1]) })
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
 
     expect(await loadEntry('k')).toEqual({
       data: { n: 1n, bytes: new Uint8Array([1]) },
@@ -62,7 +62,7 @@ describe('offline store', () => {
   })
 
   it('prunes only entries saved before the cutoff', async () => {
-    const now = jest.spyOn(Date, 'now')
+    const now = vi.spyOn(Date, 'now')
     now.mockReturnValue(100)
     await saveEntry('old', 1)
     now.mockReturnValue(300)
@@ -178,7 +178,7 @@ describe('offline store without IndexedDB', () => {
   })
 
   it('lists stored book keys and notifies subscribers of every change', async () => {
-    const listener = jest.fn()
+    const listener = vi.fn()
     const unsubscribe = subscribeBookFiles(listener)
 
     await saveBookFile(bookFile('b1'))

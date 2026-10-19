@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { cn } from '@/lib/cn'
 
 export interface BreadcrumbItem {

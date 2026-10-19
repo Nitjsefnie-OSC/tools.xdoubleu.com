@@ -1,18 +1,18 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/components/feeds/UnhealthyFeeds', () => () => <div data-testid="unhealthy-feeds" />)
+vi.mock('@/components/feeds/UnhealthyFeeds', () => () => <div data-testid="unhealthy-feeds" />)
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-const mockFetchOrNull = jest.fn<Promise<unknown>, [() => unknown]>(async () => null)
-jest.mock('@/lib/server/fetchers', () => ({
+const mockFetchOrNull = vi.fn<Promise<unknown>, [() => unknown]>(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => unknown) => mockFetchOrNull(fn)
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({
     children,

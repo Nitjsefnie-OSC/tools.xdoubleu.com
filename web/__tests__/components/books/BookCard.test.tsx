@@ -4,55 +4,31 @@ import { create } from '@bufbuild/protobuf'
 import BookCard from '@/components/books/BookCard'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-jest.mock('next/link', () => {
-  const Link = ({
-    children,
-    href,
-    ...props
-  }: {
-    children: React.ReactNode
-    href: string
-    [key: string]: unknown
-  }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt, ...props }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} {...props} />
-  }
-})
-
-jest.mock('@/components/books/BookProgressEditor', () => {
+vi.mock('@/components/books/BookProgressEditor', () => {
   return function MockProgressEditor() {
     return <div role="progressbar" data-testid="progress-editor" />
   }
 })
 
-jest.mock('@/components/books/BookRatingStars', () => {
+vi.mock('@/components/books/BookRatingStars', () => {
   return function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
     return <div data-testid="rating-stars">{userBook.rating} stars</div>
   }
 })
 
-jest.mock('@/components/books/BookFavouriteButton', () => {
+vi.mock('@/components/books/BookFavouriteButton', () => {
   return function MockFavButton() {
     return <div data-testid="favourite-button" />
   }
 })
 
-jest.mock('@/components/books/OfflineBookBadge', () => {
+vi.mock('@/components/books/OfflineBookBadge', () => {
   return function MockOfflineBadge({ bookId }: { bookId: string }) {
     return <span>offline:{bookId}</span>
   }
 })
 
-jest.mock('@/components/books/BookOwnershipToggles', () => {
+vi.mock('@/components/books/BookOwnershipToggles', () => {
   return function MockOwnership({ userBook }: { userBook: { tags: string[]; formats: string[] } }) {
     return (
       <div data-testid="ownership-toggles">
@@ -94,60 +70,60 @@ function makeBook(overrides: BookOverride = {}) {
 
 describe('BookCard', () => {
   it('renders title and author', () => {
-    render(<BookCard userBook={makeBook()} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook()} onSaved={vi.fn()} />)
     expect(screen.getByText('Test Book')).toBeInTheDocument()
     expect(screen.getByText('Test Author')).toBeInTheDocument()
   })
 
   it('shows whether the book is available offline', () => {
-    render(<BookCard userBook={makeBook({ bookId: 'b-1' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ bookId: 'b-1' })} onSaved={vi.fn()} />)
     expect(screen.getByText('offline:b-1')).toBeInTheDocument()
   })
 
   it('renders a link to the book detail page', () => {
-    render(<BookCard userBook={makeBook()} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook()} onSaved={vi.fn()} />)
     const link = screen.getByRole('link', { name: 'Test Book' })
     expect(link).toHaveAttribute('href', '/books/ub-1')
   })
 
   it('carries the search query into the detail link when provided', () => {
-    render(<BookCard userBook={makeBook()} onSaved={jest.fn()} query="dune" />)
+    render(<BookCard userBook={makeBook()} onSaved={vi.fn()} query="dune" />)
     const link = screen.getByRole('link', { name: 'Test Book' })
     expect(link).toHaveAttribute('href', '/books/ub-1?q=dune')
   })
 
   it('shows Physical badge when own-physical tag present', () => {
-    render(<BookCard userBook={makeBook({ tags: ['own-physical'] })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ tags: ['own-physical'] })} onSaved={vi.fn()} />)
     expect(screen.getByText('Physical')).toBeInTheDocument()
   })
 
   it('shows Digital badge when own-digital tag present', () => {
-    render(<BookCard userBook={makeBook({ tags: ['own-digital'] })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ tags: ['own-digital'] })} onSaved={vi.fn()} />)
     expect(screen.getByText('Digital')).toBeInTheDocument()
   })
 
   it('shows Kobo store badge when own-bol tag present', () => {
-    render(<BookCard userBook={makeBook({ tags: ['own-bol'] })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ tags: ['own-bol'] })} onSaved={vi.fn()} />)
     expect(screen.getByText('Kobo store')).toBeInTheDocument()
   })
 
   it('shows PDF badge when formats includes pdf', () => {
-    render(<BookCard userBook={makeBook({ formats: ['pdf'] })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ formats: ['pdf'] })} onSaved={vi.fn()} />)
     expect(screen.getByText('PDF')).toBeInTheDocument()
   })
 
   it('shows EPUB badge when formats includes epub', () => {
-    render(<BookCard userBook={makeBook({ formats: ['epub'] })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ formats: ['epub'] })} onSaved={vi.fn()} />)
     expect(screen.getByText('EPUB')).toBeInTheDocument()
   })
 
   it('shows progress editor for currently-reading books', () => {
-    render(<BookCard userBook={makeBook({ status: 'currently-reading' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'currently-reading' })} onSaved={vi.fn()} />)
     expect(screen.getByTestId('progress-editor')).toBeInTheDocument()
   })
 
   it('links a readable book straight to the reader', () => {
-    render(<BookCard userBook={makeBook({ formats: ['epub'] })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ formats: ['epub'] })} onSaved={vi.fn()} />)
     const read = screen.getByRole('link', { name: 'Read' })
     expect(read).toHaveAttribute('href', '/books/ub-1/read')
     expect(screen.getByRole('link', { name: 'Test Book' })).not.toContainElement(read)
@@ -157,7 +133,7 @@ describe('BookCard', () => {
     render(
       <BookCard
         userBook={makeBook({ status: 'currently-reading', formats: ['pdf'] })}
-        onSaved={jest.fn()}
+        onSaved={vi.fn()}
       />
     )
     expect(screen.getByRole('link', { name: 'Continue reading' })).toHaveAttribute(
@@ -167,7 +143,7 @@ describe('BookCard', () => {
   })
 
   it('hides the reader link when the book has no readable file', () => {
-    render(<BookCard userBook={makeBook()} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook()} onSaved={vi.fn()} />)
     expect(screen.queryByRole('link', { name: 'Read' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Continue reading' })).not.toBeInTheDocument()
   })
@@ -176,7 +152,7 @@ describe('BookCard', () => {
     render(
       <BookCard
         userBook={makeBook({ status: 'currently-reading', tags: ['own-physical'] })}
-        onSaved={jest.fn()}
+        onSaved={vi.fn()}
       />
     )
     const link = screen.getByRole('link', { name: 'Test Book' })
@@ -185,7 +161,7 @@ describe('BookCard', () => {
   })
 
   it('hides progress editor for non-reading books', () => {
-    render(<BookCard userBook={makeBook({ status: 'to-read' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'to-read' })} onSaved={vi.fn()} />)
     expect(screen.queryByTestId('progress-editor')).not.toBeInTheDocument()
   })
 
@@ -199,59 +175,59 @@ describe('BookCard', () => {
             coverUrl: 'http://example.com/cover.png'
           })
         })}
-        onSaved={jest.fn()}
+        onSaved={vi.fn()}
       />
     )
     expect(screen.getByAltText('Test Book')).toBeInTheDocument()
   })
 
   it('renders rating stars and favourite for a read book', () => {
-    render(<BookCard userBook={makeBook({ status: 'read', rating: 3 })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'read', rating: 3 })} onSaved={vi.fn()} />)
     expect(screen.getByTestId('rating-stars')).toBeInTheDocument()
     expect(screen.getByTestId('favourite-button')).toBeInTheDocument()
   })
 
   it('hides rating stars and favourite for a to-read book', () => {
-    render(<BookCard userBook={makeBook({ status: 'to-read' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'to-read' })} onSaved={vi.fn()} />)
     expect(screen.queryByTestId('rating-stars')).not.toBeInTheDocument()
     expect(screen.queryByTestId('favourite-button')).not.toBeInTheDocument()
   })
 
   it('hides rating stars and favourite for a currently-reading book', () => {
-    render(<BookCard userBook={makeBook({ status: 'currently-reading' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'currently-reading' })} onSaved={vi.fn()} />)
     expect(screen.queryByTestId('rating-stars')).not.toBeInTheDocument()
     expect(screen.queryByTestId('favourite-button')).not.toBeInTheDocument()
   })
 
   it('hides rating stars and favourite for a dropped book', () => {
-    render(<BookCard userBook={makeBook({ status: 'dropped' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'dropped' })} onSaved={vi.fn()} />)
     expect(screen.queryByTestId('rating-stars')).not.toBeInTheDocument()
     expect(screen.queryByTestId('favourite-button')).not.toBeInTheDocument()
   })
 
   it('renders the ownership toggles', () => {
-    render(<BookCard userBook={makeBook()} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook()} onSaved={vi.fn()} />)
     expect(screen.getByTestId('ownership-toggles')).toBeInTheDocument()
   })
 
   it('returns null when book is missing', () => {
     const ub = create(UserBookSchema, { id: 'ub-nobook', status: 'to-read', tags: [], formats: [] })
-    const { container } = render(<BookCard userBook={ub} onSaved={jest.fn()} />)
+    const { container } = render(<BookCard userBook={ub} onSaved={vi.fn()} />)
     expect(container.firstChild).toBeNull()
   })
 
   it('shows status text for non-reading books', () => {
-    render(<BookCard userBook={makeBook({ status: 'to-read' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'to-read' })} onSaved={vi.fn()} />)
     expect(screen.getByText('to read')).toBeInTheDocument()
   })
 
   it('shows status text for currently-reading books', () => {
-    render(<BookCard userBook={makeBook({ status: 'currently-reading' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'currently-reading' })} onSaved={vi.fn()} />)
     expect(screen.getByText('currently reading')).toBeInTheDocument()
   })
 
   it('shows read-only tags', () => {
-    render(<BookCard userBook={makeBook({ tags: ['sci-fi'] })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ tags: ['sci-fi'] })} onSaved={vi.fn()} />)
     expect(screen.getByText('sci-fi')).toBeInTheDocument()
   })
 
@@ -259,7 +235,7 @@ describe('BookCard', () => {
     render(
       <BookCard
         userBook={makeBook({ tags: ['own-physical', 'own-digital'], formats: ['pdf', 'epub'] })}
-        onSaved={jest.fn()}
+        onSaved={vi.fn()}
       />
     )
     expect(screen.getByText('Physical')).toBeInTheDocument()
@@ -269,12 +245,12 @@ describe('BookCard', () => {
   })
 
   it('clicking ownership toggles does not throw', () => {
-    render(<BookCard userBook={makeBook()} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook()} onSaved={vi.fn()} />)
     fireEvent.click(screen.getByTestId('ownership-toggles'))
   })
 
   it('clicking progress editor does not throw', () => {
-    render(<BookCard userBook={makeBook({ status: 'currently-reading' })} onSaved={jest.fn()} />)
+    render(<BookCard userBook={makeBook({ status: 'currently-reading' })} onSaved={vi.fn()} />)
     fireEvent.click(screen.getByTestId('progress-editor'))
   })
 
@@ -289,17 +265,17 @@ describe('BookCard', () => {
       })
 
     it('has no toggle unless enabled', () => {
-      render(<BookCard userBook={withDescription()} onSaved={jest.fn()} />)
+      render(<BookCard userBook={withDescription()} onSaved={vi.fn()} />)
       expect(screen.queryByRole('button', { name: 'Show description' })).not.toBeInTheDocument()
     })
 
     it('has no toggle for a book without a description', () => {
-      render(<BookCard userBook={makeBook()} onSaved={jest.fn()} showDescriptionToggle />)
+      render(<BookCard userBook={makeBook()} onSaved={vi.fn()} showDescriptionToggle />)
       expect(screen.queryByRole('button', { name: 'Show description' })).not.toBeInTheDocument()
     })
 
     it('shows and hides the description outside the detail link', () => {
-      render(<BookCard userBook={withDescription()} onSaved={jest.fn()} showDescriptionToggle />)
+      render(<BookCard userBook={withDescription()} onSaved={vi.fn()} showDescriptionToggle />)
       expect(screen.queryByText('A gripping tale.')).not.toBeInTheDocument()
 
       const toggle = screen.getByRole('button', { name: 'Show description' })

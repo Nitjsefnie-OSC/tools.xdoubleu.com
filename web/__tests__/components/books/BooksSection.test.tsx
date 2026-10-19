@@ -1,24 +1,24 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-jest.mock('@/hooks/useBooks', () => ({
-  useLibrary: jest.fn()
+vi.mock('@/hooks/useBooks', () => ({
+  useLibrary: vi.fn()
 }))
 
 // The query lives in ?q=; router.replace mutates this and a re-render picks
 // it up, like a real navigation.
 let currentSearchParams = new URLSearchParams()
-const mockReplace = jest.fn((url: string) => {
+const mockReplace = vi.fn((url: string) => {
   const qIndex = url.indexOf('?')
   currentSearchParams = new URLSearchParams(qIndex >= 0 ? url.slice(qIndex + 1) : '')
 })
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ replace: mockReplace }),
   useSearchParams: () => currentSearchParams
 }))
 
-jest.mock('@/components/books/BookSearchBar', () => {
+vi.mock('@/components/books/BookSearchBar', () => {
   return function MockBookSearchBar({
     query,
     onChange
@@ -37,7 +37,7 @@ jest.mock('@/components/books/BookSearchBar', () => {
   }
 })
 
-jest.mock('@/components/books/BooksLibrary', () => {
+vi.mock('@/components/books/BooksLibrary', () => {
   return function MockBooksLibrary({
     library,
     searchQuery,
@@ -61,7 +61,7 @@ jest.mock('@/components/books/BooksLibrary', () => {
   }
 })
 
-jest.mock('swr', () => ({ mutate: jest.fn() }))
+vi.mock('swr', () => ({ mutate: vi.fn() }))
 
 import BooksSection from '@/components/books/BooksSection'
 import { useLibrary } from '@/hooks/useBooks'
@@ -74,7 +74,7 @@ import {
   GetLibraryResponseSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-const mockUseBacklogLibrary = jest.mocked(useLibrary)
+const mockUseBacklogLibrary = vi.mocked(useLibrary)
 
 function mockLibrary() {
   const readingBook = create(UserBookSchema, {
@@ -101,7 +101,7 @@ function mockLibrary() {
 
 describe('BooksSection', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     currentSearchParams = new URLSearchParams()
   })
 

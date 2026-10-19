@@ -1,7 +1,4 @@
-'use client'
-
 import { useState } from 'react'
-import Image from 'next/image'
 import type { Provider } from '@/lib/gen/movies/v1/movies_pb'
 import { useAvailableProviders, useMovieSettings, useMoviesActions } from '@/hooks/useMovies'
 import { logoUrl } from '@/lib/movies/format'
@@ -46,7 +43,7 @@ function ProviderPicker({ picked, providers }: { picked: bigint[]; providers: Pr
               label={
                 <span className="flex items-center gap-2">
                   {p.logoPath && (
-                    <Image
+                    <img
                       src={logoUrl(p.logoPath)}
                       alt=""
                       width={24}

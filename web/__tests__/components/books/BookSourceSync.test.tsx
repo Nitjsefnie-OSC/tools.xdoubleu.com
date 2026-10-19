@@ -1,8 +1,9 @@
+import type { Mock } from 'vitest'
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import BookSourceSync from '@/components/books/BookSourceSync'
 
-const mockApplyBookSource = jest.fn()
+const mockApplyBookSource = vi.fn()
 const mockSourcesData: {
   data: { proposal: unknown } | undefined
   isLoading: boolean
@@ -12,18 +13,18 @@ const mockSourcesData: {
   isLoading: false,
   error: undefined
 }
-const mockMutate = jest.fn()
+const mockMutate = vi.fn()
 
-const mockUseBookSources: jest.Mock<typeof mockSourcesData, unknown[]> = jest.fn(
+const mockUseBookSources: Mock<typeof mockSourcesData, unknown[]> = vi.fn(
   () => mockSourcesData
 )
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useBookSources: (...args: unknown[]) => mockUseBookSources(...args),
   useApplyBookSource: () => mockApplyBookSource
 }))
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 

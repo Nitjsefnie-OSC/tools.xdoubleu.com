@@ -4,20 +4,6 @@ import { render, screen } from '@testing-library/react'
 import ExternalBookCard from '@/components/books/ExternalBookCard'
 import { ExternalBookResultSchema } from '@/lib/gen/books/v1/library_pb'
 
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} />
-  }
-})
-
 const fakeBook = create(ExternalBookResultSchema, {
   provider: 'hardcover',
   providerId: '9780134190440',

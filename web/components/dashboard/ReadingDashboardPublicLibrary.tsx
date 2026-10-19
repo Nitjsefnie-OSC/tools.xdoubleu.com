@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, useState } from 'react'
 import { useSharedLibrary } from '@/hooks/useDashboardShare'
 import type { GetSharedLibraryResponse } from '@/lib/gen/dashboard/v1/reading_pb'

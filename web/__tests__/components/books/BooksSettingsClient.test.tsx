@@ -1,39 +1,39 @@
 import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 
-const mockImportBooks = jest.fn()
+const mockImportBooks = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useImportBooks: () => mockImportBooks
 }))
 
-jest.mock('@/components/books/BulkBookUploader', () => ({
+vi.mock('@/components/books/BulkBookUploader', () => ({
   __esModule: true,
   default: () => <div data-testid="bulk-uploader" />
 }))
 
-jest.mock('@/components/books/KoboSetup', () => ({
+vi.mock('@/components/books/KoboSetup', () => ({
   __esModule: true,
   default: () => <div data-testid="kobo-setup" />
 }))
 
-jest.mock('@/components/books/KoboDevices', () => ({
+vi.mock('@/components/books/KoboDevices', () => ({
   __esModule: true,
   default: () => <div data-testid="kobo-devices" />
 }))
 
-jest.mock('@/components/books/OfflineBooksSettings', () => ({
+vi.mock('@/components/books/OfflineBooksSettings', () => ({
   __esModule: true,
   default: () => <div data-testid="offline-books-settings" />
 }))
 
-jest.mock('swr', () => ({ __esModule: true, mutate: jest.fn(), default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, mutate: vi.fn(), default: vi.fn() }))
 
 import BooksSettingsClient from '@/components/books/BooksSettingsClient'
 
 describe('BooksSettingsClient', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('includes the offline books section', () => {
@@ -63,7 +63,7 @@ describe('BooksSettingsClient', () => {
   it('opens the CSV file picker from the Import CSV button', () => {
     render(<BooksSettingsClient />)
     const input = screen.getByTestId('csv-input') as HTMLInputElement
-    const click = jest.spyOn(input, 'click')
+    const click = vi.spyOn(input, 'click')
     fireEvent.click(screen.getByRole('button', { name: 'Import CSV' }))
     expect(click).toHaveBeenCalled()
   })

@@ -4,13 +4,13 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { ListOAuthConnectionsResponseSchema } from '@/lib/gen/observability/v1/observability_pb'
 import OAuthConnectionsCard from '@/components/monitoring/OAuthConnectionsCard'
 
-const mockDisconnect = jest.fn()
+const mockDisconnect = vi.fn()
 
-jest.mock('@/hooks/useMonitoring', () => ({
+vi.mock('@/hooks/useMonitoring', () => ({
   useDisconnectOAuthConnection: () => mockDisconnect
 }))
 
-jest.mock('@/components/monitoring/ProviderConfigDialog', () => ({
+vi.mock('@/components/monitoring/ProviderConfigDialog', () => ({
   __esModule: true,
   default: ({
     provider,
@@ -30,10 +30,10 @@ jest.mock('@/components/monitoring/ProviderConfigDialog', () => ({
     ) : null
 }))
 
-const mockOnConfiguringProviderChange = jest.fn()
+const mockOnConfiguringProviderChange = vi.fn()
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 function renderCard(props: Partial<React.ComponentProps<typeof OAuthConnectionsCard>> = {}) {

@@ -1,30 +1,30 @@
 import { renderHook } from '@testing-library/react'
 
-const mutateMock = jest.fn()
-jest.mock('swr', () => ({
+const mutateMock = vi.fn()
+vi.mock('swr', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
   mutate: (...args: unknown[]) => mutateMock(...args)
 }))
 
 const clientMocks = {
-  listFilterRules: jest.fn().mockResolvedValue({ rules: [] }),
-  createFilterRule: jest.fn().mockResolvedValue({ rule: { id: 'r1', filteredCount: 0 } })
+  listFilterRules: vi.fn().mockResolvedValue({ rules: [] }),
+  createFilterRule: vi.fn().mockResolvedValue({ rule: { id: 'r1', filteredCount: 0 } })
 }
 
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => clientMocks)
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => clientMocks)
 }))
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn(async () => ({ status: () => 'sent' })),
-  sendWrite: jest.fn(async (pending: Promise<unknown>) => {
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn(async () => ({ status: () => 'sent' })),
+  sendWrite: vi.fn(async (pending: Promise<unknown>) => {
     await pending
     return 'sent'
   })
 }))
-jest.mock('@/lib/feeds/offlineWrites', () => ({ deleteFilterRuleWrite: { id: 'deleteRule' } }))
-jest.mock('@/lib/feeds/prefetch', () => ({ prefetchFeedBodies: jest.fn() }))
-jest.mock('@/lib/gen/feeds/v1/feeds_pb', () => ({
+vi.mock('@/lib/feeds/offlineWrites', () => ({ deleteFilterRuleWrite: { id: 'deleteRule' } }))
+vi.mock('@/lib/feeds/prefetch', () => ({ prefetchFeedBodies: vi.fn() }))
+vi.mock('@/lib/gen/feeds/v1/feeds_pb', () => ({
   FeedService: {},
   FeedKind: { UNSPECIFIED: 0, RSS: 1, EMAIL: 2 }
 }))
@@ -35,11 +35,11 @@ import { deleteFilterRuleWrite } from '@/lib/feeds/offlineWrites'
 import { useFilterRules, useCreateFilterRule, useDeleteFilterRule } from '@/hooks/useFeeds'
 import { swrKeys } from '@/lib/swrKeys'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 describe('filter rule hooks', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // @ts-expect-error -- partial SWRResponse is fine for these tests
     mockUseSWR.mockReturnValue({ data: undefined })
   })

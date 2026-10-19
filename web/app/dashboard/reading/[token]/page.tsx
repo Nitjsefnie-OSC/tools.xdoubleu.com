@@ -1,30 +1,12 @@
-import type { Metadata } from 'next'
-import SWRFallback from '@/components/SWRFallback'
-import { createServerClient } from '@/lib/server/client'
-import { fetchOrNull } from '@/lib/server/fetchers'
-import { swrKeys } from '@/lib/swrKeys'
-import { PublicReadingDashboardService } from '@/lib/gen/dashboard/v1/reading_pb'
+import { useRouteParams } from '@/hooks/navigation'
+import { useSharedLibrary } from '@/hooks/useDashboardShare'
 import ReadingDashboardPublicClient from '@/components/dashboard/ReadingDashboardPublicClient'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageHeader } from '@/components/ui/page-header'
 
-// Token URLs are capability links — keep them out of search indexes.
-export const metadata: Metadata = {
-  title: 'Shared reading dashboard',
-  robots: { index: false, follow: false }
-}
-
-export default async function ReadingDashboardPublicPage({
-  params
-}: {
-  params: Promise<{ token: string }>
-}) {
-  const { token } = await params
-  const client = await createServerClient(PublicReadingDashboardService)
-  const [library, feedsSummary] = await Promise.all([
-    fetchOrNull(() => client.getSharedLibrary({ token })),
-    fetchOrNull(() => client.getSharedFeedsSummary({ token }))
-  ])
+export default function ReadingDashboardPublicPage() {
+  const { token } = useRouteParams<{ token: string }>()
+  const library = useSharedLibrary(token).data
 
   return (
     <PageContainer className="lg:flex lg:h-[calc(100dvh-9rem)] lg:flex-col lg:overflow-hidden">
@@ -32,14 +14,7 @@ export default async function ReadingDashboardPublicPage({
         title={library?.displayName ? `${library.displayName}'s reading` : 'Shared reading'}
         className="lg:mb-3"
       />
-      <SWRFallback
-        fallback={{
-          ...(library ? { [swrKeys.dashboardReading(token)]: library } : {}),
-          ...(feedsSummary ? { [swrKeys.dashboardFeedsSummary(token)]: feedsSummary } : {})
-        }}
-      >
-        <ReadingDashboardPublicClient token={token} initialData={library ?? undefined} />
-      </SWRFallback>
+      <ReadingDashboardPublicClient token={token} />
     </PageContainer>
   )
 }

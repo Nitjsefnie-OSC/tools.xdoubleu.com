@@ -1,8 +1,9 @@
+import type { Mock } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
-jest.mock('@/lib/env', () => ({ getApiUrl: jest.fn(() => 'http://localhost:8000') }))
-jest.mock('@/lib/watchparty/roomUtils', () => ({
-  buildWsUrl: jest.fn(() => 'ws://localhost:8000/ws')
+vi.mock('@/lib/env', () => ({ getApiUrl: vi.fn(() => 'http://localhost:8000') }))
+vi.mock('@/lib/watchparty/roomUtils', () => ({
+  buildWsUrl: vi.fn(() => 'ws://localhost:8000/ws')
 }))
 
 class MockWebSocket {
@@ -31,8 +32,8 @@ class MockWebSocket {
 }
 
 let mockWs: MockWebSocket
-let mockWebSocketFn: jest.Mock
-let mockRTCPeerConnectionFn: jest.Mock
+let mockWebSocketFn: Mock
+let mockRTCPeerConnectionFn: Mock
 
 class MockPC {
   connectionState = 'new'
@@ -65,25 +66,25 @@ class MockPC {
 }
 
 function makeMockTrack(kind: 'audio' | 'video') {
-  return { kind, enabled: true, stop: jest.fn(), onended: null as (() => void) | null }
+  return { kind, enabled: true, stop: vi.fn(), onended: null as (() => void) | null }
 }
 
 function makeMockStream() {
   const audioTrack = makeMockTrack('audio')
   const videoTrack = makeMockTrack('video')
   return {
-    getTracks: jest.fn(() => [audioTrack, videoTrack]),
-    getAudioTracks: jest.fn(() => [audioTrack]),
-    getVideoTracks: jest.fn(() => [videoTrack]),
+    getTracks: vi.fn(() => [audioTrack, videoTrack]),
+    getAudioTracks: vi.fn(() => [audioTrack]),
+    getVideoTracks: vi.fn(() => [videoTrack]),
     _audio: audioTrack,
     _video: videoTrack
   }
 }
 
 beforeEach(() => {
-  jest.useFakeTimers()
+  vi.useFakeTimers()
 
-  mockWebSocketFn = jest.fn().mockImplementation(() => {
+  mockWebSocketFn = vi.fn().mockImplementation(() => {
     mockWs = new MockWebSocket()
     return mockWs
   })
@@ -94,7 +95,7 @@ beforeEach(() => {
     configurable: true
   })
 
-  mockRTCPeerConnectionFn = jest.fn(() => new MockPC())
+  mockRTCPeerConnectionFn = vi.fn(() => new MockPC())
   Object.defineProperty(global, 'RTCPeerConnection', {
     value: mockRTCPeerConnectionFn,
     writable: true,
@@ -104,8 +105,8 @@ beforeEach(() => {
   const mockStream = makeMockStream()
   Object.defineProperty(global.navigator, 'mediaDevices', {
     value: {
-      getUserMedia: jest.fn().mockResolvedValue(mockStream),
-      getDisplayMedia: jest.fn().mockResolvedValue(mockStream)
+      getUserMedia: vi.fn().mockResolvedValue(mockStream),
+      getDisplayMedia: vi.fn().mockResolvedValue(mockStream)
     },
     writable: true,
     configurable: true
@@ -113,8 +114,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  jest.useRealTimers()
-  jest.clearAllMocks()
+  vi.useRealTimers()
+  vi.clearAllMocks()
 })
 
 import { useWatchPartyRTC } from '@/hooks/useWatchPartyRTC'
@@ -186,7 +187,7 @@ describe('useWatchPartyRTC — status transitions', () => {
     })
     const callsBefore = mockWebSocketFn.mock.calls.length
     act(() => {
-      jest.advanceTimersByTime(2000)
+      vi.advanceTimersByTime(2000)
     })
     expect(mockWebSocketFn.mock.calls.length).toBeGreaterThan(callsBefore)
   })

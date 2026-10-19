@@ -1,20 +1,20 @@
 import { render } from '@testing-library/react'
-import { usePathname } from 'next/navigation'
+import { usePathname } from '@/hooks/navigation'
 import ServiceWorkerRegistrar from '@/components/offline/ServiceWorkerRegistrar'
 import { registerServiceWorker, savePageForOffline } from '@/lib/offline/session'
 
-jest.mock('next/navigation', () => ({ usePathname: jest.fn() }))
-jest.mock('@/lib/offline/session', () => ({
-  registerServiceWorker: jest.fn(),
-  savePageForOffline: jest.fn()
+vi.mock('@/hooks/navigation', () => ({ usePathname: vi.fn() }))
+vi.mock('@/lib/offline/session', () => ({
+  registerServiceWorker: vi.fn(),
+  savePageForOffline: vi.fn()
 }))
 
 describe('ServiceWorkerRegistrar', () => {
   it('registers once and saves each visited page', () => {
-    jest.mocked(usePathname).mockReturnValue('/feeds')
+    vi.mocked(usePathname).mockReturnValue('/feeds')
     const { rerender } = render(<ServiceWorkerRegistrar />)
 
-    jest.mocked(usePathname).mockReturnValue('/recipes')
+    vi.mocked(usePathname).mockReturnValue('/recipes')
     rerender(<ServiceWorkerRegistrar />)
 
     expect(registerServiceWorker).toHaveBeenCalledTimes(1)

@@ -3,15 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-const mockSetBookTag = jest.fn()
-const mockMutate = jest.fn()
+const mockSetBookTag = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
+vi.mock('swr', () => ({
+  ...vi.requireActual('swr'),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useSetBookTag: () => mockSetBookTag
 }))
 
@@ -116,7 +116,7 @@ describe('BookOwnershipToggles', () => {
   })
 
   it('calls onSaved after toggle', async () => {
-    const onSaved = jest.fn()
+    const onSaved = vi.fn()
     render(<BookOwnershipToggles userBook={makeBook()} onSaved={onSaved} />)
 
     fireEvent.click(screen.getByRole('button', { name: /physical/i }))

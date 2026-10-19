@@ -3,15 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-const mockUpdateBookStatus = jest.fn()
-const mockMutate = jest.fn()
+const mockUpdateBookStatus = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
+vi.mock('swr', () => ({
+  ...vi.requireActual('swr'),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useUpdateBookStatus: () => mockUpdateBookStatus
 }))
 
@@ -30,12 +30,12 @@ function makeBook(overrides: { rating?: number; tags?: string[] } = {}) {
 
 describe('MarkAsCompletedDialog', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUpdateBookStatus.mockResolvedValue({})
   })
 
   it('marks the book as read with no rating or favourite by default', async () => {
-    render(<MarkAsCompletedDialog userBook={makeBook()} open={true} onOpenChange={jest.fn()} />)
+    render(<MarkAsCompletedDialog userBook={makeBook()} open={true} onOpenChange={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Mark as completed' }))
 
@@ -51,8 +51,8 @@ describe('MarkAsCompletedDialog', () => {
   })
 
   it('includes a chosen rating and favourite toggle in the completion call', async () => {
-    const onOpenChange = jest.fn()
-    const onCompleted = jest.fn()
+    const onOpenChange = vi.fn()
+    const onCompleted = vi.fn()
     render(
       <MarkAsCompletedDialog
         userBook={makeBook()}
@@ -80,7 +80,7 @@ describe('MarkAsCompletedDialog', () => {
 
   it('shows an error and keeps the dialog open when the save fails', async () => {
     mockUpdateBookStatus.mockRejectedValue(new Error('nope'))
-    const onOpenChange = jest.fn()
+    const onOpenChange = vi.fn()
     render(<MarkAsCompletedDialog userBook={makeBook()} open={true} onOpenChange={onOpenChange} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Mark as completed' }))
@@ -90,7 +90,7 @@ describe('MarkAsCompletedDialog', () => {
   })
 
   it('highlights hovered stars and clears the highlight on mouse leave', () => {
-    render(<MarkAsCompletedDialog userBook={makeBook()} open={true} onOpenChange={jest.fn()} />)
+    render(<MarkAsCompletedDialog userBook={makeBook()} open={true} onOpenChange={vi.fn()} />)
 
     const star3 = screen.getByLabelText('Rate 3 stars')
     fireEvent.mouseEnter(star3)
@@ -101,7 +101,7 @@ describe('MarkAsCompletedDialog', () => {
   })
 
   it('resets the chosen rating and favourite when cancelled', () => {
-    const onOpenChange = jest.fn()
+    const onOpenChange = vi.fn()
     render(<MarkAsCompletedDialog userBook={makeBook()} open={true} onOpenChange={onOpenChange} />)
 
     fireEvent.click(screen.getByLabelText('Rate 4 stars'))

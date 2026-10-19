@@ -3,15 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { GameSchema } from '@/lib/gen/games/v1/games_pb'
 
-const mockSetGameFavourite = jest.fn()
-const mockMutate = jest.fn()
+const mockSetGameFavourite = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
+vi.mock('swr', () => ({
+  ...vi.requireActual('swr'),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
-jest.mock('@/hooks/useGames', () => ({
+vi.mock('@/hooks/useGames', () => ({
   useSetGameFavourite: () => mockSetGameFavourite
 }))
 

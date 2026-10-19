@@ -1,19 +1,19 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const fetchOrNull = jest.fn()
-const fallbackProps = jest.fn()
-const mockGetSeries = jest.fn()
+const fetchOrNull = vi.fn()
+const fallbackProps = vi.fn()
+const mockGetSeries = vi.fn()
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({ getSeries: mockGetSeries }))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({ getSeries: mockGetSeries }))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => Promise<unknown>) => fetchOrNull(fn)
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children, keyed }: { children: React.ReactNode; keyed: unknown }) => {
     fallbackProps(keyed)
@@ -21,7 +21,7 @@ jest.mock('@/components/SWRFallback', () => ({
   }
 }))
 
-jest.mock('@/components/books/SeriesBooksClient', () => ({
+vi.mock('@/components/books/SeriesBooksClient', () => ({
   __esModule: true,
   default: ({ name }: { name: string }) => <div data-testid="client">{name}</div>
 }))

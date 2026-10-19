@@ -9,15 +9,15 @@ class MockPC {
   ontrack: ((e: { streams: unknown[] }) => void) | null = null
   onconnectionstatechange: (() => void) | null = null
   tracks: unknown[] = []
-  addTrack = jest.fn((t: unknown) => {
+  addTrack = vi.fn((t: unknown) => {
     this.tracks.push(t)
   })
-  createOffer = jest.fn(async () => ({ type: 'offer', sdp: 'mock' }) as RTCSessionDescriptionInit)
-  createAnswer = jest.fn(async () => ({ type: 'answer', sdp: 'mock' }) as RTCSessionDescriptionInit)
-  setLocalDescription = jest.fn(async () => {})
-  setRemoteDescription = jest.fn(async () => {})
-  addIceCandidate = jest.fn(async () => {})
-  close = jest.fn(() => {
+  createOffer = vi.fn(async () => ({ type: 'offer', sdp: 'mock' }) as RTCSessionDescriptionInit)
+  createAnswer = vi.fn(async () => ({ type: 'answer', sdp: 'mock' }) as RTCSessionDescriptionInit)
+  setLocalDescription = vi.fn(async () => {})
+  setRemoteDescription = vi.fn(async () => {})
+  addIceCandidate = vi.fn(async () => {})
+  close = vi.fn(() => {
     this.connectionState = 'closed'
   })
 }
@@ -42,7 +42,7 @@ function makeVideoEl() {
 }
 
 function makeTrack(kind: 'audio' | 'video') {
-  return { kind, enabled: true, stop: jest.fn(), onended: null as (() => void) | null }
+  return { kind, enabled: true, stop: vi.fn(), onended: null as (() => void) | null }
 }
 
 function makeStream() {
@@ -73,9 +73,9 @@ function makeRefs(): RTCRefs {
 
 function makeController(role: 'presenter' | 'viewer' = 'viewer') {
   const refs = makeRefs()
-  const send = jest.fn()
-  const setError = jest.fn()
-  const onSharingChange = jest.fn()
+  const send = vi.fn()
+  const setError = vi.fn()
+  const onSharingChange = vi.fn()
   const mainVideoRef = { current: makeVideoEl() }
   const selfCamRef = { current: makeVideoEl() }
   const remoteCamRef = { current: makeVideoEl() }
@@ -110,7 +110,7 @@ function makeController(role: 'presenter' | 'viewer' = 'viewer') {
 beforeEach(() => {
   createdPCs = []
   Object.defineProperty(global, 'RTCPeerConnection', {
-    value: jest.fn(() => {
+    value: vi.fn(() => {
       const pc = new MockPC()
       createdPCs.push(pc)
       return pc
@@ -120,8 +120,8 @@ beforeEach(() => {
   })
   Object.defineProperty(global.navigator, 'mediaDevices', {
     value: {
-      getUserMedia: jest.fn().mockResolvedValue(asStream(makeStream())),
-      getDisplayMedia: jest.fn().mockResolvedValue(asStream(makeStream()))
+      getUserMedia: vi.fn().mockResolvedValue(asStream(makeStream())),
+      getDisplayMedia: vi.fn().mockResolvedValue(asStream(makeStream()))
     },
     writable: true,
     configurable: true
@@ -129,7 +129,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('createPC', () => {
@@ -338,7 +338,7 @@ describe('startCamera', () => {
   })
 
   it('reports an error when camera capture is refused', async () => {
-    jest.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValueOnce(new Error('No camera'))
+    vi.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValueOnce(new Error('No camera'))
     const { controller, setError } = makeController()
     await controller.startCamera()
     expect(setError).toHaveBeenCalledWith('No camera')

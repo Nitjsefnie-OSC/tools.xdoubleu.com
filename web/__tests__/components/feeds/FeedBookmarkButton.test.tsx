@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const updateItem = jest.fn()
-jest.mock('@/hooks/useFeeds', () => ({
+const updateItem = vi.fn()
+vi.mock('@/hooks/useFeeds', () => ({
   useUpdateItem: () => updateItem
 }))
 
@@ -9,7 +9,7 @@ import FeedBookmarkButton from '@/components/feeds/FeedBookmarkButton'
 
 describe('FeedBookmarkButton', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('bookmarks an item optimistically and persists it', async () => {

@@ -1,27 +1,27 @@
 import { renderHook } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-let mockMutate = jest.fn()
-jest.mock('swr', () => ({
+let mockMutate = vi.fn()
+vi.mock('swr', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
   useSWRConfig: () => ({ mutate: mockMutate })
 }))
 const mockClient = {
-  getProfile: jest.fn().mockResolvedValue({}),
-  listRecommendations: jest.fn().mockResolvedValue({}),
-  refreshProfile: jest.fn().mockResolvedValue({}),
-  refreshRecommendations: jest.fn().mockResolvedValue({}),
-  getStats: jest.fn().mockResolvedValue({}),
-  listEvents: jest.fn().mockResolvedValue({ events: [{ itemId: 'b1' }], hasMore: true }),
-  setFeedback: jest.fn().mockResolvedValue({}),
-  setSaved: jest.fn().mockResolvedValue({}),
-  acceptRecommendation: jest.fn().mockResolvedValue({}),
-  setEmailNewPicks: jest.fn().mockResolvedValue({})
+  getProfile: vi.fn().mockResolvedValue({}),
+  listRecommendations: vi.fn().mockResolvedValue({}),
+  refreshProfile: vi.fn().mockResolvedValue({}),
+  refreshRecommendations: vi.fn().mockResolvedValue({}),
+  getStats: vi.fn().mockResolvedValue({}),
+  listEvents: vi.fn().mockResolvedValue({ events: [{ itemId: 'b1' }], hasMore: true }),
+  setFeedback: vi.fn().mockResolvedValue({}),
+  setSaved: vi.fn().mockResolvedValue({}),
+  acceptRecommendation: vi.fn().mockResolvedValue({}),
+  setEmailNewPicks: vi.fn().mockResolvedValue({})
 }
-jest.mock('@/lib/client', () => ({ createServiceClient: jest.fn(() => mockClient) }))
-jest.mock('@/lib/gen/taste/v1/taste_pb', () => ({
-  ...jest.requireActual('@/lib/gen/taste/v1/taste_pb'),
+vi.mock('@/lib/client', () => ({ createServiceClient: vi.fn(() => mockClient) }))
+vi.mock('@/lib/gen/taste/v1/taste_pb', () => ({
+  ...vi.requireActual('@/lib/gen/taste/v1/taste_pb'),
   TasteService: {}
 }))
 
@@ -42,10 +42,10 @@ import {
   useTasteStats
 } from '@/hooks/useTaste'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
   mockUseSWR.mockImplementation((key: unknown, fetcher: unknown) => {
     if (key !== null && typeof fetcher === 'function') void fetcher()
@@ -143,7 +143,7 @@ describe('useRefreshTasteProfile', () => {
   it('uses the current SWR mutate', async () => {
     const { result, rerender } = renderHook(() => useRefreshTasteProfile())
     const first = mockMutate
-    mockMutate = jest.fn()
+    mockMutate = vi.fn()
     rerender()
     await result.current()
     expect(mockMutate).toHaveBeenCalledWith('/taste/profile')
@@ -205,7 +205,7 @@ describe('usePickActions', () => {
   it('uses the current mutate', async () => {
     const { result, rerender } = renderHook(() => usePickActions())
     const first = mockMutate
-    mockMutate = jest.fn()
+    mockMutate = vi.fn()
     rerender()
     await result.current.setSaved('r1', true)
     expect(mockMutate).toHaveBeenCalled()

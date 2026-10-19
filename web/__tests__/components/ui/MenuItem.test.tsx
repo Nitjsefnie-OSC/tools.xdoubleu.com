@@ -16,7 +16,7 @@ describe('MenuItem', () => {
   })
 
   it('fires onClick', () => {
-    const onClick = jest.fn()
+    const onClick = vi.fn()
     render(<MenuItem onClick={onClick}>Option</MenuItem>)
     fireEvent.click(screen.getByRole('button', { name: 'Option' }))
     expect(onClick).toHaveBeenCalledTimes(1)

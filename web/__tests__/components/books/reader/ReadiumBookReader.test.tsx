@@ -8,9 +8,9 @@ type Listeners = {
   tap: (e: { x: number; y: number }) => boolean
 }
 
-const mockLoadPublication = jest.fn()
-const mockResumeLocator = jest.fn()
-const mockLocatorToPosition = jest.fn()
+const mockLoadPublication = vi.fn()
+const mockResumeLocator = vi.fn()
+const mockLocatorToPosition = vi.fn()
 let nav: FakeNavigator | null = null
 let loadError: Error | null = null
 let loadHangs = false
@@ -19,17 +19,17 @@ let prefsFail = false
 class FakeNavigator {
   listeners: Listeners
   initial: unknown
-  load = jest.fn(async () => {
+  load = vi.fn(async () => {
     if (loadError) throw loadError
     if (loadHangs) await new Promise(() => {})
   })
-  destroy = jest.fn(async () => {})
-  submitPreferences = jest.fn(async () => {
+  destroy = vi.fn(async () => {})
+  submitPreferences = vi.fn(async () => {
     if (prefsFail) throw new Error('late')
   })
-  goBackward = jest.fn()
-  goForward = jest.fn()
-  goLink = jest.fn()
+  goBackward = vi.fn()
+  goForward = vi.fn()
+  goLink = vi.fn()
   timeline = {
     tocEntryFor: (item: TimelineItem) => {
       const href = item.references[0]
@@ -45,7 +45,7 @@ class FakeNavigator {
   }
 }
 
-jest.mock(
+vi.mock(
   '@readium/navigator',
   () => ({
     EpubNavigator: function (...args: ConstructorParameters<typeof FakeNavigator>) {
@@ -57,7 +57,7 @@ jest.mock(
   }),
   { virtual: true }
 )
-jest.mock(
+vi.mock(
   '@readium/shared',
   () => ({
     Link: class {
@@ -66,7 +66,7 @@ jest.mock(
   }),
   { virtual: true }
 )
-jest.mock('@/lib/books/readium', () => ({
+vi.mock('@/lib/books/readium', () => ({
   loadPublication: (...a: unknown[]) => mockLoadPublication(...a),
   resumeLocator: (...a: unknown[]) => mockResumeLocator(...a),
   locatorToPosition: (...a: unknown[]) => mockLocatorToPosition(...a),
@@ -94,8 +94,8 @@ const toc = [
 ]
 
 async function renderReader(props: Partial<React.ComponentProps<typeof ReadiumBookReader>> = {}) {
-  const onClose = jest.fn()
-  const onRelocate = jest.fn()
+  const onClose = vi.fn()
+  const onRelocate = vi.fn()
   render(
     <ReadiumBookReader
       bookId="b1"
@@ -184,24 +184,24 @@ describe('ReadiumBookReader', () => {
 
   it('shows an error when the book fails to open', async () => {
     loadError = new Error('boom')
-    render(<ReadiumBookReader bookId="b1" title="Dune" onClose={jest.fn()} />)
+    render(<ReadiumBookReader bookId="b1" title="Dune" onClose={vi.fn()} />)
     expect(await screen.findByText(/couldn.t load|failed|error/i)).toBeInTheDocument()
   })
 
   it('shows an error instead of spinning when the navigator never finishes loading', async () => {
     loadHangs = true
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     try {
-      render(<ReadiumBookReader bookId="b1" title="Dune" onClose={jest.fn()} />)
+      render(<ReadiumBookReader bookId="b1" title="Dune" onClose={vi.fn()} />)
       await waitFor(() => expect(nav?.load).toHaveBeenCalled())
       expect(screen.getByText('Loading book…')).toBeInTheDocument()
       await act(async () => {
-        jest.advanceTimersByTime(READIUM_LOAD_TIMEOUT_MS)
+        vi.advanceTimersByTime(READIUM_LOAD_TIMEOUT_MS)
       })
       expect(screen.getByText(/couldn.t load|failed|error/i)).toBeInTheDocument()
       expect(screen.queryByText('Loading book…')).not.toBeInTheDocument()
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   })
 
@@ -210,13 +210,13 @@ describe('ReadiumBookReader', () => {
       manifest: {},
       positionsFromManifest: () => Promise.resolve([])
     })
-    render(<ReadiumBookReader bookId="b1" title="Dune" onClose={jest.fn()} />)
+    render(<ReadiumBookReader bookId="b1" title="Dune" onClose={vi.fn()} />)
     expect(await screen.findByText(/couldn.t load|failed|error/i)).toBeInTheDocument()
     expect(nav).toBeNull()
   })
 
   it('closes and destroys the navigator on unmount', async () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     const { unmount } = render(<ReadiumBookReader bookId="b1" title="Dune" onClose={onClose} />)
     await waitFor(() => expect(nav?.load).toHaveBeenCalled())
     fireEvent.click(screen.getByRole('button', { name: 'Close reader' }))
@@ -290,7 +290,7 @@ describe('ReadiumBookReader', () => {
   it('does not build a navigator when unmounted while loading', async () => {
     let resolve: (pub: unknown) => void = () => {}
     mockLoadPublication.mockReturnValue(new Promise((r) => (resolve = r)))
-    const { unmount } = render(<ReadiumBookReader bookId="b1" title="Dune" onClose={jest.fn()} />)
+    const { unmount } = render(<ReadiumBookReader bookId="b1" title="Dune" onClose={vi.fn()} />)
     unmount()
     await act(async () => {
       resolve({ manifest: {}, positionsFromManifest: () => Promise.resolve(positions) })
@@ -319,7 +319,7 @@ describe('ReadiumBookReader', () => {
     })
 
     it('does not touch the navigator after unmount, and survives a throwing destroy', async () => {
-      const { unmount } = render(<ReadiumBookReader bookId="b1" title="Dune" onClose={jest.fn()} />)
+      const { unmount } = render(<ReadiumBookReader bookId="b1" title="Dune" onClose={vi.fn()} />)
       await screen.findByRole('button', { name: 'Contents' })
       const n = nav!
       n.destroy.mockImplementation(() => {
@@ -334,7 +334,7 @@ describe('ReadiumBookReader', () => {
 
     it('does not call the navigator before it has opened', async () => {
       loadHangs = true
-      render(<ReadiumBookReader bookId="b1" title="Dune" onClose={jest.fn()} />)
+      render(<ReadiumBookReader bookId="b1" title="Dune" onClose={vi.fn()} />)
       await waitFor(() => expect(nav?.load).toHaveBeenCalled())
       nav!.listeners.tap({ x: 290, y: 0 })
       expect(nav!.goForward).not.toHaveBeenCalled()

@@ -1,5 +1,3 @@
-'use client'
-
 import { useId } from 'react'
 import { Combobox } from '@/components/ui/combobox'
 import { Field } from '@/components/ui/field'

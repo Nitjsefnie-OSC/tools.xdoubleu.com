@@ -5,29 +5,29 @@ const originalFetch = global.fetch
 describe('consentClient', () => {
   afterEach(() => {
     global.fetch = originalFetch
-    jest.resetAllMocks()
+    vi.resetAllMocks()
   })
 
   describe('getConsentInfo', () => {
     it('returns null without a client_id', async () => {
-      global.fetch = jest.fn()
+      global.fetch = vi.fn()
       expect(await getConsentInfo(new URLSearchParams())).toBeNull()
       expect(global.fetch).not.toHaveBeenCalled()
     })
 
     it('returns null when the api responds with an error', async () => {
-      global.fetch = jest.fn().mockResolvedValue({ ok: false })
+      global.fetch = vi.fn().mockResolvedValue({ ok: false })
       expect(await getConsentInfo(new URLSearchParams('client_id=c1'))).toBeNull()
     })
 
     it('fetches the full request with the session and maps the response', async () => {
-      const json = jest.fn().mockResolvedValue({
+      const json = vi.fn().mockResolvedValue({
         client_id: 'c1',
         client_name: 'Claude CLI',
         scope: 'openid email',
         consent_token: 'tok'
       })
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, json })
+      global.fetch = vi.fn().mockResolvedValue({ ok: true, json })
 
       const info = await getConsentInfo(
         new URLSearchParams('client_id=c1&scope=openid+email&state=s1'),
@@ -47,13 +47,13 @@ describe('consentClient', () => {
     })
 
     it('omits the cookie without a session', async () => {
-      const json = jest.fn().mockResolvedValue({ client_id: 'c1', client_name: 'X', scope: '' })
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, json })
+      const json = vi.fn().mockResolvedValue({ client_id: 'c1', client_name: 'X', scope: '' })
+      global.fetch = vi.fn().mockResolvedValue({ ok: true, json })
 
       const info = await getConsentInfo(new URLSearchParams('client_id=c1'))
 
       expect(info?.consentToken).toBeUndefined()
-      const [, init] = jest.mocked(global.fetch).mock.calls[0]
+      const [, init] = vi.mocked(global.fetch).mock.calls[0]
       expect(init).toEqual(expect.objectContaining({ headers: undefined }))
     })
   })
@@ -61,7 +61,7 @@ describe('consentClient', () => {
   describe('decideAuthorization', () => {
     it('posts the decision and returns the redirect location', async () => {
       const headers = new Headers({ location: 'https://cb?code=1' })
-      global.fetch = jest.fn().mockResolvedValue({ headers })
+      global.fetch = vi.fn().mockResolvedValue({ headers })
 
       const location = await decideAuthorization(
         new URLSearchParams('client_id=c1&state=s1'),
@@ -71,7 +71,7 @@ describe('consentClient', () => {
       )
 
       expect(location).toBe('https://cb?code=1')
-      const [url, init] = jest.mocked(global.fetch).mock.calls[0]
+      const [url, init] = vi.mocked(global.fetch).mock.calls[0]
       expect(url).toContain('/oauth2/authorize?')
       expect(url).toContain('consent=allow')
       expect(url).toContain('client_id=c1')
@@ -85,14 +85,14 @@ describe('consentClient', () => {
     })
 
     it('throws when the api does not return a redirect location', async () => {
-      global.fetch = jest.fn().mockResolvedValue({ headers: new Headers() })
+      global.fetch = vi.fn().mockResolvedValue({ headers: new Headers() })
       await expect(
         decideAuthorization(new URLSearchParams('client_id=c1'), 'deny', 'accessToken=at')
       ).rejects.toThrow('Failed to deny authorization')
     })
 
     it('throws an approve-specific message when denied a redirect location', async () => {
-      global.fetch = jest.fn().mockResolvedValue({ headers: new Headers() })
+      global.fetch = vi.fn().mockResolvedValue({ headers: new Headers() })
       await expect(
         decideAuthorization(new URLSearchParams('client_id=c1'), 'allow', 'accessToken=at')
       ).rejects.toThrow('Failed to approve authorization')
@@ -100,11 +100,11 @@ describe('consentClient', () => {
 
     it('omits the cookie header when there is no session cookie', async () => {
       const headers = new Headers({ location: 'https://cb?code=1' })
-      global.fetch = jest.fn().mockResolvedValue({ headers })
+      global.fetch = vi.fn().mockResolvedValue({ headers })
 
       await decideAuthorization(new URLSearchParams('client_id=c1'), 'allow', '')
 
-      const [, init] = jest.mocked(global.fetch).mock.calls[0]
+      const [, init] = vi.mocked(global.fetch).mock.calls[0]
       expect(init).toEqual(expect.objectContaining({ headers: undefined }))
     })
   })

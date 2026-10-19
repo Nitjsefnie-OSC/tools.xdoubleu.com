@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import type { Achievement } from '@/lib/gen/games/v1/games_pb'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -8,7 +7,7 @@ export default function AchievementCard({ achievement }: { achievement: Achievem
   return (
     <Card className="flex items-start gap-3 p-3">
       {achievement.iconUrl && (
-        <Image
+        <img
           src={achievement.iconUrl}
           alt={achievement.displayName}
           width={48}

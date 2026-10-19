@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import ListSwitch from '@/components/ListSwitch'
 import MovieSearchResults from '@/components/movies/MovieSearchResults'

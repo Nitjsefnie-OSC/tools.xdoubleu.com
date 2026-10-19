@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import OfflineBookBadge from '@/components/books/OfflineBookBadge'
 
-jest.mock('@/hooks/useOfflineBooks', () => ({
+vi.mock('@/hooks/useOfflineBooks', () => ({
   useStoredBookIds: () => new Set(['stored'])
 }))
 

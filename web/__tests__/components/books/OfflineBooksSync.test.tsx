@@ -8,26 +8,26 @@ interface LibraryState {
 }
 
 let mockLibrary: LibraryState = { isValidating: false }
-const mockUseLibrary = jest.fn<LibraryState, [unknown]>(() => mockLibrary)
-jest.mock('@/hooks/useBooks', () => ({
+const mockUseLibrary = vi.fn<LibraryState, [unknown]>(() => mockLibrary)
+vi.mock('@/hooks/useBooks', () => ({
   useLibrary: (config: unknown) => mockUseLibrary(config)
 }))
 
 let mockServedFromCache = false
-const mockServedFromCacheFn = jest.fn<boolean, [unknown]>(() => mockServedFromCache)
-jest.mock('@/lib/offline/persist', () => ({
+const mockServedFromCacheFn = vi.fn<boolean, [unknown]>(() => mockServedFromCache)
+vi.mock('@/lib/offline/persist', () => ({
   servedFromCache: (key: unknown) => mockServedFromCacheFn(key)
 }))
 
-const mockSync = jest.fn()
-jest.mock('@/lib/books/offlineSync', () => ({
+const mockSync = vi.fn()
+vi.mock('@/lib/books/offlineSync', () => ({
   syncOfflineBooks: (library: unknown) => mockSync(library)
 }))
 
 const library = { reading: [] }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockServedFromCache = false
   mockSync.mockResolvedValue(undefined)
 })

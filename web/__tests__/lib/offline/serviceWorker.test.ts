@@ -1,4 +1,4 @@
-/** @jest-environment node */
+/** @vitest-environment node */
 import {
   serviceWorker,
   serviceWorkerScript,
@@ -54,13 +54,13 @@ type Listener = (event: SwFetchEvent & SwMessageEvent) => void
 function setup(enabled = true) {
   const listeners = new Map<string, Listener>()
   const caches = new FakeCacheStorage()
-  const fetch = jest.fn<Promise<Response>, [RequestInfo | URL, RequestInit?]>()
+  const fetch = vi.fn<Promise<Response>, [RequestInfo | URL, RequestInit?]>()
   const scope: SwScope = {
     location: { origin: ORIGIN },
     caches,
-    registration: { unregister: jest.fn(async () => true) },
-    clients: { claim: jest.fn(async () => {}) },
-    skipWaiting: jest.fn(async () => {}),
+    registration: { unregister: vi.fn(async () => true) },
+    clients: { claim: vi.fn(async () => {}) },
+    skipWaiting: vi.fn(async () => {}),
     fetch,
     addEventListener: (type: string, listener: Listener) => listeners.set(type, listener)
   }

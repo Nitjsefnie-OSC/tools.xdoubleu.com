@@ -1,7 +1,5 @@
 // Logger used instead of console.*: logs locally and fire-and-forgets a
-// batched copy to the api's log store. Server-side it posts directly with
-// OBSERVABILITY_INGEST_SECRET; client-side via app/logs/route.ts, which adds it.
-import { getApiUrl, getObservabilityIngestSecret } from './env'
+// batched copy to the api's log store via POST /logs (api/cmd/api/spa_logs.go).
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -14,7 +12,6 @@ interface QueuedEntry {
 
 const FLUSH_DELAY_MS = 2000
 const MAX_BATCH_SIZE = 25
-const INGEST_PATH = '/api/observability/logs'
 
 let queue: QueuedEntry[] = []
 let flushTimer: ReturnType<typeof setTimeout> | null = null
@@ -34,24 +31,11 @@ function flush() {
 
 async function send(entries: QueuedEntry[]): Promise<void> {
   try {
-    if (typeof window === 'undefined') {
-      const secret = getObservabilityIngestSecret()
-      if (!secret) return
-      await fetch(`${getApiUrl()}${INGEST_PATH}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Observability-Ingest-Secret': secret
-        },
-        body: JSON.stringify({ entries })
-      })
-    } else {
-      await fetch('/logs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entries })
-      })
-    }
+    await fetch('/logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries })
+    })
   } catch {
     // Best-effort: the console output already happened.
   }

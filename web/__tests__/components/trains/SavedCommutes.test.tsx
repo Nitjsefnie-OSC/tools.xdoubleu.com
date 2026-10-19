@@ -24,9 +24,9 @@ const pair: CommutePair = {
 }
 
 function setup(props: Partial<React.ComponentProps<typeof SavedCommutes>> = {}) {
-  const onOpen = jest.fn()
-  const onCreate = jest.fn().mockResolvedValue(undefined)
-  const onRemove = jest.fn().mockResolvedValue(undefined)
+  const onOpen = vi.fn()
+  const onCreate = vi.fn().mockResolvedValue(undefined)
+  const onRemove = vi.fn().mockResolvedValue(undefined)
   render(
     <SavedCommutes
       commutes={props.commutes ?? [commute()]}

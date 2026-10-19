@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, type ReactNode, type RefObject } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Breadcrumb } from '@/components/ui/breadcrumb'

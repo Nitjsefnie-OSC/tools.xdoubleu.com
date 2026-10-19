@@ -1,24 +1,24 @@
 import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 
-jest.mock('@/components/podcasts/Favourites', () => ({
+vi.mock('@/components/podcasts/Favourites', () => ({
   __esModule: true,
   default: () => <div data-testid="favourites" />
 }))
-jest.mock('@/components/podcasts/ShowSearchResults', () => ({
+vi.mock('@/components/podcasts/ShowSearchResults', () => ({
   __esModule: true,
   default: ({ query }: { query: string }) => <div data-testid="results">{query}</div>
 }))
 
 import PodcastsClient from '@/components/podcasts/PodcastsClient'
 
-beforeEach(() => jest.useFakeTimers())
-afterEach(() => jest.useRealTimers())
+beforeEach(() => vi.useFakeTimers())
+afterEach(() => vi.useRealTimers())
 
 function type(value: string) {
   fireEvent.change(screen.getByLabelText('Search podcasts'), { target: { value } })
   act(() => {
-    jest.advanceTimersByTime(300)
+    vi.advanceTimersByTime(300)
   })
 }
 
@@ -46,11 +46,11 @@ describe('PodcastsClient', () => {
     fireEvent.change(box, { target: { value: 'hi' } })
     expect(screen.getByTestId('favourites')).toBeInTheDocument()
     act(() => {
-      jest.advanceTimersByTime(299)
+      vi.advanceTimersByTime(299)
     })
     expect(screen.getByTestId('favourites')).toBeInTheDocument()
     act(() => {
-      jest.advanceTimersByTime(1)
+      vi.advanceTimersByTime(1)
     })
     expect(screen.getByTestId('results')).toBeInTheDocument()
   })
@@ -60,15 +60,15 @@ describe('PodcastsClient', () => {
     const box = screen.getByLabelText('Search podcasts')
     fireEvent.change(box, { target: { value: 'hi' } })
     act(() => {
-      jest.advanceTimersByTime(200)
+      vi.advanceTimersByTime(200)
     })
     fireEvent.change(box, { target: { value: 'hij' } })
     act(() => {
-      jest.advanceTimersByTime(200)
+      vi.advanceTimersByTime(200)
     })
     expect(screen.getByTestId('favourites')).toBeInTheDocument()
     act(() => {
-      jest.advanceTimersByTime(100)
+      vi.advanceTimersByTime(100)
     })
     expect(screen.getByTestId('results')).toHaveTextContent('hij')
   })

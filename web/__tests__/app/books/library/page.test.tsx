@@ -1,35 +1,29 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
+vi.mock('@/components/books/BooksSection', () => () => <div data-testid="books-section" />)
 
-jest.mock('@/components/books/BooksSection', () => () => <div data-testid="books-section" />)
-
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({}))
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({}))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: jest.fn(async () => null)
+vi.mock('@/lib/server/fetchers', () => ({
+  fetchOrNull: vi.fn(async () => null)
 }))
 
-jest.mock('@/components/SWRFallback', () => ({
+vi.mock('@/components/SWRFallback', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
-jest.mock('@/hooks/useAuth', () => ({
-  useCurrentUser: jest.fn()
+vi.mock('@/hooks/useAuth', () => ({
+  useCurrentUser: vi.fn()
 }))
 
 import { useCurrentUser } from '@/hooks/useAuth'
 import BacklogBooksLibraryPage from '@/app/books/library/page'
 
-const mockUseCurrentUser = jest.mocked(useCurrentUser)
+const mockUseCurrentUser = vi.mocked(useCurrentUser)
 
 describe('BacklogBooksLibraryPage', () => {
   beforeEach(() => {

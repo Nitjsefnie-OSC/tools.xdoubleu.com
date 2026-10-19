@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, useState } from 'react'
 import type { BacklogEntry } from '@/lib/gen/movies/v1/movies_pb'
 import { useFetchMoviesBacklogPage, useMoviesActions, useMoviesBacklog } from '@/hooks/useMovies'

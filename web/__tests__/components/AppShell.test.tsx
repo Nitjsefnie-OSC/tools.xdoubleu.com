@@ -1,56 +1,56 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const fetchOrNull = jest.fn()
+const fetchOrNull = vi.fn()
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({
-    getCurrentUser: jest.fn()
+vi.mock('@/lib/server/client', () => ({
+  createServerClient: vi.fn(async () => ({
+    getCurrentUser: vi.fn()
   }))
 }))
 
-jest.mock('@/lib/server/fetchers', () => ({
+vi.mock('@/lib/server/fetchers', () => ({
   fetchOrNull: (fn: () => Promise<unknown>) => fetchOrNull(fn)
 }))
 
-jest.mock('@/components/SWRProvider', () => ({
+vi.mock('@/components/SWRProvider', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="swr-provider">{children}</div>
   )
 }))
 
-jest.mock('@/components/Navbar', () => ({
+vi.mock('@/components/Navbar', () => ({
   __esModule: true,
   default: () => <div data-testid="navbar" />
 }))
 
-jest.mock('@/components/Footer', () => ({
+vi.mock('@/components/Footer', () => ({
   __esModule: true,
   default: () => <div data-testid="footer" />
 }))
 
-jest.mock('@/components/offline/OfflineBanner', () => ({
+vi.mock('@/components/offline/OfflineBanner', () => ({
   __esModule: true,
   default: () => <div data-testid="offline-banner" />
 }))
 
-jest.mock('@/components/offline/OutboxSync', () => ({
+vi.mock('@/components/offline/OutboxSync', () => ({
   __esModule: true,
   default: () => <div data-testid="outbox-sync" />
 }))
 
-jest.mock('@/components/offline/ServiceWorkerRegistrar', () => ({
+vi.mock('@/components/offline/ServiceWorkerRegistrar', () => ({
   __esModule: true,
   default: () => <div data-testid="sw-registrar" />
 }))
 
-jest.mock('@/components/DeployNotification', () => ({
+vi.mock('@/components/DeployNotification', () => ({
   __esModule: true,
   default: () => <div data-testid="deploy-notification" />
 }))
 
-jest.mock('@/components/books/OfflineBooksSync', () => ({
+vi.mock('@/components/books/OfflineBooksSync', () => ({
   __esModule: true,
   default: () => <div data-testid="offline-books-sync" />
 }))

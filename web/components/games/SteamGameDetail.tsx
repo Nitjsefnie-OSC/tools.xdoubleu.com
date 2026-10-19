@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, type ReactNode } from 'react'
 import type { Achievement, Game } from '@/lib/gen/games/v1/games_pb'
 import AchievementCard from '@/components/games/AchievementCard'

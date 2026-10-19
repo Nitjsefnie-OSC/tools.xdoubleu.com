@@ -1,7 +1,5 @@
-'use client'
-
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from '@/hooks/navigation'
 import {
   useTodoistConnection,
   useConnectTodoist,

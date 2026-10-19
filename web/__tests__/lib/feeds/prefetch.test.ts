@@ -1,22 +1,22 @@
-jest.mock('@/lib/offline/store', () => ({
-  loadEntry: jest.fn(),
-  saveEntry: jest.fn()
+vi.mock('@/lib/offline/store', () => ({
+  loadEntry: vi.fn(),
+  saveEntry: vi.fn()
 }))
 
 import type { Client } from '@connectrpc/connect'
 import type { FeedService } from '@/lib/gen/feeds/v1/feeds_pb'
 import { loadEntry, saveEntry } from '@/lib/offline/store'
 
-const listFeedItems = jest.fn()
-const getFeedItem = jest.fn()
+const listFeedItems = vi.fn()
+const getFeedItem = vi.fn()
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- only the two RPCs the prefetch calls
 const client = { listFeedItems, getFeedItem } as unknown as Client<typeof FeedService>
 
 // A fresh module per test: the prefetch runs once per page load.
 function load(): typeof import('@/lib/feeds/prefetch') {
   let mod: typeof import('@/lib/feeds/prefetch') | undefined
-  jest.isolateModules(() => {
-    mod = jest.requireActual<typeof import('@/lib/feeds/prefetch')>('@/lib/feeds/prefetch')
+  vi.isolateModules(() => {
+    mod = vi.requireActual<typeof import('@/lib/feeds/prefetch')>('@/lib/feeds/prefetch')
   })
   if (!mod) throw new Error('module not loaded')
   return mod
@@ -27,7 +27,7 @@ function setOnline(online: boolean) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   setOnline(true)
   listFeedItems.mockResolvedValue({
     items: [

@@ -3,9 +3,9 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import BookDescription from '@/components/books/BookDescription'
 
-jest.mock('react-markdown', () => ({
+vi.mock('react-markdown', () => ({
   __esModule: true,
-  default: jest.fn(({ children }: { children: string }) => <div>{children}</div>)
+  default: vi.fn(({ children }: { children: string }) => <div>{children}</div>)
 }))
 
 describe('BookDescription', () => {
@@ -14,7 +14,7 @@ describe('BookDescription', () => {
     const root = screen.getByText('**Bold** text').parentElement
     expect(root).toHaveAttribute('id', 'desc')
     expect(root).toHaveClass('prose', 'prose-sm', 'max-w-none', 'text-fg', 'extra')
-    expect(jest.mocked(ReactMarkdown).mock.calls[0][0]).toMatchObject({
+    expect(vi.mocked(ReactMarkdown).mock.calls[0][0]).toMatchObject({
       remarkPlugins: [remarkGfm]
     })
   })
