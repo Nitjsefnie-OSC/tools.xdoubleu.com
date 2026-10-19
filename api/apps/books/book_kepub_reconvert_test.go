@@ -15,6 +15,19 @@ import (
 	booksv1 "tools.xdoubleu.com/gen/books/v1"
 )
 
+// drainKEPUBQueue runs the workers job's drain until the shared queue is empty,
+// since other tests may have left requests ahead of the one under test.
+func drainKEPUBQueue(t *testing.T) {
+	t.Helper()
+	for {
+		n, err := testApp.Services.KEPUBQueue.Drain(context.Background())
+		require.NoError(t, err)
+		if n == 0 {
+			return
+		}
+	}
+}
+
 func TestConnectGetKEPUBStatus_StaleKEPUBReportsConverting(t *testing.T) {
 	client := newBooksTestClient(t)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -32,14 +45,45 @@ func TestConnectGetKEPUBStatus_StaleKEPUBReportsConverting(t *testing.T) {
 	assert.True(t, resp.HasEpub)
 	assert.Equal(t, models.FileStatusConverting, resp.KepubStatus)
 
-	// The read started the reconversion, so "converting" resolves.
-	require.Eventually(t, func() bool {
-		status, statusErr := testApp.Services.Books.GetKEPUBStatus(
-			context.Background(), userID, bookID,
-		)
-		return statusErr == nil && !status.KepubStale &&
-			status.KepubStatus == models.FileStatusReady
-	}, 10*time.Second, 20*time.Millisecond)
+	// The read queued the reconversion; the workers role's drain resolves it.
+	drainKEPUBQueue(t)
+	status, err := testApp.Services.Books.GetKEPUBStatus(
+		context.Background(), userID, bookID,
+	)
+	require.NoError(t, err)
+	assert.False(t, status.KepubStale)
+	assert.Equal(t, models.FileStatusReady, status.KepubStatus)
+}
+
+// TestKEPUBQueue_RequestsCollapseAndDrainClears: repeated requests for one book
+// queue a single conversion, and a drain attempts it once and empties the queue.
+func TestKEPUBQueue_RequestsCollapseAndDrainClears(t *testing.T) {
+	ctx := context.Background()
+	owner := "kepub-queue-" + uuid.NewString()
+	_, bookID := uploadFileForOwner(t, owner, models.FileFormatEPUB)
+
+	for range 2 {
+		require.NoError(t, testApp.Services.KEPUBQueue.Request(ctx, owner, bookID))
+	}
+	var queued int
+	require.NoError(t, testDB.QueryRow(ctx,
+		`SELECT count(*) FROM books.kepub_conversion_requests WHERE user_id = $1`,
+		owner,
+	).Scan(&queued))
+	assert.Equal(t, 1, queued)
+
+	drainKEPUBQueue(t)
+	require.NoError(t, testDB.QueryRow(ctx,
+		`SELECT count(*) FROM books.kepub_conversion_requests WHERE user_id = $1`,
+		owner,
+	).Scan(&queued))
+	assert.Zero(t, queued)
+
+	kepub, err := testApp.Repositories.BookFiles.GetByBookAndFormat(
+		ctx, owner, bookID, models.FileFormatKEPUB,
+	)
+	require.NoError(t, err)
+	assert.Equal(t, models.FileStatusReady, kepub.Status)
 }
 
 // lockRow holds FOR UPDATE on a book_files row in its own transaction, which
@@ -232,4 +276,31 @@ func TestEnsureKEPUB_ConcurrentStaleReplacement(t *testing.T) {
 		require.NotNil(t, <-results)
 	}
 	assert.Equal(t, 1, countKEPUBRows(t, book.ID))
+}
+
+// TestKEPUBQueue_FailedConversionIsDropped: a request for a book with no
+// source file fails to convert, and is still removed so it can't clog the queue.
+func TestKEPUBQueue_FailedConversionIsDropped(t *testing.T) {
+	ctx := context.Background()
+	owner := "kepub-queue-fail-" + uuid.NewString()
+	book := addUniqueBook(t)
+	require.NoError(t, testApp.Services.KEPUBQueue.Request(ctx, owner, book.ID))
+
+	drainKEPUBQueue(t)
+
+	var queued int
+	require.NoError(t, testDB.QueryRow(ctx,
+		`SELECT count(*) FROM books.kepub_conversion_requests WHERE user_id = $1`,
+		owner,
+	).Scan(&queued))
+	assert.Zero(t, queued)
+}
+
+func TestKEPUBQueue_CancelledContextErrors(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	require.Error(t, testApp.Services.KEPUBQueue.Request(ctx, "u", uuid.New()))
+	_, err := testApp.Services.KEPUBQueue.Drain(ctx)
+	require.Error(t, err)
 }
