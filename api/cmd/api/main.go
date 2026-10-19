@@ -142,9 +142,14 @@ func main() {
 		context.Background(), logger, heapWatchThreshold, heapWatchInterval,
 	)
 
+	handler, err := app.Handler()
+	if err != nil {
+		panic(err)
+	}
+
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
-		Handler:      stripAPIPathPrefix(app.Routes()),
+		Handler:      handler,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  httpReadTimeout,
 		WriteTimeout: httpWriteTimeout,

@@ -101,9 +101,25 @@ type Config struct {
 	// GrafanaAdminPassword authenticates get_grafana_alerts as `admin`; empty
 	// disables the tool.
 	GrafanaAdminPassword string
-	// ObservabilityIngestSecret gates POST /api/observability/logs (web has no
-	// user session). Empty rejects every request.
+	// ObservabilityIngestSecret is the bearer token GET /metrics requires, which
+	// Prometheus sends; empty leaves /metrics open (the api is the root service,
+	// so it is reachable through kamal-proxy). Never reuse it for user-facing auth.
 	ObservabilityIngestSecret string
+
+	// WebDir is web's build output (web/dist). Empty disables serving the web
+	// app (local development runs the Vite dev server instead).
+	WebDir string
+	// SentryDsnWeb, PostHogKey and PostHogHost reach the browser through
+	// /env.js; they ship in the bundle's runtime config anyway.
+	SentryDsnWeb string
+	PostHogKey   string
+	PostHogHost  string
+	// KoboGatewayRelease is the bundled kobo-gateway's release; it can lag
+	// Release when its build cache-hit.
+	KoboGatewayRelease string
+	// OfflineDisabled serves a service worker that clears its caches and
+	// unregisters itself.
+	OfflineDisabled bool
 }
 
 type parser struct {
@@ -286,6 +302,13 @@ func New(logger *slog.Logger) Config {
 	)
 	cfg.GrafanaAdminPassword = p.envSecret("GRAFANA_ADMIN_PASSWORD", "")
 	cfg.ObservabilityIngestSecret = p.envSecret("OBSERVABILITY_INGEST_SECRET", "")
+
+	cfg.WebDir = p.envStr("WEB_DIR", "")
+	cfg.SentryDsnWeb = p.envSecret("SENTRY_DSN_WEB", "")
+	cfg.PostHogKey = p.envSecret("POSTHOG_KEY", "")
+	cfg.PostHogHost = p.envStr("POSTHOG_HOST", "")
+	cfg.KoboGatewayRelease = p.envStr("KOBO_GATEWAY_RELEASE", "dev")
+	cfg.OfflineDisabled = p.envStr("OFFLINE_DISABLED", "") == "1"
 
 	return cfg
 }

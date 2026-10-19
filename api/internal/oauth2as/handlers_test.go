@@ -459,3 +459,89 @@ func TestOAuth2Authorize_ConsentTokenBoundToRequest(t *testing.T) {
 	assert.Equal(t, "request_unauthorized", loc.Query().Get("error"))
 	assert.Empty(t, loc.Query().Get("code"))
 }
+
+// locationJSON posts a decision the way the consent page does and returns the
+// response.
+func (s *oauth2asTestServer) decideAsJSON(
+	t *testing.T, client *fosite.DefaultClient, q url.Values, token string,
+) *http.Response {
+	t.Helper()
+	req, err := http.NewRequestWithContext(
+		context.Background(), http.MethodPost,
+		s.ts.URL+"/oauth2/authorize?"+q.Encode(), nil,
+	)
+	require.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	if token != "" {
+		req.Header.Set(oauth2as.ConsentTokenHeader, token)
+	}
+	resp, err := noRedirectClient().Do(req)
+	require.NoError(t, err)
+	t.Cleanup(func() { resp.Body.Close() })
+	return resp
+}
+
+func decisionQuery(client *fosite.DefaultClient, challenge, consent string) url.Values {
+	return url.Values{
+		"response_type":         {"code"},
+		"client_id":             {client.ID},
+		"redirect_uri":          {client.RedirectURIs[0]},
+		"code_challenge":        {challenge},
+		"code_challenge_method": {"S256"},
+		"state":                 {"json-state-abcdefgh"},
+		"consent":               {consent},
+	}
+}
+
+func TestOAuth2Authorize_AcceptJSONReturnsApprovalLocation(t *testing.T) {
+	srv := newOAuth2asTestServer(t)
+	client := srv.registerClient(t)
+	_, challenge := pkcePair(t)
+	q := decisionQuery(client, challenge, "allow")
+	token := srv.consentToken(t, q)
+
+	resp := srv.decideAsJSON(t, client, q, token)
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+	assert.Empty(t, resp.Header.Get("Location"))
+	var body map[string]string
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	loc, err := url.Parse(body["location"])
+	require.NoError(t, err)
+	assert.Equal(t, "json-state-abcdefgh", loc.Query().Get("state"))
+	assert.NotEmpty(t, loc.Query().Get("code"))
+}
+
+func TestOAuth2Authorize_AcceptJSONReturnsDenialLocation(t *testing.T) {
+	srv := newOAuth2asTestServer(t)
+	client := srv.registerClient(t)
+	_, challenge := pkcePair(t)
+
+	resp := srv.decideAsJSON(t, client, decisionQuery(client, challenge, "deny"), "")
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	var body map[string]string
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	loc, err := url.Parse(body["location"])
+	require.NoError(t, err)
+	assert.Equal(t, "access_denied", loc.Query().Get("error"))
+}
+
+func TestOAuth2Authorize_AcceptJSONLeavesUnredirectableErrorsAlone(t *testing.T) {
+	srv := newOAuth2asTestServer(t)
+	_, challenge := pkcePair(t)
+	q := url.Values{
+		"response_type":         {"code"},
+		"client_id":             {"unknown-client"},
+		"redirect_uri":          {"https://evil.example/cb"},
+		"code_challenge":        {challenge},
+		"code_challenge_method": {"S256"},
+		"consent":               {"allow"},
+	}
+
+	resp := srv.decideAsJSON(t, &fosite.DefaultClient{ID: "unknown-client"}, q, "")
+
+	assert.GreaterOrEqual(t, resp.StatusCode, http.StatusBadRequest)
+	assert.Empty(t, resp.Header.Get("Location"))
+}

@@ -45,6 +45,12 @@ func AuthorizeHandler(
 			return
 		}
 
+		// The consent page decides through fetch, which can't read a redirect's
+		// Location, so it asks for the destination as JSON instead.
+		if strings.Contains(r.Header.Get("Accept"), "application/json") {
+			w = &locationAsJSON{ResponseWriter: w}
+		}
+
 		ar, err := provider.NewAuthorizeRequest(ctx, r)
 		if err != nil {
 			logOAuthError(ctx, logger, endpointAuthorize, ar, err)
@@ -90,6 +96,34 @@ func AuthorizeHandler(
 
 		provider.WriteAuthorizeResponse(ctx, w, ar, resp)
 	}
+}
+
+// locationAsJSON replies to the redirect fosite writes with a 200 and
+// {"location": "..."}; any other response passes through unchanged.
+type locationAsJSON struct {
+	http.ResponseWriter
+	captured bool
+}
+
+func (l *locationAsJSON) WriteHeader(code int) {
+	location := l.Header().Get("Location")
+	if code < http.StatusMultipleChoices || code >= http.StatusBadRequest || location == "" {
+		l.ResponseWriter.WriteHeader(code)
+		return
+	}
+
+	l.captured = true
+	l.Header().Del("Location")
+	l.Header().Set("Content-Type", "application/json")
+	l.ResponseWriter.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(l.ResponseWriter).Encode(map[string]string{"location": location})
+}
+
+func (l *locationAsJSON) Write(p []byte) (int, error) {
+	if l.captured {
+		return len(p), nil
+	}
+	return l.ResponseWriter.Write(p)
 }
 
 // TokenHandler serves /oauth2/token (authorization_code, refresh_token, and

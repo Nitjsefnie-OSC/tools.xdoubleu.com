@@ -14,62 +14,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func withIngestSecret(t *testing.T, secret string) {
+func postLogs(t *testing.T, body []byte) *httptest.ResponseRecorder {
 	t.Helper()
-	original := testApp.config.ObservabilityIngestSecret
-	testApp.config.ObservabilityIngestSecret = secret
-	t.Cleanup(func() { testApp.config.ObservabilityIngestSecret = original })
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/logs", bytes.NewReader(body))
+	testApp.webLogsHandler().ServeHTTP(rec, req)
+	return rec
 }
 
-func TestObservabilityIngestRoute_MissingSecret_Unauthorized(t *testing.T) {
-	withIngestSecret(t, "")
-
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(
-		http.MethodPost, observabilityLogsIngestPath, bytes.NewBufferString(`{}`),
+func clearWebClientLogs(t *testing.T) {
+	t.Helper()
+	_, err := testApp.db.Exec(
+		context.Background(),
+		"DELETE FROM global.log_entries WHERE source = 'web-client'",
 	)
-	testApp.observabilityIngestRoute()(rec, req)
-
-	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	require.NoError(t, err)
 }
 
-func TestObservabilityIngestRoute_WrongSecret_Unauthorized(t *testing.T) {
-	withIngestSecret(t, "correct-secret")
-
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(
-		http.MethodPost, observabilityLogsIngestPath, bytes.NewBufferString(`{}`),
-	)
-	req.Header.Set(observabilityIngestSecretHeader, "wrong-secret")
-	testApp.observabilityIngestRoute()(rec, req)
-
-	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-}
-
-func TestObservabilityIngestRoute_InvalidBody_BadRequest(t *testing.T) {
-	withIngestSecret(t, "correct-secret")
-
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(
-		http.MethodPost, observabilityLogsIngestPath, bytes.NewBufferString(`not json`),
-	)
-	req.Header.Set(observabilityIngestSecretHeader, "correct-secret")
-	testApp.observabilityIngestRoute()(rec, req)
+func TestWebLogsHandler_InvalidBody_BadRequest(t *testing.T) {
+	rec := postLogs(t, []byte(`not json`))
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestObservabilityIngestRoute_ValidBatch_StoresEntries(t *testing.T) {
-	withIngestSecret(t, "correct-secret")
-	_, err := testApp.db.Exec(
-		context.Background(), "DELETE FROM global.log_entries WHERE source = 'web'",
-	)
-	require.NoError(t, err)
-
+func TestWebLogsHandler_ValidBatch_StoresEntriesAsWebClient(t *testing.T) {
+	clearWebClientLogs(t)
 	body, err := json.Marshal(ingestLogsRequest{
 		Entries: []ingestLogEntry{
 			//nolint:exhaustruct // Attrs intentionally omitted for this entry
-			{OccurredAt: "", Level: "info", Message: "hello from web"},
+			{OccurredAt: "", Level: "info", Message: "hello from the browser"},
 			{
 				OccurredAt: "2026-01-01T00:00:00Z",
 				Level:      "error",
@@ -80,31 +53,19 @@ func TestObservabilityIngestRoute_ValidBatch_StoresEntries(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(
-		http.MethodPost, observabilityLogsIngestPath, bytes.NewReader(body),
-	)
-	req.Header.Set(observabilityIngestSecretHeader, "correct-secret")
-	testApp.observabilityIngestRoute()(rec, req)
+	rec := postLogs(t, body)
 
 	assert.Equal(t, http.StatusNoContent, rec.Code)
-
 	var count int
-	err = testApp.db.QueryRow(
+	require.NoError(t, testApp.db.QueryRow(
 		context.Background(),
-		"SELECT count(*) FROM global.log_entries WHERE source = 'web'",
-	).Scan(&count)
-	require.NoError(t, err)
+		"SELECT count(*) FROM global.log_entries WHERE source = 'web-client'",
+	).Scan(&count))
 	assert.Equal(t, 2, count)
 }
 
-func TestObservabilityIngestRoute_MalformedTimestamp_FallsBackToNow(t *testing.T) {
-	withIngestSecret(t, "correct-secret")
-	_, err := testApp.db.Exec(
-		context.Background(), "DELETE FROM global.log_entries WHERE source = 'web'",
-	)
-	require.NoError(t, err)
-
+func TestWebLogsHandler_MalformedTimestamp_FallsBackToNow(t *testing.T) {
+	clearWebClientLogs(t)
 	body, err := json.Marshal(ingestLogsRequest{
 		Entries: []ingestLogEntry{
 			//nolint:exhaustruct // Attrs intentionally omitted for this entry
@@ -113,75 +74,36 @@ func TestObservabilityIngestRoute_MalformedTimestamp_FallsBackToNow(t *testing.T
 	})
 	require.NoError(t, err)
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(
-		http.MethodPost, observabilityLogsIngestPath, bytes.NewReader(body),
-	)
-	req.Header.Set(observabilityIngestSecretHeader, "correct-secret")
-	testApp.observabilityIngestRoute()(rec, req)
-
-	assert.Equal(t, http.StatusNoContent, rec.Code)
+	assert.Equal(t, http.StatusNoContent, postLogs(t, body).Code)
 
 	var occurredAt time.Time
-	err = testApp.db.QueryRow(
+	require.NoError(t, testApp.db.QueryRow(
 		context.Background(),
-		"SELECT occurred_at FROM global.log_entries WHERE source = 'web' AND message = $1",
+		"SELECT occurred_at FROM global.log_entries WHERE source = 'web-client' AND message = $1",
 		"bad clock",
-	).Scan(&occurredAt)
-	require.NoError(t, err)
+	).Scan(&occurredAt))
 	assert.WithinDuration(t, time.Now(), occurredAt, time.Minute)
 }
 
-func TestObservabilityIngestAuthorized(t *testing.T) {
-	withIngestSecret(t, "shhh")
-
-	req := httptest.NewRequest(http.MethodPost, observabilityLogsIngestPath, nil)
-	assert.False(t, testApp.observabilityIngestAuthorized(req))
-
-	req.Header.Set(observabilityIngestSecretHeader, "shhh")
-	assert.True(t, testApp.observabilityIngestAuthorized(req))
-}
-
-func postIngest(t *testing.T, path string, body []byte) int {
-	t.Helper()
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(body))
-	req.Header.Set(observabilityIngestSecretHeader, "correct-secret")
-	testApp.observabilityIngestRoute()(rec, req)
-	return rec.Code
-}
-
-func TestObservabilityIngestRoute_TooManyEntries_Rejected(t *testing.T) {
-	withIngestSecret(t, "correct-secret")
-	entries := make([]ingestLogEntry, maxIngestEntries+1)
-	body, err := json.Marshal(ingestLogsRequest{Entries: entries})
+func TestWebLogsHandler_TooManyEntries_Rejected(t *testing.T) {
+	body, err := json.Marshal(ingestLogsRequest{
+		Entries: make([]ingestLogEntry, maxIngestEntries+1),
+	})
 	require.NoError(t, err)
 
-	assert.Equal(
-		t, http.StatusRequestEntityTooLarge,
-		postIngest(t, observabilityLogsIngestPath, body),
-	)
+	assert.Equal(t, http.StatusRequestEntityTooLarge, postLogs(t, body).Code)
 }
 
-func TestObservabilityIngestRoute_OversizedBody_Rejected(t *testing.T) {
-	withIngestSecret(t, "correct-secret")
+func TestWebLogsHandler_OversizedBody_Rejected(t *testing.T) {
 	body := []byte(`{"entries":[{"message":"` +
 		strings.Repeat("x", maxIngestBodyBytes) + `"}]}`)
 
-	assert.Equal(
-		t, http.StatusBadRequest, postIngest(t, observabilityLogsIngestPath, body),
-	)
+	assert.Equal(t, http.StatusBadRequest, postLogs(t, body).Code)
 }
 
-// Browser-relayed entries are tagged, normalised and bounded.
-func TestObservabilityIngestRoute_WebClient_SanitisesEntries(t *testing.T) {
-	withIngestSecret(t, "correct-secret")
-	_, err := testApp.db.Exec(
-		context.Background(),
-		"DELETE FROM global.log_entries WHERE source = 'web-client'",
-	)
-	require.NoError(t, err)
-
+// Browser-supplied entries are tagged, normalised and bounded.
+func TestWebLogsHandler_SanitisesEntries(t *testing.T) {
+	clearWebClientLogs(t)
 	body, err := json.Marshal(ingestLogsRequest{
 		Entries: []ingestLogEntry{{
 			OccurredAt: "2001-01-01T00:00:00Z",
@@ -194,9 +116,7 @@ func TestObservabilityIngestRoute_WebClient_SanitisesEntries(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.Equal(t, http.StatusNoContent, postIngest(
-		t, observabilityLogsIngestPath+"?source=web-client", body,
-	))
+	require.Equal(t, http.StatusNoContent, postLogs(t, body).Code)
 
 	var (
 		level      string
