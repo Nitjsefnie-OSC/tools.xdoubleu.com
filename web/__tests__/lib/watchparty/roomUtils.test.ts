@@ -112,7 +112,7 @@ describe('attachDraggable', () => {
     document.body.appendChild(container)
     const el = document.createElement('div')
     container.appendChild(el)
-    jest.spyOn(container, 'getBoundingClientRect').mockReturnValue({
+    vi.spyOn(container, 'getBoundingClientRect').mockReturnValue({
       left: 0,
       top: 0,
       width: 200,
@@ -123,7 +123,7 @@ describe('attachDraggable', () => {
       y: 0,
       toJSON: () => ({})
     })
-    jest.spyOn(el, 'getBoundingClientRect').mockReturnValue({
+    vi.spyOn(el, 'getBoundingClientRect').mockReturnValue({
       left: 10,
       top: 10,
       width: 50,
@@ -135,9 +135,9 @@ describe('attachDraggable', () => {
       toJSON: () => ({})
     })
     // jsdom does not implement pointer capture — stub the methods directly
-    el.setPointerCapture = jest.fn()
-    el.hasPointerCapture = jest.fn().mockReturnValue(true)
-    el.releasePointerCapture = jest.fn()
+    el.setPointerCapture = vi.fn()
+    el.hasPointerCapture = vi.fn().mockReturnValue(true)
+    el.releasePointerCapture = vi.fn()
     return { el, container }
   }
 
@@ -151,7 +151,7 @@ describe('attachDraggable', () => {
 
   it('attaches three pointer event listeners', () => {
     const { el, container } = makeEl()
-    const addSpy = jest.spyOn(el, 'addEventListener')
+    const addSpy = vi.spyOn(el, 'addEventListener')
     const cleanup = attachDraggable(el)
     const eventNames = addSpy.mock.calls.map((c) => c[0])
     expect(eventNames).toContain('pointerdown')
@@ -173,7 +173,7 @@ describe('attachDraggable', () => {
 
   it('removes listeners on cleanup', () => {
     const { el, container } = makeEl()
-    const removeSpy = jest.spyOn(el, 'removeEventListener')
+    const removeSpy = vi.spyOn(el, 'removeEventListener')
     const cleanup = attachDraggable(el)
     cleanup()
     expect(removeSpy).toHaveBeenCalledTimes(3)

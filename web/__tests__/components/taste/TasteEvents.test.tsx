@@ -2,11 +2,11 @@ import React from 'react'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockFetchPage = jest.fn()
+const mockFetchPage = vi.fn()
 
-jest.mock('@/hooks/useTaste', () => ({
-  useTasteEvents: jest.fn(),
-  useFetchTasteEventsPage: jest.fn(() => mockFetchPage)
+vi.mock('@/hooks/useTaste', () => ({
+  useTasteEvents: vi.fn(),
+  useFetchTasteEventsPage: vi.fn(() => mockFetchPage)
 }))
 
 import TasteEvents from '@/components/taste/TasteEvents'
@@ -31,14 +31,14 @@ const bounced = create(EventSchema, {
 
 function mockEvents(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useTasteEvents).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useTasteEvents).mockReturnValue({ isLoading: false, ...value })
 }
 
 function page(events: Event[], hasMore = false) {
   return create(ListEventsResponseSchema, { events, hasMore })
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('TasteEvents', () => {
   it('shows each event with its domain, creator, date, reason and signal', () => {
@@ -135,7 +135,7 @@ describe('TasteEvents revalidation', () => {
   })
 
   it('keys rows uniquely', () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockEvents({ data: page([dune, bounced]) })
     render(<TasteEvents />)
     expect(spy).not.toHaveBeenCalled()

@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
 import { buildWsUrl } from '@/lib/watchparty/roomUtils'
 import { getApiUrl } from '@/lib/env'

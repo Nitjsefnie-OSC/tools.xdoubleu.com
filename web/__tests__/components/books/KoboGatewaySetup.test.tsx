@@ -1,42 +1,42 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
-jest.mock('@/lib/env', () => ({
+vi.mock('@/lib/env', () => ({
   getApiUrl: () => 'https://api.example.com',
   getRelease: () => 'current-sha',
   getKoboGatewayRelease: () => 'current-sha'
 }))
 
-jest.mock('@/lib/books/koboDevice', () => ({
+vi.mock('@/lib/books/koboDevice', () => ({
   defaultDeviceName: (serial: string) =>
     serial.length >= 4 ? `Kobo (…${serial.slice(-4)})` : 'My Kobo'
 }))
 
-const mockConfigureGateway = jest.fn()
-const mockRevertGateway = jest.fn()
-const mockUpdateGateway = jest.fn()
+const mockConfigureGateway = vi.fn()
+const mockRevertGateway = vi.fn()
+const mockUpdateGateway = vi.fn()
 
 // Only the network calls are stubbed.
-jest.mock('@/lib/books/gatewayClient', () => ({
-  ...jest.requireActual('@/lib/books/gatewayClient'),
+vi.mock('@/lib/books/gatewayClient', async () => ({
+  ...(await vi.importActual('@/lib/books/gatewayClient')),
   configureGateway: (...args: unknown[]) => mockConfigureGateway(...args),
   revertGateway: (...args: unknown[]) => mockRevertGateway(...args),
   updateGateway: (...args: unknown[]) => mockUpdateGateway(...args)
 }))
 
 // Stands in for SWR's mutate() on a fresh /status probe.
-const mockMutateGatewayStatus = jest.fn()
-jest.mock('@/hooks/useKoboGateway', () => ({
+const mockMutateGatewayStatus = vi.fn()
+vi.mock('@/hooks/useKoboGateway', () => ({
   useGatewayStatus: () => ({ mutate: mockMutateGatewayStatus })
 }))
 
-const mockRegisterKoboDevice = jest.fn()
-const mockDisconnectKoboDevice = jest.fn()
-const mockMutateDevices = jest.fn()
+const mockRegisterKoboDevice = vi.fn()
+const mockDisconnectKoboDevice = vi.fn()
+const mockMutateDevices = vi.fn()
 let mockDevicesData: { devices: { id: string; serial: string; name: string }[] } | undefined =
   undefined
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useRegisterKoboDevice: () => mockRegisterKoboDevice,
   useDisconnectKoboDevice: () => mockDisconnectKoboDevice,
   useListKoboDevices: () => ({ data: mockDevicesData, mutate: mockMutateDevices })

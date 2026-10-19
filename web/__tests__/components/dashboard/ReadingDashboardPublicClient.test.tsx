@@ -9,24 +9,17 @@ import {
 } from '@/lib/gen/books/v1/library_pb'
 import { GetSharedLibraryResponseSchema } from '@/lib/gen/dashboard/v1/reading_pb'
 
-const mockUseSharedLibrary = jest.fn()
-const mockUseSharedBooksProgress = jest.fn()
+const mockUseSharedLibrary = vi.fn()
+const mockUseSharedBooksProgress = vi.fn()
 
-jest.mock('@/hooks/useDashboardShare', () => ({
+vi.mock('@/hooks/useDashboardShare', () => ({
   useSharedLibrary: () => mockUseSharedLibrary(),
   useSharedBooksProgress: () => mockUseSharedBooksProgress()
 }))
 
-jest.mock('@/components/books/BooksProgressChart', () => () => (
-  <div data-testid="books-progress-chart" />
-))
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
+vi.mock('@/components/books/BooksProgressChart', () => ({
+  default: () => <div data-testid="books-progress-chart" />
+}))
 
 import ReadingDashboardPublicClient from '@/components/dashboard/ReadingDashboardPublicClient'
 
@@ -72,7 +65,7 @@ function makeLibrary() {
 
 describe('ReadingDashboardPublicClient', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUseSharedBooksProgress.mockReturnValue({ data: undefined })
   })
 

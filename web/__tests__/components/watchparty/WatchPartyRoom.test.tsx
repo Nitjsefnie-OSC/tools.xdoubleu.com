@@ -2,8 +2,8 @@ import { createRef } from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import WatchPartyRoom, { type WatchPartyRoomProps } from '@/components/watchparty/WatchPartyRoom'
 
-const mockAttachDraggable = jest.fn()
-jest.mock('@/lib/watchparty/roomUtils', () => ({
+const mockAttachDraggable = vi.fn()
+vi.mock('@/lib/watchparty/roomUtils', () => ({
   attachDraggable: (el: HTMLElement) => mockAttachDraggable(el)
 }))
 
@@ -16,9 +16,9 @@ function renderRoom(overrides: Partial<WatchPartyRoomProps> = {}) {
     micEnabled: true,
     camEnabled: true,
     selfCamVisible: true,
-    toggleMic: jest.fn(),
-    toggleCam: jest.fn(),
-    toggleSelfCam: jest.fn(),
+    toggleMic: vi.fn(),
+    toggleCam: vi.fn(),
+    toggleSelfCam: vi.fn(),
     mainVideoRef: createRef<HTMLVideoElement>(),
     selfCamRef: createRef<HTMLVideoElement>(),
     remoteCamRef: createRef<HTMLVideoElement>(),
@@ -29,7 +29,7 @@ function renderRoom(overrides: Partial<WatchPartyRoomProps> = {}) {
 
 beforeEach(() => {
   mockAttachDraggable.mockReset()
-  mockAttachDraggable.mockReturnValue(jest.fn())
+  mockAttachDraggable.mockReturnValue(vi.fn())
 })
 
 describe('WatchPartyRoom', () => {
@@ -41,7 +41,7 @@ describe('WatchPartyRoom', () => {
   })
 
   it('makes both camera videos draggable and cleans up on unmount', () => {
-    const cleanup = jest.fn()
+    const cleanup = vi.fn()
     mockAttachDraggable.mockReturnValue(cleanup)
     const { unmount } = renderRoom()
     expect(mockAttachDraggable).toHaveBeenCalledTimes(2)

@@ -1,13 +1,13 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-const mockPush = jest.fn()
+const mockPush = vi.fn()
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ push: mockPush })
 }))
 
-jest.mock('@/components/learningpaths/LearningPathForm', () => ({
+vi.mock('@/components/learningpaths/LearningPathForm', () => ({
   __esModule: true,
   default: ({ onSave, onCancel }: { onSave: (id: string) => void; onCancel: () => void }) => (
     <div data-testid="learning-path-form">
@@ -19,7 +19,7 @@ jest.mock('@/components/learningpaths/LearningPathForm', () => ({
 
 import NewLearningPathPage from '@/app/learningpaths/new/page'
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('NewLearningPathPage', () => {
   it('renders the heading and form', () => {

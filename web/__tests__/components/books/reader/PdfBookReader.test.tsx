@@ -1,12 +1,12 @@
 import React from 'react'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 
-const mockOpenPdf = jest.fn()
-const mockRenderPage = jest.fn()
-const mockOutline = jest.fn()
+const mockOpenPdf = vi.fn()
+const mockRenderPage = vi.fn()
+const mockOutline = vi.fn()
 
-jest.mock('@/lib/books/pdf', () => {
-  const actual = jest.requireActual('@/lib/books/pdf')
+vi.mock('@/lib/books/pdf', async () => {
+  const actual = await vi.importActual('@/lib/books/pdf')
   return {
     ...actual,
     openPdf: (...a: unknown[]) => mockOpenPdf(...a),
@@ -27,12 +27,12 @@ global.ResizeObserver = MockResizeObserver as never
 
 import PdfBookReader from '@/components/books/reader/PdfBookReader'
 
-const destroy = jest.fn(async () => {})
+const destroy = vi.fn(async () => {})
 const BOOK = new Blob(['%PDF'])
 
 async function renderReader(props: Partial<React.ComponentProps<typeof PdfBookReader>> = {}) {
-  const onRelocate = jest.fn()
-  const onClose = jest.fn()
+  const onRelocate = vi.fn()
+  const onClose = vi.fn()
   render(
     <PdfBookReader file={BOOK} title="Scans" onClose={onClose} onRelocate={onRelocate} {...props} />
   )
@@ -44,7 +44,7 @@ const surface = () => screen.getByTestId('pdf-surface')
 const valuenow = () => screen.getByRole('progressbar').getAttribute('aria-valuenow')
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   localStorage.clear()
   mockOpenPdf.mockResolvedValue({ pdf: { numPages: 5 }, destroy })
   mockOutline.mockResolvedValue([
@@ -118,18 +118,18 @@ describe('PdfBookReader', () => {
 
   it('shows an error when the file cannot be opened or a page fails to render', async () => {
     mockOpenPdf.mockRejectedValueOnce(new Error('bad'))
-    render(<PdfBookReader file={BOOK} title="Scans" onClose={jest.fn()} />)
+    render(<PdfBookReader file={BOOK} title="Scans" onClose={vi.fn()} />)
     expect(await screen.findByText(/couldn.t load|failed|error/i)).toBeInTheDocument()
   })
 
   it('shows an error when rendering a page fails', async () => {
     mockRenderPage.mockRejectedValue(new Error('x'))
-    render(<PdfBookReader file={BOOK} title="Scans" onClose={jest.fn()} />)
+    render(<PdfBookReader file={BOOK} title="Scans" onClose={vi.fn()} />)
     expect(await screen.findByText(/couldn.t load|failed|error/i)).toBeInTheDocument()
   })
 
   it('closes, and releases the document on unmount', async () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     const view = render(<PdfBookReader file={BOOK} title="Scans" onClose={onClose} />)
     await screen.findByRole('button', { name: 'Reading settings' })
     fireEvent.click(screen.getByRole('button', { name: 'Close reader' }))
@@ -141,7 +141,7 @@ describe('PdfBookReader', () => {
   it('releases a document that finished opening after unmount', async () => {
     let resolve: (v: unknown) => void = () => {}
     mockOpenPdf.mockReturnValue(new Promise((r) => (resolve = r)))
-    const view = render(<PdfBookReader file={BOOK} title="Scans" onClose={jest.fn()} />)
+    const view = render(<PdfBookReader file={BOOK} title="Scans" onClose={vi.fn()} />)
     view.unmount()
     await act(async () => resolve({ pdf: { numPages: 1 }, destroy }))
     expect(destroy).toHaveBeenCalled()

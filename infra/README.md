@@ -156,10 +156,11 @@ and a generated `.env` (postgres_exporter's `DATA_SOURCE_NAME`) to
 collects; **alerting is Grafana's** (`infra/grafana/provisioning/alerting/`).
 Neither Prometheus nor postgres_exporter publishes a host port.
 
-It also uploads a `web_ingest_secret` file (`OBSERVABILITY_INGEST_SECRET`, via
-`TF_VAR_observability_ingest_secret`) that `prometheus.yml`'s `web` job sends
-as a bearer token, since `web`'s `GET /metrics` requires it. `deploy-kamal`
-`needs` `infra-apply`, so Prometheus sends the token before `web` requires it.
+It also uploads an `ingest_secret` file (`OBSERVABILITY_INGEST_SECRET`, via
+`TF_VAR_observability_ingest_secret`) that `prometheus.yml`'s `api` job sends
+as a bearer token, since the api's `GET /metrics` requires it (the api is the
+root service, so `/metrics` is public). `deploy-kamal` `needs` `infra-apply`,
+so Prometheus sends the token before the api requires it.
 
 Grafana is **not** Tofu-managed: it's a third Kamal service
 (`config/deploy.grafana.yml`, deployed by `deploy-kamal`) because it needs the
@@ -185,7 +186,7 @@ kill`/`stop` as a manual stop and never restarts that container.
 
 **Troubleshooting:** if `prom_query` reports a target `down`, check
 `ssh deploy@<ip> docker ps` for `prometheus`/`postgres-exporter`/`node-exporter`.
-If the `api` or `web` target is **missing entirely**, Docker service discovery
+If the `api` target is **missing entirely**, Docker service discovery
 is broken. It needs: the `service` label on the container
 (`docker inspect -f '{{.Config.Labels.service}}' <container>`), attachment to
 the `kamal` network, and Docker-socket access — the image runs as `nobody`, so
@@ -208,11 +209,12 @@ automatic (`api/cmd/api/migrations/00017_auth_schema.sql`), and the
 **Deploys happen in CI** (next section); nothing under `infra/` runs Kamal.
 This section is the one-time bootstrap and the manual escape hatch.
 
-`config/deploy.api.yml`/`config/deploy.web.yml` set
-`proxy.host: tools.xdoubleu.com` + `proxy.ssl: true`, so kamal-proxy
-obtains and renews a Let's Encrypt cert over HTTP-01 (port 80). `api` and `web`
-are two independent Kamal services sharing one kamal-proxy: `/api/*` and
-`/.well-known/*` go to `api` (`proxy.path_prefix`), everything else to `web`.
+`config/deploy.api.yml` sets `proxy.host: tools.xdoubleu.com` +
+`proxy.ssl: true`, so kamal-proxy obtains and renews a Let's Encrypt cert over
+HTTP-01 (port 80). `api` is the root service: it serves the built web app and
+the API on every path, and strips `/api` itself. Grafana is a second Kamal
+service sharing the proxy at `/grafana`
+([ADR-0034](../docs/adr-0034-vite-spa-served-by-the-api.md)).
 Postgres stays Tofu-managed (not a Kamal accessory); app containers reach it
 over the `kamal` Docker network `null_resource.kamal_network` creates first
 (see its comment in `infra/main.tf`).
@@ -224,10 +226,24 @@ fresh host needs, once, by hand:
 
 ```bash
 bundle exec kamal setup -c config/deploy.api.yml
-bundle exec kamal setup -c config/deploy.web.yml
 ```
 
 Already done for the current VPS — only needed if the box is rebuilt.
+
+### One-time cutover from the `web` service
+
+The `web` Kamal service owned the root path until the SPA replaced it, and
+kamal-proxy rejects a second service on the same host and path. Before the
+first deploy of the root `api` service, remove `web` from the VPS (a few
+seconds of downtime between this and the api deploy):
+
+```bash
+ssh deploy@<ip> docker exec kamal-proxy kamal-proxy remove tools-xdoubleu-com-web
+ssh deploy@<ip> 'docker ps -aq --filter label=service=tools-xdoubleu-com-web | xargs -r docker rm -f'
+```
+
+Then merge: `deploy-kamal` registers `api` as the root service.
+`SENTRY_DSN_WEB` and `POSTHOG_KEY` now feed the api's `/env.js`.
 
 ### Manual deploy or rollback
 
@@ -244,16 +260,16 @@ export KAMAL_SERVER_IP=<vps ip> KAMAL_REGISTRY_USERNAME=<ghcr user>
 #    secrets below
 export RELEASE=<full sha> DB_DSN=... KAMAL_REGISTRY_PASSWORD=...   # etc.
 
-# 3. Deploy already-built images (tag = full commit SHA)
+# 3. Deploy the already-built image (tag = full commit SHA)
 bundle exec kamal deploy -c config/deploy.api.yml --skip-push --version=<sha>
-bundle exec kamal deploy -c config/deploy.web.yml --skip-push --version=<sha>
 ```
 
-`bundle exec kamal config -c config/deploy.api.yml` (or `.web.yml`) renders the
-config without deploying — use it to check the environment is complete.
+`bundle exec kamal config -c config/deploy.api.yml` renders the config without
+deploying — use it to check the environment is complete.
 
 Roll back with an earlier `--version` or `bundle exec kamal rollback -c
-config/deploy.api.yml`/`.web.yml`; each service rolls back independently.
+config/deploy.api.yml`; the web app ships in the same image, so it rolls back
+with the api.
 Kamal won't cut traffic to a container failing its `/health` probe, so a bad
 deploy leaves the previous one serving.
 
@@ -264,7 +280,7 @@ Verify with `curl https://tools.xdoubleu.com/api/version`,
 
 `main.yml`'s `deploy-kamal` job is **the** deploy: every push to `main`, no
 `continue-on-error`. It runs `kamal deploy` (not `setup`) against
-`config/deploy.api.yml` and `config/deploy.web.yml` (and Grafana), over SSH via
+`config/deploy.api.yml` (and Grafana), over SSH via
 an `ssh-agent` loaded with `KAMAL_SSH_KEY`.
 
 **CI deploy key.** The CI agent is headless and can't unlock a passphrase, so
@@ -349,9 +365,9 @@ EMAIL_FROM                   (also Grafana's GF_SMTP_FROM_ADDRESS)
 NOTIFY_EMAIL_TO              (admin recipient for api notification emails)
 EMAIL_INBOUND_DOMAIN
 EMAIL_INBOUND_SECRET
-OBSERVABILITY_INGEST_SECRET  (gates POST /api/observability/logs and web's
-                              GET /metrics; also TF_VAR_observability_ingest_secret
-                              for Prometheus's web scrape job)
+OBSERVABILITY_INGEST_SECRET  (bearer token for the api's GET /metrics; also
+                              TF_VAR_observability_ingest_secret for
+                              Prometheus's api scrape job)
 GRAFANA_GITHUB_DATASOURCE_TOKEN  (fine-grained PAT scoped to this repo, for
                               grafana-github-datasource; read via $__env{} in
                               infra/grafana/provisioning/datasources/issue-signals.yml)
@@ -359,8 +375,9 @@ GRAFANA_SENTRY_DATASOURCE_TOKEN  (Sentry token, org:read + project:read +
                               event:read, for grafana-sentry-datasource)
 GRAFANA_SLACK_WEBHOOK_URL    (Slack webhook for the alert contact point,
                               infra/grafana/provisioning/alerting/contactpoints.yml)
-POSTHOG_KEY                  (web's PostHog Cloud EU project key; POSTHOG_HOST
-                              is plain env.clear in config/deploy.web.yml)
+POSTHOG_KEY                  (the browser's PostHog Cloud EU project key, served
+                              as /env.js; POSTHOG_HOST is plain env.clear in
+                              config/deploy.api.yml)
 ```
 
 Every name in a deploy config's `env.secret:` must also be in `.kamal/secrets`

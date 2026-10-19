@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { Code, ConnectError } from '@connectrpc/connect'
 import type { SearchResult } from '@/lib/gen/movies/v1/movies_pb'

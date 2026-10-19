@@ -1,18 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { LinkCard } from '@/components/ui/link-card'
 
-jest.mock('next/link', () => {
-  const Link = ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  )
-  return { __esModule: true, default: Link, useLinkStatus: () => ({ pending: false }) }
-})
-
 describe('LinkCard', () => {
   it('links only the content zone', () => {
-    const onClick = jest.fn()
+    const onClick = vi.fn()
     render(
       <LinkCard href="/books/1" actions={<button onClick={onClick}>Update progress</button>}>
         <h3>Dune</h3>

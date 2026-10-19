@@ -3,22 +3,22 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-const mockUpdateBookStatus = jest.fn()
-const mockSetBookTag = jest.fn()
+const mockUpdateBookStatus = vi.fn()
+const mockSetBookTag = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useUpdateBookStatus: () => mockUpdateBookStatus,
   useSetBookTag: () => mockSetBookTag
 }))
 
-jest.mock('swr', () => ({
-  mutate: jest.fn()
+vi.mock('swr', () => ({
+  mutate: vi.fn()
 }))
 
 import BookShelfTagFields from '@/components/books/BookShelfTagFields'
 import { mutate as mockMutate } from 'swr'
 
-const mockMutateFn = jest.mocked(mockMutate)
+const mockMutateFn = vi.mocked(mockMutate)
 
 function makeUserBook(overrides = {}) {
   return create(UserBookSchema, {
@@ -35,7 +35,7 @@ function makeUserBook(overrides = {}) {
 
 describe('BookShelfTagFields', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUpdateBookStatus.mockResolvedValue(undefined)
     mockSetBookTag.mockResolvedValue(undefined)
   })
@@ -183,7 +183,7 @@ describe('BookShelfTagFields', () => {
   })
 
   it('calls onSaved after a successful status change', async () => {
-    const onSaved = jest.fn()
+    const onSaved = vi.fn()
     render(
       <BookShelfTagFields
         userBook={makeUserBook()}
@@ -197,7 +197,7 @@ describe('BookShelfTagFields', () => {
   })
 
   it('calls onSaved after a successful tag toggle', async () => {
-    const onSaved = jest.fn()
+    const onSaved = vi.fn()
     render(
       <BookShelfTagFields
         userBook={makeUserBook()}

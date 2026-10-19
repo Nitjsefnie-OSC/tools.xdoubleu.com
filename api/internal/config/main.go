@@ -113,9 +113,25 @@ type Config struct {
 	// GrafanaAdminPassword authenticates get_grafana_alerts as `admin`; empty
 	// disables the tool.
 	GrafanaAdminPassword string
-	// ObservabilityIngestSecret gates POST /api/observability/logs (web has no
-	// user session). Empty rejects every request.
+	// ObservabilityIngestSecret is the bearer token GET /metrics requires, which
+	// Prometheus sends; empty leaves /metrics open (the api is the root service,
+	// so it is reachable through kamal-proxy). Never reuse it for user-facing auth.
 	ObservabilityIngestSecret string
+
+	// WebDir is web's build output (web/dist). Empty disables serving the web
+	// app (local development runs the Vite dev server instead).
+	WebDir string
+	// SentryDsnWeb, PostHogKey and PostHogHost reach the browser through
+	// /env.js; they ship in the bundle's runtime config anyway.
+	SentryDsnWeb string
+	PostHogKey   string
+	PostHogHost  string
+	// KoboGatewayRelease is the bundled kobo-gateway's release; it can lag
+	// Release when its build cache-hit.
+	KoboGatewayRelease string
+	// OfflineDisabled serves a service worker that clears its caches and
+	// unregisters itself.
+	OfflineDisabled bool
 }
 
 type parser struct {
@@ -228,6 +244,28 @@ func (c parser) envBool(key string, defaultValue bool) bool {
 	return value
 }
 
+// loadMonitoring reads the Prometheus and Grafana settings.
+func (c parser) loadMonitoring(cfg *Config) {
+	cfg.PrometheusURL = c.envStr(
+		"PROMETHEUS_URL", "http://prometheus:9090",
+	)
+	cfg.GrafanaURL = c.envStr(
+		"GRAFANA_URL", "https://tools.xdoubleu.com/grafana",
+	)
+	cfg.GrafanaAdminPassword = c.envSecret("GRAFANA_ADMIN_PASSWORD", "")
+	cfg.ObservabilityIngestSecret = c.envSecret("OBSERVABILITY_INGEST_SECRET", "")
+}
+
+// loadWeb reads what the api needs to serve the web build.
+func (c parser) loadWeb(cfg *Config) {
+	cfg.WebDir = c.envStr("WEB_DIR", "")
+	cfg.SentryDsnWeb = c.envSecret("SENTRY_DSN_WEB", "")
+	cfg.PostHogKey = c.envSecret("POSTHOG_KEY", "")
+	cfg.PostHogHost = c.envStr("POSTHOG_HOST", "")
+	cfg.KoboGatewayRelease = c.envStr("KOBO_GATEWAY_RELEASE", "dev")
+	cfg.OfflineDisabled = c.envStr("OFFLINE_DISABLED", "") == "1"
+}
+
 func (c parser) envRole() string {
 	role := c.envStr("ROLE", RoleWeb)
 	if role != RoleWeb && role != RoleWorkers {
@@ -236,7 +274,6 @@ func (c parser) envRole() string {
 	return role
 }
 
-//nolint:funlen //flat list of env reads
 func New(logger *slog.Logger) Config {
 	var cfg Config
 
@@ -300,14 +337,8 @@ func New(logger *slog.Logger) Config {
 	cfg.EmailInboundDomain = p.envStr("EMAIL_INBOUND_DOMAIN", "")
 	cfg.EmailInboundSecret = p.envSecret("EMAIL_INBOUND_SECRET", "")
 
-	cfg.PrometheusURL = p.envStr(
-		"PROMETHEUS_URL", "http://prometheus:9090",
-	)
-	cfg.GrafanaURL = p.envStr(
-		"GRAFANA_URL", "https://tools.xdoubleu.com/grafana",
-	)
-	cfg.GrafanaAdminPassword = p.envSecret("GRAFANA_ADMIN_PASSWORD", "")
-	cfg.ObservabilityIngestSecret = p.envSecret("OBSERVABILITY_INGEST_SECRET", "")
+	p.loadMonitoring(&cfg)
+	p.loadWeb(&cfg)
 
 	return cfg
 }

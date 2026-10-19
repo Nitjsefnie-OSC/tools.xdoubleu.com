@@ -1,7 +1,4 @@
-'use client'
-
 import { useState } from 'react'
-import Image from 'next/image'
 import { cn } from '@/lib/cn'
 
 const SIZES = {
@@ -52,7 +49,7 @@ export default function BookCover({ coverUrl, title, size = 'sm', className }: B
           {initials(title)}
         </div>
       ) : (
-        <Image
+        <img
           src={coverUrl}
           alt={title}
           width={width}

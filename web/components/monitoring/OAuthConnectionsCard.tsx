@@ -1,5 +1,3 @@
-'use client'
-
 import { SectionCard } from '@/components/ui/section-card'
 import { ConnectionRow } from '@/components/ui/connection-row'
 import { LoadingState } from '@/components/ui/states'

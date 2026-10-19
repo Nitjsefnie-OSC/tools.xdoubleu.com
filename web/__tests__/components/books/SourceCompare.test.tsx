@@ -25,22 +25,18 @@ function makeProposal() {
 
 describe('SourceCompare', () => {
   it('renders a cover image for a source that has one', () => {
-    render(
-      <SourceCompare proposal={makeProposal()} onApply={jest.fn()} applyLabel={() => 'Apply'} />
-    )
+    render(<SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />)
     const img = screen.getByRole('img')
     expect(img).toHaveAttribute('alt', 'Dune (UC)')
   })
 
   it('does not render cover_url as a text field', () => {
-    render(
-      <SourceCompare proposal={makeProposal()} onApply={jest.fn()} applyLabel={() => 'Apply'} />
-    )
+    render(<SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />)
     expect(screen.queryByText('cover url')).not.toBeInTheDocument()
   })
 
   it('calls onApply with the selected source and index 0', async () => {
-    const onApply = jest.fn().mockResolvedValue(undefined)
+    const onApply = vi.fn().mockResolvedValue(undefined)
     render(<SourceCompare proposal={makeProposal()} onApply={onApply} applyLabel={() => 'Apply'} />)
 
     fireEvent.click(screen.getByRole('radio', { name: 'UniCat' }))
@@ -50,7 +46,7 @@ describe('SourceCompare', () => {
   })
 
   it('shows an error message when onApply rejects', async () => {
-    const onApply = jest.fn().mockRejectedValue(new Error('boom'))
+    const onApply = vi.fn().mockRejectedValue(new Error('boom'))
     render(<SourceCompare proposal={makeProposal()} onApply={onApply} applyLabel={() => 'Apply'} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
@@ -62,7 +58,7 @@ describe('SourceCompare', () => {
     render(
       <SourceCompare
         proposal={makeProposal()}
-        onApply={jest.fn()}
+        onApply={vi.fn()}
         applyLabel={(choice) => (choice === '' ? 'Dismiss' : 'Apply & next')}
       />
     )
@@ -70,18 +66,16 @@ describe('SourceCompare', () => {
   })
 
   it('renders no search fields without onSearch', () => {
-    render(
-      <SourceCompare proposal={makeProposal()} onApply={jest.fn()} applyLabel={() => 'Apply'} />
-    )
+    render(<SourceCompare proposal={makeProposal()} onApply={vi.fn()} applyLabel={() => 'Apply'} />)
     expect(screen.queryByPlaceholderText('Title')).not.toBeInTheDocument()
   })
 
   it('prefills the search fields from the library row and submits edited terms', () => {
-    const onSearch = jest.fn()
+    const onSearch = vi.fn()
     render(
       <SourceCompare
         proposal={makeProposal()}
-        onApply={jest.fn()}
+        onApply={vi.fn()}
         applyLabel={() => 'Apply'}
         onSearch={onSearch}
       />
@@ -99,7 +93,7 @@ describe('SourceCompare', () => {
   })
 
   it('calls onApply with index 0 when dismissing (keep library)', async () => {
-    const onApply = jest.fn().mockResolvedValue(undefined)
+    const onApply = vi.fn().mockResolvedValue(undefined)
     render(
       <SourceCompare
         proposal={makeProposal()}
@@ -123,7 +117,7 @@ describe('SourceCompare', () => {
         create(SourceBookSchema, { source: 'hardcover', title: 'Candidate C', index: 2 })
       ]
     })
-    render(<SourceCompare proposal={proposal} onApply={jest.fn()} applyLabel={() => 'Apply'} />)
+    render(<SourceCompare proposal={proposal} onApply={vi.fn()} applyLabel={() => 'Apply'} />)
 
     expect(screen.getByText('Candidate A')).toBeInTheDocument()
     expect(screen.getByText('Candidate B')).toBeInTheDocument()
@@ -132,7 +126,7 @@ describe('SourceCompare', () => {
   })
 
   it('applies the chosen candidate index, not just the first, for a multi-candidate source', async () => {
-    const onApply = jest.fn().mockResolvedValue(undefined)
+    const onApply = vi.fn().mockResolvedValue(undefined)
     const proposal = create(ResyncProposalSchema, {
       bookId: 'b1',
       library: create(SourceBookSchema, { source: '', title: 'Dune' }),

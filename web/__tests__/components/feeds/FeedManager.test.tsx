@@ -1,16 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const mockUseFeeds = jest.fn()
-const deleteFeed = jest.fn()
-const refreshFeed = jest.fn()
+const mockUseFeeds = vi.fn()
+const deleteFeed = vi.fn()
+const refreshFeed = vi.fn()
 
-jest.mock('@/hooks/useFeeds', () => ({
+vi.mock('@/hooks/useFeeds', () => ({
   useFeeds: () => mockUseFeeds(),
   useDeleteFeed: () => deleteFeed,
   useRefreshFeed: () => refreshFeed,
-  useCreateFeed: () => jest.fn()
+  useCreateFeed: () => vi.fn()
 }))
-jest.mock('@/lib/gen/feeds/v1/feeds_pb', () => ({
+vi.mock('@/lib/gen/feeds/v1/feeds_pb', () => ({
   FeedKind: { RSS: 1, EMAIL: 2 }
 }))
 
@@ -36,7 +36,7 @@ const emailFeed = {
 
 describe('FeedManager', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('shows a loading state', () => {

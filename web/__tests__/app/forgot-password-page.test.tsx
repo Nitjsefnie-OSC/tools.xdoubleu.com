@@ -2,13 +2,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ConnectError } from '@connectrpc/connect'
 import ForgotPasswordPage from '@/app/auth/forgot-password/page'
 
-jest.mock('@/hooks/useAuth', () => ({
-  useForgotPassword: jest.fn()
+vi.mock('@/hooks/useAuth', () => ({
+  useForgotPassword: vi.fn()
 }))
 
 import { useForgotPassword } from '@/hooks/useAuth'
 
-const mockUseForgotPassword = jest.mocked(useForgotPassword)
+const mockUseForgotPassword = vi.mocked(useForgotPassword)
 
 function submit(email = 'a@example.com') {
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: email } })
@@ -16,12 +16,12 @@ function submit(email = 'a@example.com') {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('ForgotPasswordPage', () => {
   it('renders the page heading and a labelled email field', () => {
-    mockUseForgotPassword.mockReturnValue(jest.fn())
+    mockUseForgotPassword.mockReturnValue(vi.fn())
 
     render(<ForgotPasswordPage />)
 
@@ -36,7 +36,7 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('shows the confirmation after sending the reset link', async () => {
-    const forgotPassword = jest.fn().mockResolvedValue(undefined)
+    const forgotPassword = vi.fn().mockResolvedValue(undefined)
     mockUseForgotPassword.mockReturnValue(forgotPassword)
 
     render(<ForgotPasswordPage />)
@@ -49,7 +49,7 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('shows the server message on a ConnectError', async () => {
-    mockUseForgotPassword.mockReturnValue(jest.fn().mockRejectedValue(new ConnectError('nope')))
+    mockUseForgotPassword.mockReturnValue(vi.fn().mockRejectedValue(new ConnectError('nope')))
 
     render(<ForgotPasswordPage />)
     submit()
@@ -58,7 +58,7 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('shows a generic message on other errors', async () => {
-    mockUseForgotPassword.mockReturnValue(jest.fn().mockRejectedValue(new Error('x')))
+    mockUseForgotPassword.mockReturnValue(vi.fn().mockRejectedValue(new Error('x')))
 
     render(<ForgotPasswordPage />)
     submit()

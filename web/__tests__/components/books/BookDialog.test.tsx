@@ -10,11 +10,11 @@ import {
   BookShelfSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-const mockAddBook = jest.fn()
+const mockAddBook = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useCreateBook: () => mockAddBook,
-  useLibrary: jest.fn()
+  useLibrary: vi.fn()
 }))
 
 const fakeBook = create(ExternalBookResultSchema, {
@@ -39,7 +39,7 @@ describe('BookDialog', () => {
   beforeEach(() => {
     mockAddBook.mockReset()
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData(),
       isLoading: false,
       error: undefined
@@ -47,30 +47,30 @@ describe('BookDialog', () => {
   })
 
   it('renders nothing when book is null', () => {
-    const { container } = render(<BookDialog book={null} onClose={jest.fn()} onAdded={jest.fn()} />)
+    const { container } = render(<BookDialog book={null} onClose={vi.fn()} onAdded={vi.fn()} />)
     expect(container.firstChild).toBeNull()
   })
 
   it('renders book title and authors', () => {
-    render(<BookDialog book={fakeBook} onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<BookDialog book={fakeBook} onClose={vi.fn()} onAdded={vi.fn()} />)
     expect(screen.getByText('The Go Programming Language')).toBeInTheDocument()
     expect(screen.getByText('Alan Donovan, Brian Kernighan')).toBeInTheDocument()
   })
 
   it('renders status select defaulting to "Want to read"', () => {
-    render(<BookDialog book={fakeBook} onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<BookDialog book={fakeBook} onClose={vi.fn()} onAdded={vi.fn()} />)
     const select = screen.getByLabelText('Status') as HTMLSelectElement
     expect(select.value).toBe('to-read')
   })
 
   it('includes custom shelves from the library as selectable options', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData(['book-club']),
       isLoading: false,
       error: undefined
     })
-    render(<BookDialog book={fakeBook} onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<BookDialog book={fakeBook} onClose={vi.fn()} onAdded={vi.fn()} />)
     const select = screen.getByLabelText('Status') as HTMLSelectElement
     expect(screen.getByRole('option', { name: 'book-club' })).toBeInTheDocument()
     fireEvent.change(select, { target: { value: 'book-club' } })
@@ -79,18 +79,18 @@ describe('BookDialog', () => {
 
   it('excludes built-in statuses from the custom shelf options', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData(['read', 'book-club']),
       isLoading: false,
       error: undefined
     })
-    render(<BookDialog book={fakeBook} onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<BookDialog book={fakeBook} onClose={vi.fn()} onAdded={vi.fn()} />)
     expect(screen.getAllByRole('option', { name: 'Read' })).toHaveLength(1)
   })
 
   it('calls onClose when Cancel button clicked', () => {
-    const onClose = jest.fn()
-    render(<BookDialog book={fakeBook} onClose={onClose} onAdded={jest.fn()} />)
+    const onClose = vi.fn()
+    render(<BookDialog book={fakeBook} onClose={onClose} onAdded={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(onClose).toHaveBeenCalled()
   })
@@ -103,7 +103,7 @@ describe('BookDialog', () => {
       seriesPosition: 4,
       seriesTotal: 41
     })
-    render(<BookDialog book={inSeries} onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<BookDialog book={inSeries} onClose={vi.fn()} onAdded={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Add Book' }))
     await waitFor(() =>
       expect(mockAddBook).toHaveBeenCalledWith(
@@ -119,8 +119,8 @@ describe('BookDialog', () => {
   })
 
   it('calls addBook and onAdded on successful submit', async () => {
-    const onAdded = jest.fn()
-    const onClose = jest.fn()
+    const onAdded = vi.fn()
+    const onClose = vi.fn()
     mockAddBook.mockResolvedValue(undefined)
     render(<BookDialog book={fakeBook} onClose={onClose} onAdded={onAdded} />)
 
@@ -135,7 +135,7 @@ describe('BookDialog', () => {
 
   it('shows error message when addBook throws', async () => {
     mockAddBook.mockRejectedValue(new Error('Network error'))
-    render(<BookDialog book={fakeBook} onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<BookDialog book={fakeBook} onClose={vi.fn()} onAdded={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Book' }))
 
@@ -145,8 +145,8 @@ describe('BookDialog', () => {
   })
 
   it('closes when Escape is pressed', () => {
-    const onClose = jest.fn()
-    render(<BookDialog book={fakeBook} onClose={onClose} onAdded={jest.fn()} />)
+    const onClose = vi.fn()
+    render(<BookDialog book={fakeBook} onClose={onClose} onAdded={vi.fn()} />)
     fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' })
     expect(onClose).toHaveBeenCalled()
   })

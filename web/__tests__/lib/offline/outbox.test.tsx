@@ -18,7 +18,7 @@ import { addQueued, type QueuedWrite } from '@/lib/offline/store'
 import type { OfflineWrite } from '@/lib/offline/registry'
 
 // Writes that append their JSON `value` to cached '/list…' arrays.
-jest.mock('@/lib/shoppinglist/offlineWrites', () => {
+vi.mock('@/lib/shoppinglist/offlineWrites', () => {
   const decode = (bytes: Uint8Array): string => {
     const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes))
     return typeof parsed === 'object' && parsed !== null && 'value' in parsed
@@ -28,7 +28,7 @@ jest.mock('@/lib/shoppinglist/offlineWrites', () => {
   const make = (name: string) => ({
     id: `test/${name}`,
     encode: (init: unknown) => new TextEncoder().encode(JSON.stringify(init)),
-    send: jest.fn(async () => ({})),
+    send: vi.fn(async () => ({})),
     apply: (key: unknown, data: unknown, bytes: Uint8Array) => {
       const value = decode(bytes)
       return typeof key === 'string' && key.startsWith('/list') && Array.isArray(data)
@@ -44,45 +44,45 @@ jest.mock('@/lib/shoppinglist/offlineWrites', () => {
   return { shoppingListWrites: [make('add'), make('set')] }
 })
 
-jest.mock('@/lib/offline/store', () => {
+vi.mock('@/lib/offline/store', () => {
   let queued: Record<string, unknown>[] = []
   let failed: Record<string, unknown>[] = []
   let seq = 0
+  const memoryOnly = { on: false }
   return {
     mockReset: () => {
       queued = []
       failed = []
     },
-    mockMemoryOnly: { on: false },
-    addQueued: jest.fn(async function (this: unknown, write: Record<string, unknown>) {
-      const self = jest.requireMock<{ mockMemoryOnly: { on: boolean } }>('@/lib/offline/store')
-      if (self.mockMemoryOnly.on) return undefined
+    mockMemoryOnly: memoryOnly,
+    addQueued: vi.fn(async (write: Record<string, unknown>) => {
+      if (memoryOnly.on) return undefined
       seq++
       queued.push({ ...write, seq })
       return seq
     }),
-    listQueued: jest.fn(async () => queued.map((w) => ({ ...w }))),
-    deleteQueued: jest.fn(async (s: number) => {
+    listQueued: vi.fn(async () => queued.map((w) => ({ ...w }))),
+    deleteQueued: vi.fn(async (s: number) => {
       queued = queued.filter((w) => w.seq !== s)
     }),
-    addFailed: jest.fn(async (f: Record<string, unknown>) => {
+    addFailed: vi.fn(async (f: Record<string, unknown>) => {
       failed.push(f)
     }),
-    listFailed: jest.fn(async () => [...failed]),
-    clearFailed: jest.fn(async () => {
+    listFailed: vi.fn(async () => [...failed]),
+    clearFailed: vi.fn(async () => {
       failed = []
     })
   }
 })
 
-const storeMock = jest.requireMock<{
+const storeMock: {
   mockReset: () => void
   mockMemoryOnly: { on: boolean }
-}>('@/lib/offline/store')
+} = await vi.importMock('@/lib/offline/store')
 
 const write: OfflineWrite = shoppingListWrites[0]
-const send = jest.mocked(write.send)
-const fetcher = jest.fn<Promise<string[]>, []>()
+const send = vi.mocked(write.send)
+const fetcher = vi.fn<() => Promise<string[]>>()
 
 // A fresh key per test, so no test joins another's in-flight refetch.
 let listKey = '/list'
@@ -121,7 +121,7 @@ describe('outbox', () => {
     storeMock.mockReset()
     storeMock.mockMemoryOnly.on = false
     resetOutbox()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     send.mockResolvedValue({})
     fetcher.mockResolvedValue(['a'])
   })
@@ -266,7 +266,7 @@ describe('outbox', () => {
   })
 
   it('runs one drain at a time, under a cross-tab lock when available', async () => {
-    const request = jest.fn((_name: string, fn: () => Promise<void>) => fn())
+    const request = vi.fn((_name: string, fn: () => Promise<void>) => fn())
     Object.defineProperty(navigator, 'locks', { value: { request }, configurable: true })
     try {
       const first = flushOutbox()
@@ -280,7 +280,7 @@ describe('outbox', () => {
   })
 
   it('notifies subscribers and reports nothing pending on the server', async () => {
-    const listener = jest.fn()
+    const listener = vi.fn()
     const unsubscribe = subscribeOutbox(listener)
     send.mockRejectedValue(networkError())
 
@@ -308,9 +308,7 @@ describe('outbox', () => {
   })
 
   it('shows failures stored by an earlier session once loaded', async () => {
-    const { addFailed } = jest.requireMock<{ addFailed: (f: unknown) => Promise<void> }>(
-      '@/lib/offline/store'
-    )
+    const { addFailed } = await import('@/lib/offline/store')
     await addFailed({ description: 'Old', reason: 'gone' })
     resetOutbox()
 
@@ -320,7 +318,7 @@ describe('outbox', () => {
 
   it('coalesces consecutive writes with the same key into the latest', async () => {
     const set: OfflineWrite = shoppingListWrites[1]
-    const sendSet = jest.mocked(set.send)
+    const sendSet = vi.mocked(set.send)
     send.mockRejectedValue(networkError())
     sendSet.mockRejectedValue(networkError())
     const queue = (value: string) =>
@@ -351,12 +349,12 @@ describe('outbox', () => {
 
   it('never coalesces a write with its own copy reloaded by a concurrent drain', async () => {
     const set: OfflineWrite = shoppingListWrites[1]
-    jest.mocked(set.send).mockRejectedValue(networkError())
+    vi.mocked(set.send).mockRejectedValue(networkError())
     const queue = (value: string) =>
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the fake write encodes any JSON
       act(async () => void (await enqueueWrite(set, { value } as never)))
     await queue('k1:1')
-    const add = jest.mocked(addQueued)
+    const add = vi.mocked(addQueued)
     const store = add.getMockImplementation()!
     add.mockImplementationOnce(async (write) => {
       const seq = await store(write)
@@ -381,7 +379,7 @@ describe('outbox', () => {
   it('coalesces writes kept only in memory', async () => {
     storeMock.mockMemoryOnly.on = true
     const set: OfflineWrite = shoppingListWrites[1]
-    jest.mocked(set.send).mockRejectedValue(networkError())
+    vi.mocked(set.send).mockRejectedValue(networkError())
     await act(async () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the fake write encodes any JSON
       await enqueueWrite(set, { value: 'k1:1' } as never)
@@ -425,7 +423,7 @@ describe('outbox', () => {
   })
 
   it('refetches only keys under the written app', async () => {
-    const other = jest.fn(async () => ['x'])
+    const other = vi.fn(async () => ['x'])
     function OtherProbe() {
       const { data } = useSWR<string[]>('/other', other)
       return <span>{data?.join(',')}</span>

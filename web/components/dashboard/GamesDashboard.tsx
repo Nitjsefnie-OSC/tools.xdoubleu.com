@@ -1,8 +1,6 @@
-'use client'
-
 import { useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter } from '@/hooks/navigation'
+import { Link } from '@/components/ui/link'
 import { mutate } from 'swr'
 import { useSteam, useSteamProgress, useRecentlyActiveGames } from '@/hooks/useGames'
 import { useSteamRefresh } from '@/lib/games/steamRefresh'

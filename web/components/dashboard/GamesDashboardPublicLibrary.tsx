@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useSharedSteam } from '@/hooks/useDashboardShare'
 import type { GetSharedSteamResponse } from '@/lib/gen/dashboard/v1/games_pb'

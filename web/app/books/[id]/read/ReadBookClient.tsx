@@ -1,9 +1,6 @@
-'use client'
-
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import dynamic from 'next/dynamic'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Link } from '@/components/ui/link'
+import { useRouter, useSearchParams } from '@/hooks/navigation'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '@/components/ui/page-container'
 import { ErrorState, LoadingState } from '@/components/ui/states'
@@ -15,17 +12,9 @@ import { resumeFromState, type ReaderLocation, type ReaderResume } from '@/lib/b
 import { pickReaderFormat } from '@/lib/books/readerSettings'
 import { isWebPubWarm } from '@/lib/books/webpubCache'
 
-// Readium builds iframes and reads sections from the API; client-only too.
-// Stryker disable next-line all: next/dynamic options must stay an object literal.
-const ReadiumBookReader = dynamic(() => import('@/components/books/reader/ReadiumBookReader'), {
-  ssr: false
-})
-
-// pdf.js draws to a canvas and runs a worker; client-only too.
-// Stryker disable next-line all: next/dynamic options must stay an object literal.
-const PdfBookReader = dynamic(() => import('@/components/books/reader/PdfBookReader'), {
-  ssr: false
-})
+// Each reader is its own chunk: Readium and pdf.js are only needed on this page.
+const ReadiumBookReader = lazy(() => import('@/components/books/reader/ReadiumBookReader'))
+const PdfBookReader = lazy(() => import('@/components/books/reader/PdfBookReader'))
 
 function Fallback({ id, children }: { id: string; children: ReactNode }) {
   return (

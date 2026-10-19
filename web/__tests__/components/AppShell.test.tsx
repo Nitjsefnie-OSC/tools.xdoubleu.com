@@ -1,66 +1,67 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-const fetchOrNull = jest.fn()
+vi.mock('@/hooks/useAuth', () => ({ useCurrentUser: vi.fn() }))
 
-jest.mock('@/lib/server/client', () => ({
-  createServerClient: jest.fn(async () => ({
-    getCurrentUser: jest.fn()
-  }))
-}))
-
-jest.mock('@/lib/server/fetchers', () => ({
-  fetchOrNull: (fn: () => Promise<unknown>) => fetchOrNull(fn)
-}))
-
-jest.mock('@/components/SWRProvider', () => ({
-  __esModule: true,
+vi.mock('@/components/SWRProvider', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="swr-provider">{children}</div>
-  )
+  ),
+  useSessionEffects: vi.fn()
 }))
 
-jest.mock('@/components/Navbar', () => ({
+vi.mock('@/components/Navbar', () => ({
   __esModule: true,
   default: () => <div data-testid="navbar" />
 }))
 
-jest.mock('@/components/Footer', () => ({
+vi.mock('@/components/Footer', () => ({
   __esModule: true,
   default: () => <div data-testid="footer" />
 }))
 
-jest.mock('@/components/offline/OfflineBanner', () => ({
+vi.mock('@/components/offline/OfflineBanner', () => ({
   __esModule: true,
   default: () => <div data-testid="offline-banner" />
 }))
 
-jest.mock('@/components/offline/OutboxSync', () => ({
+vi.mock('@/components/offline/OutboxSync', () => ({
   __esModule: true,
   default: () => <div data-testid="outbox-sync" />
 }))
 
-jest.mock('@/components/offline/ServiceWorkerRegistrar', () => ({
+vi.mock('@/components/offline/ServiceWorkerRegistrar', () => ({
   __esModule: true,
   default: () => <div data-testid="sw-registrar" />
 }))
 
-jest.mock('@/components/DeployNotification', () => ({
+vi.mock('@/components/DeployNotification', () => ({
   __esModule: true,
   default: () => <div data-testid="deploy-notification" />
 }))
 
-jest.mock('@/components/books/OfflineBooksSync', () => ({
+vi.mock('@/components/books/OfflineBooksSync', () => ({
   __esModule: true,
   default: () => <div data-testid="offline-books-sync" />
 }))
 
 import AppShell from '@/components/AppShell'
+import { useCurrentUser } from '@/hooks/useAuth'
+import { useSessionEffects } from '@/components/SWRProvider'
+
+function signedInAs(user: { userId?: string; role: string; appAccess: string[] } | undefined) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- only data is read
+  vi.mocked(useCurrentUser).mockReturnValue({ data: user } as never)
+}
 
 describe('AppShell', () => {
-  it('renders the app chrome and children once the current-user fetch resolves', async () => {
-    fetchOrNull.mockResolvedValue({ role: 'user', appAccess: [] })
-    render(await AppShell({ children: <div data-testid="child">content</div> }))
+  it('renders the app chrome and children', () => {
+    signedInAs({ role: 'user', appAccess: [] })
+    render(
+      <AppShell>
+        <div data-testid="child">content</div>
+      </AppShell>
+    )
 
     expect(screen.getByTestId('swr-provider')).toBeInTheDocument()
     expect(screen.getByTestId('navbar')).toBeInTheDocument()
@@ -72,27 +73,27 @@ describe('AppShell', () => {
     expect(screen.getByTestId('child')).toHaveTextContent('content')
   })
 
-  it('renders when the server fetch returns null', async () => {
-    fetchOrNull.mockResolvedValue(null)
-    render(await AppShell({ children: <div data-testid="child" /> }))
+  it('passes the signed-in user to the session effects', () => {
+    signedInAs({ userId: 'u1', role: 'user', appAccess: [] })
+    render(<AppShell>{null}</AppShell>)
 
-    expect(screen.getByTestId('child')).toBeInTheDocument()
+    expect(useSessionEffects).toHaveBeenCalledWith('u1')
   })
 
   it.each([
     ['a user with books access', { role: 'user', appAccess: ['books'] }, true],
     ['an admin', { role: 'admin', appAccess: [] }, true],
     ['a user without books access', { role: 'user', appAccess: ['games'] }, false]
-  ])('keeps books downloaded for offline only for %s', async (_, user, synced) => {
-    fetchOrNull.mockResolvedValue(user)
-    render(await AppShell({ children: null }))
+  ])('keeps books downloaded for offline only for %s', (_, user, synced) => {
+    signedInAs(user)
+    render(<AppShell>{null}</AppShell>)
 
     expect(screen.queryByTestId('offline-books-sync') !== null).toBe(synced)
   })
 
-  it('keeps no books offline when signed out', async () => {
-    fetchOrNull.mockResolvedValue(null)
-    render(await AppShell({ children: null }))
+  it('keeps no books offline when signed out', () => {
+    signedInAs(undefined)
+    render(<AppShell>{null}</AppShell>)
 
     expect(screen.queryByTestId('offline-books-sync')).not.toBeInTheDocument()
   })

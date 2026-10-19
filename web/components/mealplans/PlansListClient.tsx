@@ -1,8 +1,6 @@
-'use client'
-
 import { useEffect } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { Link } from '@/components/ui/link'
+import { useRouter } from '@/hooks/navigation'
 import { useMealPlans } from '@/hooks/useMealPlans'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '@/components/ui/page-container'

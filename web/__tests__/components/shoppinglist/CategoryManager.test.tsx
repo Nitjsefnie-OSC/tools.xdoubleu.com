@@ -8,7 +8,7 @@ import {
   renameCategoryWrite
 } from '@/lib/shoppinglist/offlineWrites'
 
-jest.mock('@/hooks/useShoppingList', () => ({
+vi.mock('@/hooks/useShoppingList', () => ({
   useCategories: () => ({
     data: {
       categories: [
@@ -20,14 +20,14 @@ jest.mock('@/hooks/useShoppingList', () => ({
   })
 }))
 
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn().mockResolvedValue(undefined)
 }))
 
-const enqueue = jest.mocked(enqueueWrite)
+const enqueue = vi.mocked(enqueueWrite)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('CategoryManager', () => {

@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useIntegrations, useSaveIntegrations } from '@/hooks/useGames'
 import { mutate } from 'swr'

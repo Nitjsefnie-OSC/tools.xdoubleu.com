@@ -6,33 +6,20 @@ import {
   GetExternalBookResponseSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-const mockAddBook = jest.fn().mockResolvedValue(undefined)
+const mockAddBook = vi.fn().mockResolvedValue(undefined)
 
-jest.mock('@/hooks/useBooks', () => ({
-  useExternalBook: jest.fn(),
+vi.mock('@/hooks/useBooks', () => ({
+  useExternalBook: vi.fn(),
   useCreateBook: () => mockAddBook,
   useLibrary: () => ({ data: undefined })
 }))
 
-const mockRouterPush = jest.fn()
-jest.mock('next/navigation', () => ({
+const mockRouterPush = vi.fn()
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ push: mockRouterPush })
 }))
 
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} />
-  }
-})
-
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
-
-jest.mock('swr', () => ({ mutate: jest.fn() }))
+vi.mock('swr', () => ({ mutate: vi.fn() }))
 
 import ExternalBookDetailClient from '@/app/books/external/[provider]/[providerId]/ExternalBookDetailClient'
 import { useExternalBook } from '@/hooks/useBooks'
@@ -49,7 +36,7 @@ const mockBook = create(ExternalBookResultSchema, {
 
 function mockResult(book = mockBook) {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-  jest.mocked(useExternalBook).mockReturnValue({
+  vi.mocked(useExternalBook).mockReturnValue({
     data: create(GetExternalBookResponseSchema, { result: book }),
     error: undefined,
     isLoading: false
@@ -58,12 +45,12 @@ function mockResult(book = mockBook) {
 
 describe('ExternalBookDetailClient', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('shows loading state', () => {
     // @ts-expect-error -- partial mock
-    jest.mocked(useExternalBook).mockReturnValue({
+    vi.mocked(useExternalBook).mockReturnValue({
       data: undefined,
       error: undefined,
       isLoading: true
@@ -74,7 +61,7 @@ describe('ExternalBookDetailClient', () => {
 
   it('shows error state', () => {
     // @ts-expect-error -- partial mock
-    jest.mocked(useExternalBook).mockReturnValue({
+    vi.mocked(useExternalBook).mockReturnValue({
       data: undefined,
       error: new Error('fail'),
       isLoading: false
@@ -85,7 +72,7 @@ describe('ExternalBookDetailClient', () => {
 
   it('shows not found when there is no result', () => {
     // @ts-expect-error -- partial mock
-    jest.mocked(useExternalBook).mockReturnValue({
+    vi.mocked(useExternalBook).mockReturnValue({
       data: create(GetExternalBookResponseSchema, {}),
       error: undefined,
       isLoading: false

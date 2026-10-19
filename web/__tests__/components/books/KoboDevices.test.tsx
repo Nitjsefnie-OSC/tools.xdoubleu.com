@@ -1,9 +1,9 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
-const mockDisconnectKoboDevice = jest.fn()
-const mockSetKoboDeviceLogging = jest.fn()
-const mockMutate = jest.fn()
+const mockDisconnectKoboDevice = vi.fn()
+const mockSetKoboDeviceLogging = vi.fn()
+const mockMutate = vi.fn()
 
 function makeUseListKoboDevices(devices: unknown[]) {
   return {
@@ -13,15 +13,15 @@ function makeUseListKoboDevices(devices: unknown[]) {
   }
 }
 
-const mockUseListKoboDevices = jest.fn()
+const mockUseListKoboDevices = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useListKoboDevices: () => mockUseListKoboDevices(),
   useDisconnectKoboDevice: () => mockDisconnectKoboDevice,
   useSetKoboDeviceLogging: () => mockSetKoboDeviceLogging
 }))
 
-jest.mock('@/components/books/KoboDeviceLogs', () => ({
+vi.mock('@/components/books/KoboDeviceLogs', () => ({
   __esModule: true,
   default: ({ deviceId }: { deviceId: string }) => (
     <div data-testid={`kobo-logs-stub-${deviceId}`}>logs</div>
@@ -29,7 +29,7 @@ jest.mock('@/components/books/KoboDeviceLogs', () => ({
 }))
 
 // Inline dialog avoids jsdom portal issues.
-jest.mock('@/components/ui/dialog', () => ({
+vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
     open ? <div data-testid="dialog">{children}</div> : null,
   DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

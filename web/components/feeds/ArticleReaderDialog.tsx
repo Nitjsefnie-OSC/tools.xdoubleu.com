@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
 import ArticleReaderDialog from '@/components/ArticleReaderDialog'
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'
@@ -150,7 +148,6 @@ export default function FeedArticleReaderDialog({
               aria-label="Close image"
               className="block h-full w-full cursor-zoom-out p-0"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={zoomedSrc}
                 alt=""

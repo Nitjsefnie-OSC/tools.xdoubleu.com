@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest'
 import React from 'react'
 import { create } from '@bufbuild/protobuf'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
@@ -12,27 +13,27 @@ import {
   type GetTodoistConnectionStatusResponse
 } from '@/lib/gen/learningpaths/v1/learningpaths_pb'
 
-jest.mock('@/hooks/useTodoistConnection', () => ({
-  useTodoistConnection: jest.fn(),
-  useConnectTodoist: jest.fn(),
-  useDisconnectTodoist: jest.fn()
+vi.mock('@/hooks/useTodoistConnection', () => ({
+  useTodoistConnection: vi.fn(),
+  useConnectTodoist: vi.fn(),
+  useDisconnectTodoist: vi.fn()
 }))
 
 const mockSearchParams = new URLSearchParams()
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useSearchParams: () => mockSearchParams
 }))
 
 function mockConnection({
   data,
   isLoading = false,
-  mutate = jest.fn()
+  mutate = vi.fn()
 }: {
   data?: GetTodoistConnectionStatusResponse
   isLoading?: boolean
-  mutate?: jest.Mock
+  mutate?: Mock
 }) {
-  jest.mocked(useTodoistConnection).mockReturnValue({
+  vi.mocked(useTodoistConnection).mockReturnValue({
     data,
     error: undefined,
     isLoading,
@@ -44,8 +45,8 @@ function mockConnection({
 describe('LearningPathsSettingsClient', () => {
   beforeEach(() => {
     mockSearchParams.delete('todoist_error')
-    jest.mocked(useConnectTodoist).mockReturnValue(jest.fn().mockResolvedValue(undefined))
-    jest.mocked(useDisconnectTodoist).mockReturnValue(jest.fn().mockResolvedValue({}))
+    vi.mocked(useConnectTodoist).mockReturnValue(vi.fn().mockResolvedValue(undefined))
+    vi.mocked(useDisconnectTodoist).mockReturnValue(vi.fn().mockResolvedValue({}))
   })
 
   it('shows a loading state', () => {
@@ -58,8 +59,8 @@ describe('LearningPathsSettingsClient', () => {
   })
 
   it('connects when not connected and reports a failed connect', async () => {
-    const connect = jest.fn().mockResolvedValue(undefined)
-    jest.mocked(useConnectTodoist).mockReturnValue(connect)
+    const connect = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useConnectTodoist).mockReturnValue(connect)
     mockSearchParams.set('todoist_error', '1')
     mockConnection({ data: create(GetTodoistConnectionStatusResponseSchema, { connected: false }) })
     render(<LearningPathsSettingsClient />)
@@ -70,9 +71,9 @@ describe('LearningPathsSettingsClient', () => {
   })
 
   it('disconnects and revalidates when connected', async () => {
-    const disconnect = jest.fn().mockResolvedValue({})
-    const mutate = jest.fn()
-    jest.mocked(useDisconnectTodoist).mockReturnValue(disconnect)
+    const disconnect = vi.fn().mockResolvedValue({})
+    const mutate = vi.fn()
+    vi.mocked(useDisconnectTodoist).mockReturnValue(disconnect)
     mockConnection({
       data: create(GetTodoistConnectionStatusResponseSchema, {
         connected: true,
@@ -88,8 +89,8 @@ describe('LearningPathsSettingsClient', () => {
   })
 
   it('asks to reconnect when the connection lacks scopes', async () => {
-    const connect = jest.fn().mockResolvedValue(undefined)
-    jest.mocked(useConnectTodoist).mockReturnValue(connect)
+    const connect = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useConnectTodoist).mockReturnValue(connect)
     mockConnection({
       data: create(GetTodoistConnectionStatusResponseSchema, {
         connected: true,

@@ -10,8 +10,8 @@ import {
 
 // jsdom has no layout, so @dnd-kit can't drag; a trigger button calls
 // onDragEnd to exercise the real reorder logic.
-jest.mock('@dnd-kit/core', () => {
-  const actual = jest.requireActual('@dnd-kit/core')
+vi.mock('@dnd-kit/core', async () => {
+  const actual = await vi.importActual('@dnd-kit/core')
   return {
     ...actual,
     DndContext: ({
@@ -32,7 +32,7 @@ jest.mock('@dnd-kit/core', () => {
   }
 })
 
-jest.mock('@/hooks/useShoppingList', () => ({
+vi.mock('@/hooks/useShoppingList', () => ({
   useStores: () => ({
     data: { stores: [{ id: 'store-1', name: 'Colruyt' }] },
     isLoading: false
@@ -56,14 +56,14 @@ jest.mock('@/hooks/useShoppingList', () => ({
   })
 }))
 
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn().mockResolvedValue(undefined)
 }))
 
-const enqueue = jest.mocked(enqueueWrite)
+const enqueue = vi.mocked(enqueueWrite)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('StoreManager', () => {

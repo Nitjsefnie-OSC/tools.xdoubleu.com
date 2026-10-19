@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react'
+import { useRouteParams } from '@/hooks/navigation'
 
-jest.mock('@/app/watchparty/[id]/ViewerClient', () => ({
+vi.mock('@/app/watchparty/[id]/ViewerClient', () => ({
   __esModule: true,
   default: ({ id }: { id: string }) => <div data-testid="viewer-client">{id}</div>
 }))
@@ -8,15 +9,15 @@ jest.mock('@/app/watchparty/[id]/ViewerClient', () => ({
 import ViewerPage from '@/app/watchparty/[id]/page'
 
 describe('ViewerPage', () => {
-  it('renders without throwing', async () => {
-    const params = Promise.resolve({ id: 'session-123' })
-    const { getByTestId } = render(await ViewerPage({ params }))
+  it('renders without throwing', () => {
+    vi.mocked(useRouteParams).mockReturnValue({ id: 'session-123' })
+    const { getByTestId } = render(<ViewerPage />)
     expect(getByTestId('viewer-client')).toBeInTheDocument()
   })
 
-  it('passes the id from params to ViewerClient', async () => {
-    const params = Promise.resolve({ id: 'my-session-id' })
-    const { getByText } = render(await ViewerPage({ params }))
+  it('passes the id from params to ViewerClient', () => {
+    vi.mocked(useRouteParams).mockReturnValue({ id: 'my-session-id' })
+    const { getByText } = render(<ViewerPage />)
     expect(getByText('my-session-id')).toBeInTheDocument()
   })
 })

@@ -1,7 +1,5 @@
-'use client'
-
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from '@/hooks/navigation'
 import { useOAuthConnections } from '@/hooks/useMonitoring'
 import { Alert } from '@/components/ui/alert'
 import OAuthConnectionsCard from './OAuthConnectionsCard'

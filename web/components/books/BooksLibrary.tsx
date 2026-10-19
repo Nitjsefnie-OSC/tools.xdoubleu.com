@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import type { LibraryResponse, UserBook, ExternalBookResult } from '@/lib/gen/books/v1/library_pb'
 import LibrarySidebar, {

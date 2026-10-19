@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import BooksProgressChart from '@/components/books/BooksProgressChart'
 import type { ProgressPoint } from '@/components/books/BooksProgressChart'
 
-jest.mock('recharts', () => ({
+vi.mock('recharts', () => ({
   LineChart: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="line-chart">{children}</div>
   ),

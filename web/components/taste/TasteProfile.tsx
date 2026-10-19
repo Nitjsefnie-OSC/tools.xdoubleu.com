@@ -1,5 +1,3 @@
-'use client'
-
 import type { ProfileSections } from '@/lib/gen/taste/v1/taste_pb'
 import { useRefreshTasteProfile, useTasteProfile } from '@/hooks/useTaste'
 import { useSharedList } from '@/hooks/useSharedList'

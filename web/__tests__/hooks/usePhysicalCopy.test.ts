@@ -1,24 +1,24 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
-const mockGetPhysicalCopy = jest.fn()
-jest.mock('@/lib/client', () => ({
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
+const mockGetPhysicalCopy = vi.fn()
+vi.mock('@/lib/client', () => ({
   createServiceClient: () => ({ getPhysicalCopy: mockGetPhysicalCopy })
 }))
-jest.mock('@/lib/gen/books/v1/library_pb', () => ({ LibraryService: {} }))
-const mockEnqueueWrite = jest.fn()
-const mockSendWrite = jest.fn()
-jest.mock('@/lib/offline/outbox', () => ({
+vi.mock('@/lib/gen/books/v1/library_pb', () => ({ LibraryService: {} }))
+const mockEnqueueWrite = vi.fn()
+const mockSendWrite = vi.fn()
+vi.mock('@/lib/offline/outbox', () => ({
   enqueueWrite: (...args: unknown[]) => mockEnqueueWrite(...args),
   sendWrite: (...args: unknown[]) => mockSendWrite(...args)
 }))
-jest.mock('@/lib/books/offlineWrites', () => ({ updatePhysicalCopyWrite: 'write' }))
+vi.mock('@/lib/books/offlineWrites', () => ({ updatePhysicalCopyWrite: 'write' }))
 
 import useSWR from 'swr'
 import { usePhysicalCopy, useUpdatePhysicalCopy } from '@/hooks/usePhysicalCopy'
 import { swrKeys } from '@/lib/swrKeys'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 describe('usePhysicalCopy', () => {
   beforeEach(() => mockUseSWR.mockReset())

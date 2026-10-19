@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, type MouseEvent } from 'react'
 import { mutate } from 'swr'
 import { useSetGameFavourite } from '@/hooks/useGames'

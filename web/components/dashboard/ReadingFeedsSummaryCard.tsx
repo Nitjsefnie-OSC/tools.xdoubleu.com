@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { Card, interactiveCardClass } from '@/components/ui/card'
 import { CardLinkStatus } from '@/components/ui/CardLinkStatus'
 import { Badge } from '@/components/ui/badge'

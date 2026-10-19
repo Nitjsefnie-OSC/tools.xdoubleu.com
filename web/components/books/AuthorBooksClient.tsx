@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo } from 'react'
 import { mutate } from 'swr'
 import { useLibrary } from '@/hooks/useBooks'

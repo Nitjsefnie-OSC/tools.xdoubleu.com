@@ -1,1 +1,6 @@
 .env
+.git
+**/node_modules
+web/dist
+web/coverage
+web/.stryker-tmp

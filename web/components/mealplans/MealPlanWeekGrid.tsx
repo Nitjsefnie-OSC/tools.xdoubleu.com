@@ -1,5 +1,3 @@
-'use client'
-
 import React from 'react'
 import { formatMealDate, MEAL_SLOTS } from '@/lib/mealplans/mealPlanCalendar'
 import type { PlanMeal } from '@/lib/gen/mealplans/v1/mealplans_pb'

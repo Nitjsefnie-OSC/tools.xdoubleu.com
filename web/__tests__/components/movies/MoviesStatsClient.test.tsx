@@ -2,9 +2,9 @@ import React from 'react'
 import { render, screen, within } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockBarChart = jest.fn()
+const mockBarChart = vi.fn()
 
-jest.mock('recharts', () => ({
+vi.mock('recharts', () => ({
   BarChart: (props: { data: unknown; children: React.ReactNode }) => {
     mockBarChart(props.data)
     return <div>{props.children}</div>
@@ -22,7 +22,7 @@ jest.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }))
 
-jest.mock('@/hooks/useMovies', () => ({ useMovieStats: jest.fn() }))
+vi.mock('@/hooks/useMovies', () => ({ useMovieStats: vi.fn() }))
 
 import MoviesStatsClient from '@/components/movies/MoviesStatsClient'
 import { useMovieStats } from '@/hooks/useMovies'
@@ -34,7 +34,7 @@ import {
 
 function mockStats(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useMovieStats).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useMovieStats).mockReturnValue({ isLoading: false, ...value })
 }
 
 const full = create(GetStatsResponseSchema, {
@@ -52,7 +52,7 @@ const full = create(GetStatsResponseSchema, {
   seasonsWatched: 5
 })
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('MoviesStatsClient', () => {
   it('shows loading and error states without data', () => {

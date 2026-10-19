@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -10,16 +9,10 @@ import (
 	"tools.xdoubleu.com/internal/models"
 )
 
-// observabilityLogsIngestPath receives web's batched logs. web has no user
-// session, so it authenticates with a shared-secret header, not Connect.
-const observabilityLogsIngestPath = "/api/observability/logs"
+// webLogSource tags entries the browser logger posts to /logs.
+const webLogSource = "web-client"
 
-// observabilityIngestSecretHeader carries OBSERVABILITY_INGEST_SECRET.
-//
-//nolint:gosec // this is a header name, not a credential
-const observabilityIngestSecretHeader = "X-Observability-Ingest-Secret"
-
-// ingestLogEntry is one entry of web's log batch.
+// ingestLogEntry is one entry of a browser log batch.
 type ingestLogEntry struct {
 	OccurredAt string          `json:"occurred_at"` // RFC3339; empty means "now"
 	Level      string          `json:"level"`
@@ -31,7 +24,7 @@ type ingestLogsRequest struct {
 	Entries []ingestLogEntry `json:"entries"`
 }
 
-// Ingest bounds: web's relay forwards browser-supplied batches.
+// Ingest bounds: the batches are browser-supplied and unauthenticated.
 const (
 	maxIngestBodyBytes    = 256 * 1024
 	maxIngestEntries      = 100
@@ -45,23 +38,11 @@ var ingestLevels = map[string]bool{
 	"debug": true, "info": true, "warn": true, "error": true,
 }
 
-// ingestSource is web's server-side logger by default; its public relay
-// marks browser-supplied entries web-client.
-func ingestSource(r *http.Request) string {
-	if r.URL.Query().Get("source") == "web-client" {
-		return "web-client"
-	}
-	return "web"
-}
-
-// observabilityIngestRoute authenticates with the shared secret.
-func (app *Application) observabilityIngestRoute() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !app.observabilityIngestAuthorized(r) {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
+// webLogsHandler stores the browser logger's batches (web/lib/logger.ts). The
+// endpoint is public, so the SPA handler gates it by same-origin, body size and
+// per-IP rate; it validates every entry before storing it.
+func (app *Application) webLogsHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req ingestLogsRequest
 		r.Body = http.MaxBytesReader(w, r.Body, maxIngestBodyBytes)
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -83,23 +64,12 @@ func (app *Application) observabilityIngestRoute() http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-func (app *Application) observabilityIngestAuthorized(r *http.Request) bool {
-	if app.config.ObservabilityIngestSecret == "" {
-		return false
-	}
-	provided := r.Header.Get(observabilityIngestSecretHeader)
-	return subtle.ConstantTimeCompare(
-		[]byte(provided), []byte(app.config.ObservabilityIngestSecret),
-	) == 1
+	})
 }
 
 func (app *Application) insertIngestedLogs(
 	r *http.Request, entries []ingestLogEntry,
 ) error {
-	source := ingestSource(r)
 	for _, e := range entries {
 		now := time.Now()
 		occurredAt := now
@@ -119,7 +89,7 @@ func (app *Application) insertIngestedLogs(
 
 		if err := app.logsRepo.Insert(r.Context(), models.LogEntry{
 			OccurredAt: occurredAt,
-			Source:     source,
+			Source:     webLogSource,
 			Level:      level,
 			Message:    truncateUTF8(e.Message, maxIngestMessageBytes),
 			AttrsJSON:  attrs,

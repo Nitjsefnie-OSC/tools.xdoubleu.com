@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { Recommendation } from '@/lib/gen/taste/v1/taste_pb'
 import {

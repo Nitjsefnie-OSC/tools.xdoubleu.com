@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { ShoppingItem } from '@/lib/shoppinglist/shoppingExport'
 import { Button } from '@/components/ui/button'

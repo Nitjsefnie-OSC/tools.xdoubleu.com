@@ -10,7 +10,7 @@ interface HookArgs {
 
 let lastArgs: HookArgs | undefined
 let mockStatus = 'connected'
-jest.mock('@/hooks/useWatchPartyRTC', () => ({
+vi.mock('@/hooks/useWatchPartyRTC', () => ({
   useWatchPartyRTC: (args: HookArgs) => {
     lastArgs = args
     return {
@@ -19,14 +19,14 @@ jest.mock('@/hooks/useWatchPartyRTC', () => ({
       camEnabled: true,
       selfCamVisible: true,
       error: null,
-      toggleMic: jest.fn(),
-      toggleCam: jest.fn(),
-      toggleSelfCam: jest.fn()
+      toggleMic: vi.fn(),
+      toggleCam: vi.fn(),
+      toggleSelfCam: vi.fn()
     }
   }
 }))
 
-jest.mock('@/lib/watchparty/roomUtils', () => ({
+vi.mock('@/lib/watchparty/roomUtils', () => ({
   attachDraggable: () => () => {}
 }))
 
@@ -48,8 +48,8 @@ describe('PresenterClient', () => {
   it('starts and stops screen sharing', () => {
     render(<PresenterClient id="ROOM2" />)
     expect(lastArgs?.role).toBe('presenter')
-    const start = jest.fn(() => Promise.resolve())
-    const stop = jest.fn()
+    const start = vi.fn(() => Promise.resolve())
+    const stop = vi.fn()
     lastArgs!.screenControls!.current = { start, stop }
 
     fireEvent.click(screen.getByRole('button', { name: 'Share Screen' }))

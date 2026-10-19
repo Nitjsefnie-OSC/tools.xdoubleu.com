@@ -4,18 +4,11 @@ import { create } from '@bufbuild/protobuf'
 import { SteamResponseSchema, GameSchema } from '@/lib/gen/games/v1/games_pb'
 import { GetSharedSteamResponseSchema } from '@/lib/gen/dashboard/v1/games_pb'
 
-const mockUseSharedSteam = jest.fn()
+const mockUseSharedSteam = vi.fn()
 
-jest.mock('@/hooks/useDashboardShare', () => ({
+vi.mock('@/hooks/useDashboardShare', () => ({
   useSharedSteam: () => mockUseSharedSteam()
 }))
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
 
 import GamesDashboardPublicLibrary from '@/components/dashboard/GamesDashboardPublicLibrary'
 
@@ -37,7 +30,7 @@ function makeSteam() {
 
 describe('GamesDashboardPublicLibrary', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('groups games with a Favourites section first', () => {

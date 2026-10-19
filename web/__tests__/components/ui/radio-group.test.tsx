@@ -4,7 +4,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 
 function TestGroup({
   value = 'a',
-  onChange = jest.fn()
+  onChange = vi.fn()
 }: {
   value?: string
   onChange?: (v: string) => void
@@ -31,7 +31,7 @@ describe('RadioGroup', () => {
   })
 
   it('calls onChange with the new value when an item is clicked', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(<TestGroup value="a" onChange={onChange} />)
     fireEvent.click(screen.getByLabelText('Option B'))
     expect(onChange).toHaveBeenCalledWith('b')
@@ -43,7 +43,7 @@ describe('RadioGroup', () => {
   })
 
   it('throws when RadioGroupItem is used outside RadioGroup', () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     expect(() => render(<RadioGroupItem value="x" label="X" />)).toThrow(
       'RadioGroupItem must be inside RadioGroup'
     )

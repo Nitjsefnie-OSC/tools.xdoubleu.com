@@ -10,7 +10,7 @@ function dialogContentClass(): string {
 
 describe('ArticleReaderDialog', () => {
   it('defaults to the centered card on desktop (books reader)', () => {
-    render(<ArticleReaderDialog title="T" open onOpenChange={jest.fn()} />)
+    render(<ArticleReaderDialog title="T" open onOpenChange={vi.fn()} />)
     const cls = dialogContentClass()
     expect(cls).toContain('max-w-2xl')
     expect(cls).toContain('lg:max-w-4xl')
@@ -20,7 +20,7 @@ describe('ArticleReaderDialog', () => {
   })
 
   it('fills the whole desktop viewport when bleedDesktop is set (feeds reader)', () => {
-    render(<ArticleReaderDialog title="T" open onOpenChange={jest.fn()} bleedDesktop />)
+    render(<ArticleReaderDialog title="T" open onOpenChange={vi.fn()} bleedDesktop />)
     const cls = dialogContentClass()
     expect(cls).toContain('lg:inset-0')
     expect(cls).toContain('lg:h-full')
@@ -30,7 +30,7 @@ describe('ArticleReaderDialog', () => {
   })
 
   it('caps the prose column at a readable width only when not bleeding (books reader)', () => {
-    render(<ArticleReaderDialog title="T" open onOpenChange={jest.fn()} html="<p>Body</p>" />)
+    render(<ArticleReaderDialog title="T" open onOpenChange={vi.fn()} html="<p>Body</p>" />)
     const proseEl = [...document.querySelectorAll('.prose')].find((el) => el.textContent == 'Body')
     expect(proseEl?.className).toContain('lg:max-w-prose')
     expect(proseEl?.className).toContain('lg:mx-auto')
@@ -38,13 +38,7 @@ describe('ArticleReaderDialog', () => {
 
   it('spans the prose edge to edge inside the full-bleed desktop dialog', () => {
     render(
-      <ArticleReaderDialog
-        title="T"
-        open
-        onOpenChange={jest.fn()}
-        html="<p>Body</p>"
-        bleedDesktop
-      />
+      <ArticleReaderDialog title="T" open onOpenChange={vi.fn()} html="<p>Body</p>" bleedDesktop />
     )
     const proseEl = [...document.querySelectorAll('.prose')].find((el) => el.textContent == 'Body')
     // max-w-none stays; the centered lg cap must not apply.
@@ -54,7 +48,7 @@ describe('ArticleReaderDialog', () => {
   })
 
   it('renders the sanitized article body', () => {
-    render(<ArticleReaderDialog title="T" open onOpenChange={jest.fn()} html="<p>Body</p>" />)
+    render(<ArticleReaderDialog title="T" open onOpenChange={vi.fn()} html="<p>Body</p>" />)
     expect(screen.getByText('Body')).toBeInTheDocument()
   })
 })

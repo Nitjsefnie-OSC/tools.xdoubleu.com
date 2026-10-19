@@ -8,35 +8,35 @@ const sampleKeys = [
   undefined
 ]
 let revalidated: unknown[] = []
-const mockMutate = jest.fn(async (match: (key: unknown) => boolean) => {
+const mockMutate = vi.fn(async (match: (key: unknown) => boolean) => {
   revalidated = sampleKeys.filter(match)
 })
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
   useSWRConfig: () => ({ mutate: mockMutate })
 }))
 const mockClient = {
-  listBacklog: jest.fn().mockResolvedValue({ entries: [{ id: 'e-1' }], hasMore: true }),
-  searchTitles: jest.fn().mockResolvedValue({ results: [] }),
-  getTitle: jest.fn().mockResolvedValue({}),
-  getStats: jest.fn().mockResolvedValue({}),
-  getSettings: jest.fn().mockResolvedValue({ providerIds: [] }),
-  setSettings: jest.fn().mockResolvedValue({ providerIds: [] }),
-  listAvailableProviders: jest.fn().mockResolvedValue({ providers: [] }),
-  addTitle: jest.fn().mockResolvedValue({ entry: { id: 'e-2' } }),
-  setStatus: jest.fn().mockResolvedValue({}),
-  removeTitle: jest.fn().mockResolvedValue({}),
-  setRating: jest.fn().mockResolvedValue({}),
-  setSeasonWatched: jest.fn().mockResolvedValue({}),
-  addWatchDate: jest.fn().mockResolvedValue({}),
-  editWatchDate: jest.fn().mockResolvedValue({}),
-  removeWatchDate: jest.fn().mockResolvedValue({})
+  listBacklog: vi.fn().mockResolvedValue({ entries: [{ id: 'e-1' }], hasMore: true }),
+  searchTitles: vi.fn().mockResolvedValue({ results: [] }),
+  getTitle: vi.fn().mockResolvedValue({}),
+  getStats: vi.fn().mockResolvedValue({}),
+  getSettings: vi.fn().mockResolvedValue({ providerIds: [] }),
+  setSettings: vi.fn().mockResolvedValue({ providerIds: [] }),
+  listAvailableProviders: vi.fn().mockResolvedValue({ providers: [] }),
+  addTitle: vi.fn().mockResolvedValue({ entry: { id: 'e-2' } }),
+  setStatus: vi.fn().mockResolvedValue({}),
+  removeTitle: vi.fn().mockResolvedValue({}),
+  setRating: vi.fn().mockResolvedValue({}),
+  setSeasonWatched: vi.fn().mockResolvedValue({}),
+  addWatchDate: vi.fn().mockResolvedValue({}),
+  editWatchDate: vi.fn().mockResolvedValue({}),
+  removeWatchDate: vi.fn().mockResolvedValue({})
 }
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => mockClient)
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => mockClient)
 }))
-jest.mock('@/lib/gen/movies/v1/movies_pb', () => ({ MoviesService: {} }))
+vi.mock('@/lib/gen/movies/v1/movies_pb', () => ({ MoviesService: {} }))
 
 import useSWR from 'swr'
 import {
@@ -50,11 +50,11 @@ import {
   useMoviesBacklog
 } from '@/hooks/useMovies'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 const filter = { status: 'want', mediaType: 'movie', sort: 'title', onMyServices: false }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // Runs the fetcher for a non-null key, like SWR would.
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
   mockUseSWR.mockImplementation((key: unknown, fetcher: unknown) => {

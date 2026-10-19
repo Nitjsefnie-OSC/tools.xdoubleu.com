@@ -1,19 +1,19 @@
 import { renderHook, act } from '@testing-library/react'
 
-const mockTrigger = jest.fn()
+const mockTrigger = vi.fn()
 
-jest.mock('@/hooks/useGames', () => ({
+vi.mock('@/hooks/useGames', () => ({
   useRefreshSteam: () => mockTrigger
 }))
 
-jest.mock('@/lib/env', () => ({
-  getApiUrl: jest.fn(() => 'https://api.test')
+vi.mock('@/lib/env', () => ({
+  getApiUrl: vi.fn(() => 'https://api.test')
 }))
 
 import { useSteamRefresh } from '@/lib/games/steamRefresh'
 import { getApiUrl } from '@/lib/env'
 
-const mockGetApiUrl = jest.mocked(getApiUrl)
+const mockGetApiUrl = vi.mocked(getApiUrl)
 
 class MockWebSocket {
   static instances: MockWebSocket[] = []
@@ -61,15 +61,15 @@ function latest() {
 
 describe('useSteamRefresh', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.clearAllMocks()
+    vi.useFakeTimers()
+    vi.clearAllMocks()
     MockWebSocket.instances = []
     mockGetApiUrl.mockReturnValue('https://api.test')
   })
 
   afterEach(() => {
-    jest.clearAllTimers()
-    jest.useRealTimers()
+    vi.clearAllTimers()
+    vi.useRealTimers()
   })
 
   it('connects to the progress endpoint and subscribes to steam on open', () => {
@@ -108,7 +108,7 @@ describe('useSteamRefresh', () => {
   })
 
   it('invokes onSynced once a refresh transitions from running to finished', () => {
-    const onSynced = jest.fn()
+    const onSynced = vi.fn()
     renderHook(() => useSteamRefresh(onSynced))
     act(() => latest().emitOpen())
 
@@ -120,7 +120,7 @@ describe('useSteamRefresh', () => {
   })
 
   it('does not invoke onSynced when no refresh was in progress', () => {
-    const onSynced = jest.fn()
+    const onSynced = vi.fn()
     renderHook(() => useSteamRefresh(onSynced))
     act(() => latest().emitOpen())
     act(() => latest().emit({ isRefreshing: false, lastRefresh: null }))
@@ -158,7 +158,7 @@ describe('useSteamRefresh', () => {
     expect(MockWebSocket.instances).toHaveLength(1)
 
     act(() => {
-      jest.advanceTimersByTime(1500)
+      vi.advanceTimersByTime(1500)
     })
     expect(MockWebSocket.instances).toHaveLength(2)
 
@@ -168,7 +168,7 @@ describe('useSteamRefresh', () => {
   })
 
   it('delivers a completion that arrives on the reconnected socket', () => {
-    const onSynced = jest.fn()
+    const onSynced = vi.fn()
     renderHook(() => useSteamRefresh(onSynced))
     act(() => latest().emitOpen())
     act(() => latest().emit({ isRefreshing: true, lastRefresh: null }))
@@ -176,7 +176,7 @@ describe('useSteamRefresh', () => {
     // Socket drops mid-sync; the job finishes while disconnected.
     act(() => latest().close())
     act(() => {
-      jest.advanceTimersByTime(1500)
+      vi.advanceTimersByTime(1500)
     })
     act(() => latest().emitOpen())
     act(() => latest().emit({ isRefreshing: false, lastRefresh: '2026-01-02T03:04:05Z' }))
@@ -187,13 +187,13 @@ describe('useSteamRefresh', () => {
   it('closes the socket and does not reconnect on unmount', () => {
     const { unmount } = renderHook(() => useSteamRefresh())
     act(() => latest().emitOpen())
-    const closeSpy = jest.spyOn(latest(), 'close')
+    const closeSpy = vi.spyOn(latest(), 'close')
 
     unmount()
     expect(closeSpy).toHaveBeenCalled()
 
     act(() => {
-      jest.advanceTimersByTime(1500)
+      vi.advanceTimersByTime(1500)
     })
     expect(MockWebSocket.instances).toHaveLength(1)
   })

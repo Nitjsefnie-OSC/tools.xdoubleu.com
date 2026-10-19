@@ -1,5 +1,3 @@
-'use client'
-
 import { Popover } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'

@@ -1,13 +1,13 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import StationField from '@/components/trains/StationField'
 
-const mockUseStationSearch = jest.fn()
-jest.mock('@/hooks/useTrains', () => ({
+const mockUseStationSearch = vi.fn()
+vi.mock('@/hooks/useTrains', () => ({
   useStationSearch: (query: string) => mockUseStationSearch(query)
 }))
 
 let capturedOnSelect: ((name: string) => void) | undefined
-jest.mock('@/components/ui/combobox', () => ({
+vi.mock('@/components/ui/combobox', () => ({
   Combobox: (props: {
     value: string
     onChange: (v: string) => void
@@ -37,8 +37,8 @@ describe('StationField', () => {
       <StationField
         label="From"
         query="Al"
-        onQueryChange={jest.fn()}
-        onSelectStation={jest.fn()}
+        onQueryChange={vi.fn()}
+        onSelectStation={vi.fn()}
         placeholder="Origin station"
       />
     )
@@ -47,13 +47,13 @@ describe('StationField', () => {
   })
 
   it('calls onQueryChange as the user types', () => {
-    const onQueryChange = jest.fn()
+    const onQueryChange = vi.fn()
     render(
       <StationField
         label="From"
         query=""
         onQueryChange={onQueryChange}
-        onSelectStation={jest.fn()}
+        onSelectStation={vi.fn()}
         placeholder="Origin station"
       />
     )
@@ -62,12 +62,12 @@ describe('StationField', () => {
   })
 
   it('resolves a selected suggestion to its stop id', () => {
-    const onSelectStation = jest.fn()
+    const onSelectStation = vi.fn()
     render(
       <StationField
         label="From"
         query="Al"
-        onQueryChange={jest.fn()}
+        onQueryChange={vi.fn()}
         onSelectStation={onSelectStation}
         placeholder="Origin station"
       />
@@ -88,12 +88,12 @@ describe('StationField', () => {
         }
       ]
     })
-    const onSelectStation = jest.fn()
+    const onSelectStation = vi.fn()
     render(
       <StationField
         label="From"
         query="Bru"
-        onQueryChange={jest.fn()}
+        onQueryChange={vi.fn()}
         onSelectStation={onSelectStation}
         placeholder="Origin station"
       />
@@ -106,12 +106,12 @@ describe('StationField', () => {
   })
 
   it('ignores a selection that does not match a known station', () => {
-    const onSelectStation = jest.fn()
+    const onSelectStation = vi.fn()
     render(
       <StationField
         label="From"
         query="Al"
-        onQueryChange={jest.fn()}
+        onQueryChange={vi.fn()}
         onSelectStation={onSelectStation}
         placeholder="Origin station"
       />

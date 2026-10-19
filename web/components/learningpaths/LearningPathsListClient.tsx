@@ -1,7 +1,5 @@
-'use client'
-
 import { useMemo } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { useLearningPaths, useFetchLearningPathsPage } from '@/hooks/useLearningPaths'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import type { LearningPath } from '@/lib/gen/learningpaths/v1/learningpaths_pb'

@@ -1,5 +1,3 @@
-'use client'
-
 import { useId, useState } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'

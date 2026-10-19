@@ -1,5 +1,3 @@
-'use client'
-
 import { useId, useState } from 'react'
 import type { SourceBook, ResyncProposal } from '@/lib/gen/books/v1/catalog_pb'
 import BookCover from '@/components/books/BookCover'

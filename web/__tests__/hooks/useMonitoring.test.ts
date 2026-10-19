@@ -1,18 +1,18 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn(), mutate: jest.fn() }))
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => ({
-    listOAuthConnections: jest.fn(),
-    disconnectOAuthConnection: jest.fn(),
-    getProviderOptions: jest.fn(),
-    setProviderConfig: jest.fn(),
-    getNotificationSettings: jest.fn(),
-    updateNotificationSettings: jest.fn(),
-    getAutomatedActions: jest.fn()
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn(), mutate: vi.fn() }))
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => ({
+    listOAuthConnections: vi.fn(),
+    disconnectOAuthConnection: vi.fn(),
+    getProviderOptions: vi.fn(),
+    setProviderConfig: vi.fn(),
+    getNotificationSettings: vi.fn(),
+    updateNotificationSettings: vi.fn(),
+    getAutomatedActions: vi.fn()
   }))
 }))
-jest.mock('@/lib/gen/observability/v1/observability_pb', () => ({
+vi.mock('@/lib/gen/observability/v1/observability_pb', () => ({
   ObservabilityService: {},
   ProviderConfigSchema: {}
 }))
@@ -30,12 +30,12 @@ import {
   useAutomatedActions
 } from '@/hooks/useMonitoring'
 
-const mockUseSWR = jest.mocked(useSWR)
-const mockMutate = jest.mocked(mutate)
-const mockCreateServiceClient = jest.mocked(createServiceClient)
+const mockUseSWR = vi.mocked(useSWR)
+const mockMutate = vi.mocked(mutate)
+const mockCreateServiceClient = vi.mocked(createServiceClient)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockUseSWR.mockReturnValue(
     // @ts-expect-error -- partial SWRResponse for test purposes
     { data: undefined, isLoading: false, error: undefined }
@@ -61,7 +61,7 @@ describe('useNotificationSettings', () => {
 
 describe('useAutomatedActions', () => {
   it('uses the automated-actions SWR key and calls getAutomatedActions with an empty request', () => {
-    const getAutomatedActions = jest.fn().mockResolvedValue({})
+    const getAutomatedActions = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- partial client shape
     mockCreateServiceClient.mockReturnValue({ getAutomatedActions })
 
@@ -76,7 +76,7 @@ describe('useAutomatedActions', () => {
 
 describe('useDisconnectOAuthConnection', () => {
   it('calls client.disconnectOAuthConnection then revalidates connections', async () => {
-    const disconnectOAuthConnection = jest.fn().mockResolvedValue({})
+    const disconnectOAuthConnection = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- partial client shape
     mockCreateServiceClient.mockReturnValue({ disconnectOAuthConnection })
 
@@ -90,7 +90,7 @@ describe('useDisconnectOAuthConnection', () => {
 
 describe('useProviderOptions', () => {
   it('calls client.getProviderOptions with a defaulted sentryOrg', () => {
-    const getProviderOptions = jest.fn().mockResolvedValue({})
+    const getProviderOptions = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- partial client shape
     mockCreateServiceClient.mockReturnValue({ getProviderOptions })
 
@@ -101,7 +101,7 @@ describe('useProviderOptions', () => {
   })
 
   it('passes an explicit sentryOrg through', () => {
-    const getProviderOptions = jest.fn().mockResolvedValue({})
+    const getProviderOptions = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- partial client shape
     mockCreateServiceClient.mockReturnValue({ getProviderOptions })
 
@@ -114,7 +114,7 @@ describe('useProviderOptions', () => {
 
 describe('useSetProviderConfig', () => {
   it('calls client.setProviderConfig then revalidates connections', async () => {
-    const setProviderConfig = jest.fn().mockResolvedValue({})
+    const setProviderConfig = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- partial client shape
     mockCreateServiceClient.mockReturnValue({ setProviderConfig })
 
@@ -129,7 +129,7 @@ describe('useSetProviderConfig', () => {
 
 describe('useUpdateNotificationSettings', () => {
   it('calls client.updateNotificationSettings then revalidates settings', async () => {
-    const updateNotificationSettings = jest.fn().mockResolvedValue({})
+    const updateNotificationSettings = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- partial client shape
     mockCreateServiceClient.mockReturnValue({ updateNotificationSettings })
 

@@ -1,13 +1,13 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-jest.mock('@/hooks/useMealPlans', () => ({
-  useUpdatePlan: jest.fn(),
-  useRotateICalToken: jest.fn()
+vi.mock('@/hooks/useMealPlans', () => ({
+  useUpdatePlan: vi.fn(),
+  useRotateICalToken: vi.fn()
 }))
-jest.mock('@/lib/gen/mealplans/v1/mealplans_pb', () => ({
-  ...jest.requireActual('@/lib/gen/mealplans/v1/mealplans_pb'),
-  UpdatePlanRequest: jest.fn().mockImplementation((d) => d)
+vi.mock('@/lib/gen/mealplans/v1/mealplans_pb', async () => ({
+  ...(await vi.importActual('@/lib/gen/mealplans/v1/mealplans_pb')),
+  UpdatePlanRequest: vi.fn().mockImplementation((d) => d)
 }))
 
 import { useRotateICalToken, useUpdatePlan } from '@/hooks/useMealPlans'
@@ -15,8 +15,8 @@ import PlanForm from '@/components/mealplans/PlanForm'
 import { create } from '@bufbuild/protobuf'
 import { PlanSchema } from '@/lib/gen/mealplans/v1/mealplans_pb'
 
-const mockUpdate = jest.fn()
-const mockRotate = jest.fn()
+const mockUpdate = vi.fn()
+const mockRotate = vi.fn()
 
 const existingPlan = create(PlanSchema, {
   id: 'plan-1',
@@ -27,16 +27,16 @@ const existingPlan = create(PlanSchema, {
 })
 
 beforeEach(() => {
-  jest.clearAllMocks()
-  jest.mocked(useUpdatePlan).mockReturnValue(mockUpdate)
+  vi.clearAllMocks()
+  vi.mocked(useUpdatePlan).mockReturnValue(mockUpdate)
   mockUpdate.mockResolvedValue({})
-  jest.mocked(useRotateICalToken).mockReturnValue(mockRotate)
+  vi.mocked(useRotateICalToken).mockReturnValue(mockRotate)
   mockRotate.mockResolvedValue({ icalUrl: '/mealplans/ical/new.ics' })
 })
 
 describe('PlanForm', () => {
   it('renders name input and iCal controls', () => {
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={vi.fn()} />)
     expect(screen.getByLabelText(/Plan Name/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Breakfast/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Noon/i)).toBeInTheDocument()
@@ -45,33 +45,33 @@ describe('PlanForm', () => {
   })
 
   it('pre-fills name from existing plan', () => {
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={vi.fn()} />)
     expect(screen.getByLabelText(/Plan Name/i)).toHaveValue('Existing Plan')
   })
 
   it('pre-checks hidden slots', () => {
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={vi.fn()} />)
     expect(screen.getByLabelText(/Breakfast/i)).toBeChecked()
     expect(screen.getByLabelText(/Noon/i)).not.toBeChecked()
   })
 
   it('calls updatePlan on submit', async () => {
-    const onSave = jest.fn()
-    render(<PlanForm plan={existingPlan} onSave={onSave} onCancel={jest.fn()} />)
+    const onSave = vi.fn()
+    render(<PlanForm plan={existingPlan} onSave={onSave} onCancel={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /Save/i }))
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled())
     expect(onSave).toHaveBeenCalledWith('plan-1')
   })
 
   it('calls onCancel when cancel is clicked', () => {
-    const onCancel = jest.fn()
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={onCancel} />)
+    const onCancel = vi.fn()
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={onCancel} />)
     fireEvent.click(screen.getByRole('button', { name: /Cancel/i }))
     expect(onCancel).toHaveBeenCalled()
   })
 
   it('toggles iCal hide slot checkbox', () => {
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={vi.fn()} />)
     const noonCheckbox = screen.getByLabelText(/Noon/i)
     expect(noonCheckbox).not.toBeChecked()
     fireEvent.click(noonCheckbox)
@@ -79,7 +79,7 @@ describe('PlanForm', () => {
   })
 
   it('toggles the hide-past-events checkbox', () => {
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={vi.fn()} />)
     const hidePast = screen.getByLabelText(/Hide past events/i)
     expect(hidePast).toBeChecked()
     fireEvent.click(hidePast)
@@ -87,7 +87,7 @@ describe('PlanForm', () => {
   })
 
   it('resets the iCal link after confirmation', async () => {
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /Reset iCal link/i }))
     expect(mockRotate).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: /^Reset link$/i }))
@@ -96,7 +96,7 @@ describe('PlanForm', () => {
   })
 
   it('keeps the iCal link when the reset is cancelled', () => {
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /Reset iCal link/i }))
     fireEvent.click(screen.getByRole('button', { name: /Keep link/i }))
     expect(mockRotate).not.toHaveBeenCalled()
@@ -105,7 +105,7 @@ describe('PlanForm', () => {
 
   it('shows an error when the iCal reset fails', async () => {
     mockRotate.mockRejectedValue(new Error('rotate failed'))
-    render(<PlanForm plan={existingPlan} onSave={jest.fn()} onCancel={jest.fn()} />)
+    render(<PlanForm plan={existingPlan} onSave={vi.fn()} onCancel={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /Reset iCal link/i }))
     fireEvent.click(screen.getByRole('button', { name: /^Reset link$/i }))
     expect(await screen.findByText('rotate failed')).toBeInTheDocument()

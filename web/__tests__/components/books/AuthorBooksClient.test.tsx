@@ -10,48 +10,38 @@ import {
   type BookShelf
 } from '@/lib/gen/books/v1/library_pb'
 
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} />
+vi.mock('@/components/books/BookRatingStars', () => {
+  return {
+    default: function MockRatingStars() {
+      return <div data-testid="rating-stars" />
+    }
   }
 })
 
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('@/components/books/BookRatingStars', () => {
-  return function MockRatingStars() {
-    return <div data-testid="rating-stars" />
+vi.mock('@/components/books/BookFavouriteButton', () => {
+  return {
+    default: function MockFavButton() {
+      return <div data-testid="favourite-button" />
+    }
   }
 })
 
-jest.mock('@/components/books/BookFavouriteButton', () => {
-  return function MockFavButton() {
-    return <div data-testid="favourite-button" />
-  }
-})
-
-jest.mock('@/hooks/useBooks', () => ({
-  useLibrary: jest.fn(),
-  useSetBookTag: () => jest.fn(),
-  useRemoveBook: () => jest.fn(),
-  useUpdateBookStatus: () => jest.fn()
+vi.mock('@/hooks/useBooks', () => ({
+  useLibrary: vi.fn(),
+  useSetBookTag: () => vi.fn(),
+  useRemoveBook: () => vi.fn(),
+  useUpdateBookStatus: () => vi.fn()
 }))
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
-  mutate: jest.fn()
+vi.mock('swr', async () => ({
+  ...(await vi.importActual('swr')),
+  mutate: vi.fn()
 }))
 
 import AuthorBooksClient from '@/components/books/AuthorBooksClient'
 import { useLibrary } from '@/hooks/useBooks'
 
-const mockUseBacklogLibrary = jest.mocked(useLibrary)
+const mockUseBacklogLibrary = vi.mocked(useLibrary)
 
 function makeLibraryWith(books: UserBook[], shelves: BookShelf[]) {
   return {
@@ -99,7 +89,7 @@ describe('AuthorBooksClient', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('shows only books by the specified author', () => {

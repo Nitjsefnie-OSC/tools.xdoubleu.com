@@ -1,5 +1,3 @@
-'use client'
-
 import KoboGatewaySetup from '@/components/books/KoboGatewaySetup'
 import KoboGatewayDownload from '@/components/books/KoboGatewayDownload'
 import { useGatewayStatus } from '@/hooks/useKoboGateway'

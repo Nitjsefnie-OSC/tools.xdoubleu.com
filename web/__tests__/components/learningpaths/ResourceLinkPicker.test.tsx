@@ -2,33 +2,31 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import ResourceLinkPicker, { BookLinkSearch } from '@/components/learningpaths/ResourceLinkPicker'
 
-const mockSearchLibrary = jest.fn()
-const mockUseFeedItems = jest.fn()
+const mockSearchLibrary = vi.fn()
+const mockUseFeedItems = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useSearchLibrary: () => mockSearchLibrary
 }))
 
-jest.mock('@/hooks/useFeeds', () => ({
+vi.mock('@/hooks/useFeeds', () => ({
   useFeedItems: (...args: unknown[]) => mockUseFeedItems(...args)
 }))
 
-jest.useFakeTimers()
+vi.useFakeTimers()
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockUseFeedItems.mockReturnValue({ data: { items: [] } })
 })
 
 afterEach(() => {
-  jest.clearAllTimers()
+  vi.clearAllTimers()
 })
 
 describe('ResourceLinkPicker — unlinked', () => {
   it('renders the link buttons', () => {
-    render(
-      <ResourceLinkPicker onLinkBook={jest.fn()} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Link a book' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Link a feed item' })).toBeInTheDocument()
   })
@@ -36,12 +34,12 @@ describe('ResourceLinkPicker — unlinked', () => {
 
 describe('ResourceLinkPicker — linked book', () => {
   it('shows the linked book and unlinks on click', () => {
-    const onUnlink = jest.fn()
+    const onUnlink = vi.fn()
     render(
       <ResourceLinkPicker
         linkedBook={{ id: 'b1', title: 'The Go Programming Language' }}
-        onLinkBook={jest.fn()}
-        onLinkFeedItem={jest.fn()}
+        onLinkBook={vi.fn()}
+        onLinkFeedItem={vi.fn()}
         onUnlink={onUnlink}
       />
     )
@@ -53,12 +51,12 @@ describe('ResourceLinkPicker — linked book', () => {
 
 describe('ResourceLinkPicker — linked feed item', () => {
   it('shows the linked feed item and unlinks on click', () => {
-    const onUnlink = jest.fn()
+    const onUnlink = vi.fn()
     render(
       <ResourceLinkPicker
         linkedFeedItem={{ id: 'f1', title: 'An Interesting Article' }}
-        onLinkBook={jest.fn()}
-        onLinkFeedItem={jest.fn()}
+        onLinkBook={vi.fn()}
+        onLinkFeedItem={vi.fn()}
         onUnlink={onUnlink}
       />
     )
@@ -72,9 +70,9 @@ describe('ResourceLinkPicker — linked feed item', () => {
       <ResourceLinkPicker
         linkedBook={{ id: 'b1', title: 'Book Wins' }}
         linkedFeedItem={{ id: 'f1', title: 'Feed Loses' }}
-        onLinkBook={jest.fn()}
-        onLinkFeedItem={jest.fn()}
-        onUnlink={jest.fn()}
+        onLinkBook={vi.fn()}
+        onLinkFeedItem={vi.fn()}
+        onUnlink={vi.fn()}
       />
     )
     expect(screen.getByText(/Book Wins/)).toBeInTheDocument()
@@ -84,16 +82,16 @@ describe('ResourceLinkPicker — linked feed item', () => {
 
 describe('ResourceLinkPicker — book search', () => {
   it('exposes BookLinkSearch for item authoring', async () => {
-    const onPick = jest.fn()
+    const onPick = vi.fn()
     mockSearchLibrary.mockResolvedValue({
       books: [{ bookId: 'b1', book: { title: 'Dune' } }]
     })
-    render(<BookLinkSearch onPick={onPick} onCancel={jest.fn()} />)
+    render(<BookLinkSearch onPick={onPick} onCancel={vi.fn()} />)
     fireEvent.change(screen.getByPlaceholderText('Search your library…'), {
       target: { value: 'Dune' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => screen.getByText('Dune'))
     fireEvent.mouseDown(screen.getByText('Dune'))
@@ -107,19 +105,19 @@ describe('ResourceLinkPicker — book search', () => {
   })
 
   it('searches the library after debounce and picks a result', async () => {
-    const onLinkBook = jest.fn()
+    const onLinkBook = vi.fn()
     mockSearchLibrary.mockResolvedValue({
       books: [{ bookId: 'b1', book: { title: 'Dune' } }]
     })
     render(
-      <ResourceLinkPicker onLinkBook={onLinkBook} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
+      <ResourceLinkPicker onLinkBook={onLinkBook} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     fireEvent.change(screen.getByPlaceholderText('Search your library…'), {
       target: { value: 'Dune' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => screen.getByText('Dune'))
     fireEvent.mouseDown(screen.getByText('Dune'))
@@ -131,15 +129,13 @@ describe('ResourceLinkPicker — book search', () => {
     mockSearchLibrary.mockResolvedValue({
       books: [{ bookId: 'b1', book: undefined }]
     })
-    render(
-      <ResourceLinkPicker onLinkBook={jest.fn()} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     fireEvent.change(screen.getByPlaceholderText('Search your library…'), {
       target: { value: 'Dune' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => screen.getByText('(untitled)'))
   })
@@ -148,14 +144,12 @@ describe('ResourceLinkPicker — book search', () => {
     mockSearchLibrary.mockResolvedValue({
       books: [{ bookId: 'b1', book: { title: 'Dune' } }]
     })
-    render(
-      <ResourceLinkPicker onLinkBook={jest.fn()} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     const input = screen.getByPlaceholderText('Search your library…')
     fireEvent.change(input, { target: { value: 'Dune' } })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => screen.getByText('Dune'))
     fireEvent.change(input, { target: { value: '' } })
@@ -164,24 +158,20 @@ describe('ResourceLinkPicker — book search', () => {
 
   it('shows no results when the search rejects', async () => {
     mockSearchLibrary.mockRejectedValue(new Error('boom'))
-    render(
-      <ResourceLinkPicker onLinkBook={jest.fn()} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     fireEvent.change(screen.getByPlaceholderText('Search your library…'), {
       target: { value: 'Dune' }
     })
     await act(async () => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     await waitFor(() => expect(mockSearchLibrary).toHaveBeenCalled())
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument()
   })
 
   it('cancels back to the unlinked view', () => {
-    render(
-      <ResourceLinkPicker onLinkBook={jest.fn()} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a book' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.getByRole('button', { name: 'Link a book' })).toBeInTheDocument()
@@ -190,7 +180,7 @@ describe('ResourceLinkPicker — book search', () => {
 
 describe('ResourceLinkPicker — feed item search', () => {
   it('filters cached feed items client-side and picks a result', () => {
-    const onLinkFeedItem = jest.fn()
+    const onLinkFeedItem = vi.fn()
     mockUseFeedItems.mockReturnValue({
       data: {
         items: [
@@ -200,11 +190,7 @@ describe('ResourceLinkPicker — feed item search', () => {
       }
     })
     render(
-      <ResourceLinkPicker
-        onLinkBook={jest.fn()}
-        onLinkFeedItem={onLinkFeedItem}
-        onUnlink={jest.fn()}
-      />
+      <ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={onLinkFeedItem} onUnlink={vi.fn()} />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Link a feed item' }))
     fireEvent.change(screen.getByPlaceholderText('Search your feed items…'), {
@@ -221,18 +207,14 @@ describe('ResourceLinkPicker — feed item search', () => {
     mockUseFeedItems.mockReturnValue({
       data: { items: [{ id: 'f1', title: 'Learning Go' }] }
     })
-    render(
-      <ResourceLinkPicker onLinkBook={jest.fn()} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a feed item' }))
     expect(screen.queryByText('Learning Go')).not.toBeInTheDocument()
   })
 
   it('handles an undefined items list', () => {
     mockUseFeedItems.mockReturnValue({ data: undefined })
-    render(
-      <ResourceLinkPicker onLinkBook={jest.fn()} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a feed item' }))
     fireEvent.change(screen.getByPlaceholderText('Search your feed items…'), {
       target: { value: 'go' }
@@ -241,9 +223,7 @@ describe('ResourceLinkPicker — feed item search', () => {
   })
 
   it('cancels back to the unlinked view', () => {
-    render(
-      <ResourceLinkPicker onLinkBook={jest.fn()} onLinkFeedItem={jest.fn()} onUnlink={jest.fn()} />
-    )
+    render(<ResourceLinkPicker onLinkBook={vi.fn()} onLinkFeedItem={vi.fn()} onUnlink={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Link a feed item' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(screen.getByRole('button', { name: 'Link a feed item' })).toBeInTheDocument()

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Zoom stays disabled for an app-like feel (docs/convention-ui-standards.md). -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <title>tools.xdoubleu.com</title>
+    <meta name="description" content="Personal tools suite" />
+    <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="tools.xdoubleu.com" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="msapplication-TileColor" content="#7c3aed" />
+    <meta name="msapplication-TileImage" content="/apple-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" id="app-icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" id="app-apple-icon" href="/apple-icon.png" />
+    <link rel="mask-icon" href="/icon.svg" color="#7c3aed" />
+    <!-- Both are served by the api: env.js carries the runtime config, and
+         theme-init.js sets data-theme before first paint. -->
+    <script src="/env.js"></script>
+    <script src="/theme-init.js"></script>
+  </head>
+  <body class="flex min-h-dvh flex-col bg-bg text-fg">
+    <div id="root" class="flex min-h-dvh flex-col"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

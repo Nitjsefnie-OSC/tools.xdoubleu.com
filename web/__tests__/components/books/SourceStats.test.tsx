@@ -36,7 +36,7 @@ const mockExactSourcesData: {
   error: undefined
 }
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useSourceStats: () => mockStatsData,
   useBooksInExactSources: () => mockExactSourcesData
 }))

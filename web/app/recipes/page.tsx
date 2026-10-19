@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import { Navigate } from 'react-router'
 
 export default function RecipesPage() {
-  redirect('/recipes/list')
+  return <Navigate to="/recipes/list" replace />
 }

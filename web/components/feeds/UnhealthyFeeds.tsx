@@ -1,5 +1,3 @@
-'use client'
-
 import { useCurrentUser } from '@/hooks/useAuth'
 import { useUnhealthyFeeds } from '@/hooks/useFeeds'
 import FeedsCard from './FeedsCard'

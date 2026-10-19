@@ -1,7 +1,8 @@
 import { getApiUrl } from '@/lib/env'
 
-// Server-only client for the OAuth consent flow against the api's embedded
-// fosite server; plain fetches, since /oauth2/* isn't a Connect procedure.
+// Browser client for the OAuth consent flow against the api's embedded fosite
+// server; plain fetches, since /oauth2/* isn't a Connect procedure. The
+// HttpOnly session cookie rides along via credentials.
 
 export interface ConsentInfo {
   clientId: string
@@ -18,17 +19,14 @@ interface ConsentInfoResponse {
   consent_token?: string
 }
 
-// GET /oauth2/consent-info with the full authorize request and the session
-// cookie: the client name, scope, and the consent token approval requires.
-export async function getConsentInfo(
-  query: URLSearchParams,
-  accessToken?: string
-): Promise<ConsentInfo | null> {
+// GET /oauth2/consent-info with the full authorize request: the client name,
+// scope, and the consent token approval requires.
+export async function getConsentInfo(query: URLSearchParams): Promise<ConsentInfo | null> {
   if (!query.get('client_id')) return null
 
   const res = await fetch(`${getApiUrl()}/oauth2/consent-info?${query}`, {
-    cache: 'no-store',
-    headers: accessToken ? { cookie: `accessToken=${accessToken}` } : undefined
+    credentials: 'include',
+    cache: 'no-store'
   })
   if (!res.ok) return null
 
@@ -41,35 +39,33 @@ export async function getConsentInfo(
   }
 }
 
-// POST /oauth2/authorize with the original params plus consent=allow|deny,
-// forwarding the session cookie and, to approve, the consent token. fosite
-// replies with a redirect, so redirect: 'manual' hands the Location to Next's
-// redirect() for the browser to follow.
+// POST /oauth2/authorize with the original params plus consent=allow|deny and,
+// to approve, the consent token. fosite answers with a redirect, which fetch
+// can't expose, so Accept: application/json makes the api return it as
+// {"location": ...} for the caller to navigate to.
 export async function decideAuthorization(
   query: URLSearchParams,
   decision: 'allow' | 'deny',
-  cookieHeader: string,
   consentToken = ''
 ): Promise<string> {
   const params = new URLSearchParams(query)
   params.set('consent', decision)
 
-  const headers: Record<string, string> = {}
-  if (cookieHeader) headers.cookie = cookieHeader
+  const headers: Record<string, string> = { Accept: 'application/json' }
   if (consentToken) headers['X-OAuth-Consent-Token'] = consentToken
 
   const res = await fetch(`${getApiUrl()}/oauth2/authorize?${params}`, {
     method: 'POST',
-    redirect: 'manual',
-    headers: Object.keys(headers).length > 0 ? headers : undefined,
+    credentials: 'include',
+    headers,
     cache: 'no-store'
   })
 
-  const location = res.headers.get('location')
-  if (!location) {
+  const body: { location?: string } = await res.json().catch(() => ({}))
+  if (!body.location) {
     throw new Error(
       decision === 'allow' ? 'Failed to approve authorization' : 'Failed to deny authorization'
     )
   }
-  return location
+  return body.location
 }

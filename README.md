@@ -5,14 +5,14 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 A monorepo serving multiple web tools: a Go 1.26 + PostgreSQL API with
-first-party auth (bcrypt + TOTP), and a Next.js 16 / React 19 / TypeScript
-frontend. Architecture, commands, and conventions live in
+first-party auth (bcrypt + TOTP), and a Vite / React 19 / TypeScript
+frontend (a single-page app the api serves). Architecture, commands, and conventions live in
 [AGENTS.md](AGENTS.md).
 
 ## Tools
 
 - **games** — Steam backlog tracker: library sync, achievements, completion progress and distribution, favourites, live updates over WebSocket.
-- **books** — Book library and e-reader companion: metadata sync (UniCat, Hardcover), EPUB/PDF uploads converted to KEPUB and synced to Kobo devices at `/books/kobo/<token>/…` (devices on an older `/reading/kobo/…` or `/backlog/kobo/…` prefix must re-run setup). Setup is driven by **kobo-gateway** (`kobo-gateway/`), a macOS menu-bar app served as `/downloads/kobo-gateway.dmg`; it's built on a macOS runner and bundled into the *web* image, so its changes rebuild web.
+- **books** — Book library and e-reader companion: metadata sync (UniCat, Hardcover), EPUB/PDF uploads converted to KEPUB and synced to Kobo devices at `/books/kobo/<token>/…` (devices on an older `/reading/kobo/…` or `/backlog/kobo/…` prefix must re-run setup). Setup is driven by **kobo-gateway** (`kobo-gateway/`), a macOS menu-bar app served as `/downloads/kobo-gateway.dmg`; it's built on a macOS runner and bundled into the api image, so its changes rebuild the api.
 - **feeds** — RSS and newsletter reader: a unified unread timeline with filter rules and a per-feed inbound email address for newsletters without RSS.
 - **watchparty** — WebRTC screen sharing with draggable camera overlays.
 - **recipes** — Recipe management with fraction parsing and iCal export, shared with your family.

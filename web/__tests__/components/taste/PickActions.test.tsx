@@ -3,11 +3,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
 const mockActions = {
-  setFeedback: jest.fn().mockResolvedValue(undefined),
-  setSaved: jest.fn().mockResolvedValue(undefined),
-  accept: jest.fn().mockResolvedValue(undefined)
+  setFeedback: vi.fn().mockResolvedValue(undefined),
+  setSaved: vi.fn().mockResolvedValue(undefined),
+  accept: vi.fn().mockResolvedValue(undefined)
 }
-jest.mock('@/hooks/useTaste', () => ({ usePickActions: () => mockActions }))
+vi.mock('@/hooks/useTaste', () => ({ usePickActions: () => mockActions }))
 
 import PickActions from '@/components/taste/PickActions'
 import { RecommendationSchema } from '@/lib/gen/taste/v1/taste_pb'
@@ -19,7 +19,7 @@ const book = create(RecommendationSchema, {
   canAccept: true
 })
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('PickActions', () => {
   it('records feedback', async () => {

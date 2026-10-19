@@ -7,8 +7,8 @@
 import { getKoboGatewayRelease } from '@/lib/env'
 
 const GATEWAY_PORT = 41132
-// middleware.ts allows this in the CSP connect-src.
-export const GATEWAY_URL = `https://127.0.0.1:${GATEWAY_PORT}`
+// api/internal/spa/csp.go allows this in the CSP connect-src.
+const GATEWAY_URL = `https://127.0.0.1:${GATEWAY_PORT}`
 
 /**
  * Minimum gateway protocol version; older triggers a self-update. Bump only

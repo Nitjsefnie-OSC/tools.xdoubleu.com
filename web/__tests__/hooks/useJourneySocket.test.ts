@@ -1,13 +1,13 @@
 import { renderHook, act } from '@testing-library/react'
 
-jest.mock('@/lib/env', () => ({
-  getApiUrl: jest.fn(() => 'https://api.test')
+vi.mock('@/lib/env', () => ({
+  getApiUrl: vi.fn(() => 'https://api.test')
 }))
 
 import { useJourneyLive } from '@/hooks/useJourneySocket'
 import { getApiUrl } from '@/lib/env'
 
-const mockGetApiUrl = jest.mocked(getApiUrl)
+const mockGetApiUrl = vi.mocked(getApiUrl)
 
 class MockWebSocket {
   static instances: MockWebSocket[] = []
@@ -61,19 +61,19 @@ const journeyDetailPayload = {
 
 describe('useJourneyLive', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.clearAllMocks()
+    vi.useFakeTimers()
+    vi.clearAllMocks()
     MockWebSocket.instances = []
     mockGetApiUrl.mockReturnValue('https://api.test')
   })
 
   afterEach(() => {
-    jest.clearAllTimers()
-    jest.useRealTimers()
+    vi.clearAllTimers()
+    vi.useRealTimers()
   })
 
   it('connects to the journeys/live endpoint and subscribes to the journey id', () => {
-    const refetch = jest.fn().mockResolvedValue(undefined)
+    const refetch = vi.fn().mockResolvedValue(undefined)
     const { result } = renderHook(() => useJourneyLive('journey-1', refetch))
 
     expect(latest().url).toBe('wss://api.test/trains/api/journeys/live')
@@ -86,12 +86,12 @@ describe('useJourneyLive', () => {
 
   it('does not open a socket without an api url or journey id', () => {
     mockGetApiUrl.mockReturnValue('')
-    renderHook(() => useJourneyLive('journey-1', jest.fn()))
+    renderHook(() => useJourneyLive('journey-1', vi.fn()))
     expect(MockWebSocket.instances).toHaveLength(0)
   })
 
   it('stores a pushed journey detail message', () => {
-    const { result } = renderHook(() => useJourneyLive('journey-1', jest.fn()))
+    const { result } = renderHook(() => useJourneyLive('journey-1', vi.fn()))
     act(() => latest().emitOpen())
     act(() => latest().emit(journeyDetailPayload))
 
@@ -99,21 +99,21 @@ describe('useJourneyLive', () => {
   })
 
   it('ignores a message that is not a journey detail shape', () => {
-    const { result } = renderHook(() => useJourneyLive('journey-1', jest.fn()))
+    const { result } = renderHook(() => useJourneyLive('journey-1', vi.fn()))
     act(() => latest().emitOpen())
     act(() => latest().emit({ unexpected: 'shape' }))
     expect(result.current.pushedDetail).toBeNull()
   })
 
   it('ignores unparseable message data', () => {
-    const { result } = renderHook(() => useJourneyLive('journey-1', jest.fn()))
+    const { result } = renderHook(() => useJourneyLive('journey-1', vi.fn()))
     act(() => latest().emitOpen())
     act(() => latest().onmessage?.({ data: 'not-json' }))
     expect(result.current.pushedDetail).toBeNull()
   })
 
   it('reconnects and re-subscribes after an unexpected close', () => {
-    const { result } = renderHook(() => useJourneyLive('journey-1', jest.fn()))
+    const { result } = renderHook(() => useJourneyLive('journey-1', vi.fn()))
     act(() => latest().emitOpen())
 
     act(() => latest().close())
@@ -121,7 +121,7 @@ describe('useJourneyLive', () => {
     expect(MockWebSocket.instances).toHaveLength(1)
 
     act(() => {
-      jest.advanceTimersByTime(1500)
+      vi.advanceTimersByTime(1500)
     })
     expect(MockWebSocket.instances).toHaveLength(2)
 
@@ -130,7 +130,7 @@ describe('useJourneyLive', () => {
   })
 
   it('marks the connection as closed when the socket errors', () => {
-    const { result } = renderHook(() => useJourneyLive('journey-1', jest.fn()))
+    const { result } = renderHook(() => useJourneyLive('journey-1', vi.fn()))
     act(() => latest().emitOpen())
     act(() => latest().onerror?.())
     expect(result.current.connected).toBe(false)
@@ -138,7 +138,7 @@ describe('useJourneyLive', () => {
 
   // Becoming visible again forces a fresh socket and a refetch.
   it('forces a reconnect and refetch when the page becomes visible again', () => {
-    const refetch = jest.fn().mockResolvedValue(undefined)
+    const refetch = vi.fn().mockResolvedValue(undefined)
     renderHook(() => useJourneyLive('journey-1', refetch))
     act(() => latest().emitOpen())
     const staleSocket = latest()
@@ -157,7 +157,7 @@ describe('useJourneyLive', () => {
   })
 
   it('does not reconnect on a visibilitychange while still hidden', () => {
-    const refetch = jest.fn().mockResolvedValue(undefined)
+    const refetch = vi.fn().mockResolvedValue(undefined)
     renderHook(() => useJourneyLive('journey-1', refetch))
     act(() => latest().emitOpen())
 
@@ -174,7 +174,7 @@ describe('useJourneyLive', () => {
   })
 
   it('forces a reconnect and refetch on pageshow (e.g. bfcache restore)', () => {
-    const refetch = jest.fn().mockResolvedValue(undefined)
+    const refetch = vi.fn().mockResolvedValue(undefined)
     renderHook(() => useJourneyLive('journey-1', refetch))
     act(() => latest().emitOpen())
 
@@ -187,7 +187,7 @@ describe('useJourneyLive', () => {
   })
 
   it('forces a reconnect and refetch when the network comes back online', () => {
-    const refetch = jest.fn().mockResolvedValue(undefined)
+    const refetch = vi.fn().mockResolvedValue(undefined)
     renderHook(() => useJourneyLive('journey-1', refetch))
     act(() => latest().emitOpen())
 
@@ -200,9 +200,9 @@ describe('useJourneyLive', () => {
   })
 
   it('closes the socket and removes listeners on unmount', () => {
-    const { unmount } = renderHook(() => useJourneyLive('journey-1', jest.fn()))
+    const { unmount } = renderHook(() => useJourneyLive('journey-1', vi.fn()))
     act(() => latest().emitOpen())
-    const closeSpy = jest.spyOn(latest(), 'close')
+    const closeSpy = vi.spyOn(latest(), 'close')
 
     unmount()
     expect(closeSpy).toHaveBeenCalled()

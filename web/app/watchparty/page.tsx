@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { createServiceClient } from '@/lib/client'
 import { RoomService } from '@/lib/gen/watchparty/v1/rooms_pb'

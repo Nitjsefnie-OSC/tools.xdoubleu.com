@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { getTheme, setTheme, THEMES, type Theme } from '@/lib/theme'

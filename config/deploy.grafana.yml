@@ -28,7 +28,7 @@ registry:
     - KAMAL_REGISTRY_PASSWORD
 
 proxy:
-  # No `ssl` key: TLS is declared on the root path service (deploy.web.yml).
+  # No `ssl` key: TLS is declared on the root path service (deploy.api.yml).
   host: tools.xdoubleu.com
   app_port: 3000
   # Not stripped: Grafana serves from the sub path (GF_SERVER_SERVE_FROM_SUB_PATH)
@@ -57,7 +57,7 @@ env:
     GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
     GF_AUTH_GENERIC_OAUTH_NAME: "tools.xdoubleu.com"
     GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
-    # Must carry /api: a bare /oauth2/... hits the web catch-all and 404s.
+    # Must carry /api: a bare /oauth2/... serves the web app's HTML shell.
     GF_AUTH_GENERIC_OAUTH_AUTH_URL: https://tools.xdoubleu.com/api/oauth2/authorize
     GF_AUTH_GENERIC_OAUTH_TOKEN_URL: https://tools.xdoubleu.com/api/oauth2/token
     GF_AUTH_GENERIC_OAUTH_API_URL: ""
@@ -73,7 +73,7 @@ env:
     GF_SMTP_HOST: smtp.resend.com:587
     GF_SMTP_USER: resend
   secret:
-    # Deploy-time SHA, kept for parity with api/web.
+    # Deploy-time SHA, kept for parity with api.
     - RELEASE
     # Grafana only reads GF_-prefixed vars, so the api's OAUTH_GRAFANA_CLIENT_SECRET
     # is stored here under this name (same repo Secret).

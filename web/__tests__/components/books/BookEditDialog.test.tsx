@@ -4,14 +4,14 @@ import { create, type MessageInitShape } from '@bufbuild/protobuf'
 import BookEditDialog from '@/components/books/BookEditDialog'
 import { BookSchema, type Book } from '@/lib/gen/books/v1/library_pb'
 
-const mockUpdateBook = jest.fn()
-const mockMutate = jest.fn()
+const mockUpdateBook = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useUpdateBook: () => mockUpdateBook
 }))
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
@@ -31,8 +31,8 @@ function makeBook(overrides: MessageInitShape<typeof BookSchema> = {}): Book {
 function renderDialog({
   book = makeBook(),
   open = true,
-  onOpenChange = jest.fn(),
-  onSaved = jest.fn()
+  onOpenChange = vi.fn(),
+  onSaved = vi.fn()
 }: {
   book?: Book
   open?: boolean
@@ -67,7 +67,7 @@ describe('BookEditDialog', () => {
   })
 
   it('calls onOpenChange(false) on cancel', () => {
-    const onOpenChange = jest.fn()
+    const onOpenChange = vi.fn()
     renderDialog({ onOpenChange })
     fireEvent.click(screen.getByText('Cancel'))
     expect(onOpenChange).toHaveBeenCalledWith(false)
@@ -76,8 +76,8 @@ describe('BookEditDialog', () => {
   it('saves edited fields, splitting authors on comma', async () => {
     mockUpdateBook.mockResolvedValue({})
     mockMutate.mockResolvedValue(undefined)
-    const onOpenChange = jest.fn()
-    const onSaved = jest.fn()
+    const onOpenChange = vi.fn()
+    const onSaved = vi.fn()
     renderDialog({ onOpenChange, onSaved })
 
     fireEvent.change(screen.getByDisplayValue('Original Title'), {

@@ -3,35 +3,37 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-const mockUpdateProgress = jest.fn()
-const mockMutate = jest.fn()
+const mockUpdateProgress = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
+vi.mock('swr', async () => ({
+  ...(await vi.importActual('swr')),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
-jest.mock('@/hooks/usePhysicalCopy', () => ({
+vi.mock('@/hooks/usePhysicalCopy', () => ({
   usePhysicalCopy: () => ({ data: undefined }),
-  useUpdatePhysicalCopy: () => jest.fn()
+  useUpdatePhysicalCopy: () => vi.fn()
 }))
 
-jest.mock('@/hooks/useReadingState', () => ({
+vi.mock('@/hooks/useReadingState', () => ({
   useReadingState: () => ({ data: undefined })
 }))
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useUpdateProgress: () => mockUpdateProgress
 }))
 
-jest.mock('@/components/books/BookProgressBar', () => {
-  return function MockProgressBar() {
-    return <div role="progressbar" data-testid="progress-bar" />
+vi.mock('@/components/books/BookProgressBar', () => {
+  return {
+    default: function MockProgressBar() {
+      return <div role="progressbar" data-testid="progress-bar" />
+    }
   }
 })
 
-const mockTrack = jest.fn()
-jest.mock('@/lib/analytics', () => ({
+const mockTrack = vi.fn()
+vi.mock('@/lib/analytics', () => ({
   track: (...args: unknown[]) => mockTrack(...args)
 }))
 
@@ -173,7 +175,7 @@ describe('BookProgressEditor', () => {
   })
 
   it('calls onSaved after successful save', async () => {
-    const onSaved = jest.fn()
+    const onSaved = vi.fn()
     render(<BookProgressEditor userBook={makeBook()} onSaved={onSaved} />)
     fireEvent.click(screen.getByRole('button', { name: /Update progress/ }))
     fireEvent.keyDown(screen.getByLabelText('Current page'), { key: 'Enter' })
@@ -188,7 +190,7 @@ describe('BookProgressEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: /Update progress/ }))
 
     const input = screen.getByLabelText('Current page') as HTMLInputElement
-    const selectSpy = jest.spyOn(input, 'select')
+    const selectSpy = vi.spyOn(input, 'select')
     fireEvent.focus(input)
 
     expect(selectSpy).toHaveBeenCalled()

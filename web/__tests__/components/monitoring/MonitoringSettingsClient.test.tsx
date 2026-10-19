@@ -4,29 +4,29 @@ import { render, screen } from '@testing-library/react'
 import { ListOAuthConnectionsResponseSchema } from '@/lib/gen/observability/v1/observability_pb'
 import MonitoringSettingsClient from '@/components/monitoring/MonitoringSettingsClient'
 
-const mockUseOAuthConnections = jest.fn()
-const mockMutate = jest.fn()
-const mockRouterReplace = jest.fn()
+const mockUseOAuthConnections = vi.fn()
+const mockMutate = vi.fn()
+const mockRouterReplace = vi.fn()
 let mockSearchParams = new URLSearchParams()
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ replace: mockRouterReplace }),
   useSearchParams: () => mockSearchParams
 }))
 
-jest.mock('@/hooks/useMonitoring', () => ({
+vi.mock('@/hooks/useMonitoring', () => ({
   useOAuthConnections: () => mockUseOAuthConnections(),
-  useDisconnectOAuthConnection: () => jest.fn()
+  useDisconnectOAuthConnection: () => vi.fn()
 }))
 
-jest.mock('@/components/monitoring/ProviderConfigDialog', () => ({
+vi.mock('@/components/monitoring/ProviderConfigDialog', () => ({
   __esModule: true,
   default: ({ provider, open }: { provider: string; open: boolean }) =>
     open ? <div data-testid="provider-config-dialog">Configuring {provider}</div> : null
 }))
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockSearchParams = new URLSearchParams()
   mockMutate.mockResolvedValue(undefined)
   mockUseOAuthConnections.mockReturnValue({

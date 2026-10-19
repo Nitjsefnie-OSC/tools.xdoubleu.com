@@ -9,11 +9,11 @@ import {
   BookShelfSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-const mockAddBook = jest.fn()
+const mockAddBook = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useCreateBook: () => mockAddBook,
-  useLibrary: jest.fn()
+  useLibrary: vi.fn()
 }))
 
 function makeLibraryData(shelfNames: string[] = []) {
@@ -28,7 +28,7 @@ describe('AddManualBookDialog', () => {
   beforeEach(() => {
     mockAddBook.mockReset()
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData(),
       isLoading: false,
       error: undefined
@@ -36,18 +36,18 @@ describe('AddManualBookDialog', () => {
   })
 
   it('defaults the title to empty when initialTitle is omitted', () => {
-    render(<AddManualBookDialog onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<AddManualBookDialog onClose={vi.fn()} onAdded={vi.fn()} />)
     expect(screen.getByLabelText('Title')).toHaveValue('')
   })
 
   it('tolerates a missing library response when computing custom shelves', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: undefined,
       isLoading: true,
       error: undefined
     })
-    render(<AddManualBookDialog initialTitle="A Title" onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<AddManualBookDialog initialTitle="A Title" onClose={vi.fn()} onAdded={vi.fn()} />)
     expect(screen.getByLabelText('Status')).toHaveValue('to-read')
   })
 
@@ -55,15 +55,15 @@ describe('AddManualBookDialog', () => {
     render(
       <AddManualBookDialog
         initialTitle="Dungeon Crawler Carl"
-        onClose={jest.fn()}
-        onAdded={jest.fn()}
+        onClose={vi.fn()}
+        onAdded={vi.fn()}
       />
     )
     expect(screen.getByLabelText('Title')).toHaveValue('Dungeon Crawler Carl')
   })
 
   it('disables submit until a title is present', () => {
-    render(<AddManualBookDialog initialTitle="" onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<AddManualBookDialog initialTitle="" onClose={vi.fn()} onAdded={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Add Book' })).toBeDisabled()
 
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'A Title' } })
@@ -72,25 +72,25 @@ describe('AddManualBookDialog', () => {
 
   it('includes custom shelves from the library as selectable options', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData(['book-club']),
       isLoading: false,
       error: undefined
     })
-    render(<AddManualBookDialog initialTitle="A Title" onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<AddManualBookDialog initialTitle="A Title" onClose={vi.fn()} onAdded={vi.fn()} />)
     expect(screen.getByRole('option', { name: 'book-club' })).toBeInTheDocument()
   })
 
   it('calls onClose when Cancel is clicked', () => {
-    const onClose = jest.fn()
-    render(<AddManualBookDialog initialTitle="A Title" onClose={onClose} onAdded={jest.fn()} />)
+    const onClose = vi.fn()
+    render(<AddManualBookDialog initialTitle="A Title" onClose={onClose} onAdded={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(onClose).toHaveBeenCalled()
   })
 
   it('submits with provider "manual", an empty providerId, and every typed field', async () => {
-    const onAdded = jest.fn()
-    const onClose = jest.fn()
+    const onAdded = vi.fn()
+    const onClose = vi.fn()
     mockAddBook.mockResolvedValue(undefined)
     render(
       <AddManualBookDialog
@@ -130,15 +130,15 @@ describe('AddManualBookDialog', () => {
   })
 
   it('closes when Escape is pressed', () => {
-    const onClose = jest.fn()
-    render(<AddManualBookDialog initialTitle="A Title" onClose={onClose} onAdded={jest.fn()} />)
+    const onClose = vi.fn()
+    render(<AddManualBookDialog initialTitle="A Title" onClose={onClose} onAdded={vi.fn()} />)
     fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' })
     expect(onClose).toHaveBeenCalled()
   })
 
   it('shows an error message when addBook throws', async () => {
     mockAddBook.mockRejectedValue(new Error('Network error'))
-    render(<AddManualBookDialog initialTitle="A Title" onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<AddManualBookDialog initialTitle="A Title" onClose={vi.fn()} onAdded={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Book' }))
 
@@ -149,7 +149,7 @@ describe('AddManualBookDialog', () => {
 
   it('shows a fallback error message when addBook throws a non-Error value', async () => {
     mockAddBook.mockRejectedValue('boom')
-    render(<AddManualBookDialog initialTitle="A Title" onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<AddManualBookDialog initialTitle="A Title" onClose={vi.fn()} onAdded={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Book' }))
 
@@ -159,7 +159,7 @@ describe('AddManualBookDialog', () => {
   })
 
   it('does not submit when the title is blank/whitespace', () => {
-    render(<AddManualBookDialog initialTitle="   " onClose={jest.fn()} onAdded={jest.fn()} />)
+    render(<AddManualBookDialog initialTitle="   " onClose={vi.fn()} onAdded={vi.fn()} />)
     // The button is disabled for a blank title; submit the form directly to hit
     // handleSubmit's own guard (content is portalled).
     fireEvent.submit(screen.getByLabelText('Title').closest('form')!)

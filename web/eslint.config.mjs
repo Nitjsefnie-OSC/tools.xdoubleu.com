@@ -1,5 +1,4 @@
 // @ts-check
-import nextPlugin from '@next/eslint-plugin-next'
 import typescriptEslint from 'typescript-eslint'
 import js from '@eslint/js'
 import uiPlugin from './eslint-rules/index.mjs'
@@ -20,9 +19,10 @@ const uiCallSites = {
 export default [
   {
     ignores: [
-      '.next',
       'node_modules',
       'dist',
+      'public',
+      'coverage',
       'lib/gen/**',
       '.stryker-tmp',
       'reports',
@@ -33,12 +33,9 @@ export default [
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
-      '@next/next': nextPlugin,
       ui: uiPlugin
     },
     rules: {
-      ...nextPlugin.configs.recommended.rules,
-      ...nextPlugin.configs['core-web-vitals'].rules,
       'no-restricted-syntax': [
         'error',
         {
@@ -51,7 +48,7 @@ export default [
   {
     // Interactive controls go through components/ui/ primitives
     // (docs/convention-ui-standards.md).
-    files: ['components/**/*.tsx', 'app/**/*.tsx'],
+    files: ['components/**/*.tsx', 'app/**/*.tsx', 'src/**/*.tsx'],
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -99,17 +96,6 @@ export default [
     }
   },
   {
-    // Brand icons and the splash logo are fixed artwork, not themed UI.
-    files: [
-      'app/**/apple-icon.tsx',
-      'app/**/icon.tsx',
-      'app/icon-*/**/*.tsx',
-      'app/layout.tsx',
-      'components/Splash.tsx'
-    ],
-    rules: { 'ui/theme-tokens': 'off' }
-  },
-  {
     files: ['scripts/**/*.mjs', 'eslint-rules/**/*.mjs'],
     languageOptions: {
       globals: {
@@ -120,7 +106,7 @@ export default [
     }
   },
   {
-    files: ['*.config.js', '.dependency-cruiser.js'],
+    files: ['*.config.cjs', '.dependency-cruiser.cjs'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: {

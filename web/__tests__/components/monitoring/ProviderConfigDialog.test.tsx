@@ -2,28 +2,28 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ProviderConfigDialog from '@/components/monitoring/ProviderConfigDialog'
 
-const mockFetchOptions = jest.fn()
-const mockSetProviderConfig = jest.fn()
+const mockFetchOptions = vi.fn()
+const mockSetProviderConfig = vi.fn()
 
-jest.mock('@/hooks/useMonitoring', () => ({
+vi.mock('@/hooks/useMonitoring', () => ({
   useProviderOptions: () => mockFetchOptions,
   useSetProviderConfig: () => mockSetProviderConfig
 }))
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('ProviderConfigDialog', () => {
   it('does not render content when closed', () => {
-    render(<ProviderConfigDialog provider="github" open={false} onOpenChange={jest.fn()} />)
+    render(<ProviderConfigDialog provider="github" open={false} onOpenChange={vi.fn()} />)
     expect(screen.queryByText(/Configure/)).not.toBeInTheDocument()
   })
 
   it('loads and picks a github repo, then saves', async () => {
     mockFetchOptions.mockResolvedValue({ repos: ['o/a', 'o/b'], sentryOrgs: [] })
     mockSetProviderConfig.mockResolvedValue(undefined)
-    const onOpenChange = jest.fn()
+    const onOpenChange = vi.fn()
 
     render(<ProviderConfigDialog provider="github" open={true} onOpenChange={onOpenChange} />)
 
@@ -53,7 +53,7 @@ describe('ProviderConfigDialog', () => {
     })
     mockSetProviderConfig.mockResolvedValue(undefined)
 
-    render(<ProviderConfigDialog provider="sentry" open={true} onOpenChange={jest.fn()} />)
+    render(<ProviderConfigDialog provider="sentry" open={true} onOpenChange={vi.fn()} />)
 
     await waitFor(() => expect(screen.getByText('org-a')).toBeInTheDocument())
 
@@ -82,14 +82,14 @@ describe('ProviderConfigDialog', () => {
   it('shows an error when loading options fails', async () => {
     mockFetchOptions.mockRejectedValue(new Error('boom'))
 
-    render(<ProviderConfigDialog provider="github" open={true} onOpenChange={jest.fn()} />)
+    render(<ProviderConfigDialog provider="github" open={true} onOpenChange={vi.fn()} />)
 
     await waitFor(() => expect(screen.getByText('boom')).toBeInTheDocument())
   })
 
   it('calls onOpenChange(false) on cancel', async () => {
     mockFetchOptions.mockResolvedValue({ repos: [], sentryOrgs: [] })
-    const onOpenChange = jest.fn()
+    const onOpenChange = vi.fn()
 
     render(<ProviderConfigDialog provider="github" open={true} onOpenChange={onOpenChange} />)
     await waitFor(() => expect(mockFetchOptions).toHaveBeenCalled())

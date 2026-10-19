@@ -3,13 +3,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError } from '@connectrpc/connect'
 
-const mockAdd = jest.fn()
+const mockAdd = vi.fn()
 
-jest.mock('@/hooks/usePodcasts', () => ({
-  usePodcastSearch: jest.fn(),
-  usePodcastActions: jest.fn(() => ({ add: mockAdd }))
+vi.mock('@/hooks/usePodcasts', () => ({
+  usePodcastSearch: vi.fn(),
+  usePodcastActions: vi.fn(() => ({ add: mockAdd }))
 }))
-jest.mock('@/components/podcasts/ShowArtwork', () => ({
+vi.mock('@/components/podcasts/ShowArtwork', () => ({
   __esModule: true,
   default: () => <div data-testid="artwork" />
 }))
@@ -27,11 +27,11 @@ const results = create(SearchShowsResponseSchema, {
 
 function mockSearch(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(usePodcastSearch).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(usePodcastSearch).mockReturnValue({ isLoading: false, ...value })
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockAdd.mockResolvedValue(undefined)
 })
 

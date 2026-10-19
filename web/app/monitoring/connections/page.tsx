@@ -1,25 +1,12 @@
-import SWRFallback from '@/components/SWRFallback'
-import { createServerClient } from '@/lib/server/client'
-import { fetchOrNull } from '@/lib/server/fetchers'
-import { swrKeys } from '@/lib/swrKeys'
-import { ObservabilityService } from '@/lib/gen/observability/v1/observability_pb'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageHeader } from '@/components/ui/page-header'
 import MonitoringSettingsClient from '@/components/monitoring/MonitoringSettingsClient'
 
-export default async function MonitoringConnectionsPage() {
-  const client = await createServerClient(ObservabilityService)
-  const oauthConnections = await fetchOrNull(() => client.listOAuthConnections({}))
-
-  const fallback: Record<string, unknown> = {}
-  if (oauthConnections) fallback[swrKeys.monitoringOAuthConnections] = oauthConnections
-
+export default function MonitoringConnectionsPage() {
   return (
     <PageContainer>
-      <SWRFallback fallback={fallback}>
-        <PageHeader title="Connections" />
-        <MonitoringSettingsClient />
-      </SWRFallback>
+      <PageHeader title="Connections" />
+      <MonitoringSettingsClient />
     </PageContainer>
   )
 }

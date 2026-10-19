@@ -1,6 +1,7 @@
-// The service worker, served by app/sw.js/route.ts as
-// `(${serviceWorker})(self, enabled)`. It must stay self-contained: no
-// imports or outer references survive the toString().
+// The service worker, emitted as sw.js at build time by vite.config.ts as
+// `(${serviceWorker})(self, enabled, precache)`. It must stay self-contained:
+// no imports or outer references survive the toString(). The api swaps the
+// `enabled` token per request (OFFLINE_DISABLED kill switch).
 
 interface SwEvent {
   waitUntil(promise: Promise<unknown>): void
@@ -38,34 +39,27 @@ export interface SwScope {
   addEventListener(type: 'message', listener: (event: SwMessageEvent) => void): void
 }
 
-/** Cache holding saved pages; lib/offline/session.ts clears it on sign-out. */
-export const PAGE_CACHE = 'tools-pages'
-
 /**
- * Navigations go network-first and fall back to the last saved copy of the
- * page; `/_next/static` (content-hashed) is cache-first. With `enabled` false
- * it deletes its caches and unregisters itself (the kill switch).
+ * The app is one HTML shell plus content-hashed assets, so the worker
+ * precaches both (`precache` lists the build's files) and serves the shell for
+ * any navigation it can't reach the network for; page data comes from the
+ * IndexedDB SWR cache. With `enabled` false it deletes its caches and
+ * unregisters itself (the kill switch).
  */
-export function serviceWorker(sw: SwScope, enabled: boolean): void {
+export function serviceWorker(sw: SwScope, enabled: boolean, precache: string[]): void {
   const PREFIX = 'tools-'
-  const PAGES = 'tools-pages'
-  const STATIC = 'tools-static'
-  const MAX_PAGES = 100
-  const MAX_STATIC = 500
-  // A page saved this recently isn't re-fetched on a 'save-page' message.
-  const SAVE_INTERVAL_MS = 10 * 60 * 1000
-  const ONLINE_ONLY = [
+  const APP = 'tools-app'
+  const SHELL = '/'
+  const ENV = '/env.js'
+  // Paths the api serves itself; a navigation to them is never the SPA shell.
+  const SERVER_ONLY = [
     '/api/',
-    '/auth',
-    '/oauth',
-    '/monitoring',
-    '/user-management',
+    '/.well-known/',
+    '/downloads/',
     '/logs',
-    '/metrics',
+    '/web-vitals',
     '/release',
     '/health',
-    '/sentry-tunnel',
-    '/downloads/',
     '/sw.js'
   ]
 
@@ -76,38 +70,48 @@ export function serviceWorker(sw: SwScope, enabled: boolean): void {
     )
   }
 
-  sw.addEventListener('install', (event) => event.waitUntil(sw.skipWaiting()))
-
   if (!enabled) {
+    sw.addEventListener('install', (event) => event.waitUntil(sw.skipWaiting()))
     sw.addEventListener('activate', (event) =>
       event.waitUntil(deleteCaches([]).then(() => sw.registration.unregister()))
     )
     return
   }
 
-  sw.addEventListener('activate', (event) =>
-    event.waitUntil(deleteCaches([PAGES, STATIC]).then(() => sw.clients.claim()))
+  const files = [SHELL, ...precache.map((name) => `/${name}`)]
+
+  sw.addEventListener('install', (event) =>
+    event.waitUntil(
+      // One failed file only costs its offline copy, so it doesn't fail the install.
+      sw.caches
+        .open(APP)
+        .then((cache) =>
+          Promise.allSettled(
+            files.map(async (file) => {
+              const res = await sw.fetch(file)
+              if (res.status === 200) await cache.put(file, res)
+            })
+          )
+        )
+        .then(() => sw.skipWaiting())
+    )
   )
 
-  // cache.keys() lists oldest writes first.
-  const trim = async (cache: SwCache, max: number) => {
-    const keys = await cache.keys()
-    await Promise.all(keys.slice(0, Math.max(0, keys.length - max)).map((k) => cache.delete(k)))
+  // Drops hashed files a newer build no longer lists.
+  const pruneAssets = async () => {
+    const cache = await sw.caches.open(APP)
+    const live = new Set(files.map((f) => new URL(f, sw.location.origin).href))
+    const stale = (await cache.keys()).filter((r) => r.url.includes('/assets/') && !live.has(r.url))
+    await Promise.all(stale.map((r) => cache.delete(r)))
   }
 
-  const isPage = (url: URL) =>
-    url.origin === sw.location.origin && !ONLINE_ONLY.some((p) => url.pathname.startsWith(p))
-
-  const isSavable = (res: Response) =>
-    res.status === 200 &&
-    !res.redirected &&
-    (res.headers.get('Content-Type') ?? '').startsWith('text/html')
-
-  const savePage = async (key: string, res: Response) => {
-    const cache = await sw.caches.open(PAGES)
-    await cache.put(key, res)
-    await trim(cache, MAX_PAGES)
-  }
+  sw.addEventListener('activate', (event) =>
+    event.waitUntil(
+      deleteCaches([APP])
+        .then(pruneAssets)
+        .then(() => sw.clients.claim())
+    )
+  )
 
   const offlinePage = () =>
     new Response(
@@ -117,61 +121,51 @@ export function serviceWorker(sw: SwScope, enabled: boolean): void {
         'body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem}' +
         'a{display:inline-block;min-height:44px;line-height:44px;padding:0 .5rem}</style>' +
         '</head><body><h1>You&#39;re offline</h1>' +
-        '<p>This page hasn&#39;t been saved for offline use yet. Open it once while online.</p>' +
-        '<p><a href="/">Home</a> · <a href="">Try again</a></p></body></html>',
+        '<p>The app hasn&#39;t been saved for offline use yet. Open it once while online.</p>' +
+        '<p><a href="">Try again</a></p></body></html>',
       { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
     )
 
-  const networkFirst = async (event: SwFetchEvent, key: string) => {
+  const isHtml = (res: Response) =>
+    res.status === 200 &&
+    !res.redirected &&
+    (res.headers.get('Content-Type') ?? '').startsWith('text/html')
+
+  // Every path serves the same shell, so one saved copy answers them all.
+  const shell = async (event: SwFetchEvent) => {
     try {
       const res = await sw.fetch(event.request)
-      if (isSavable(res)) event.waitUntil(savePage(key, res.clone()))
+      if (isHtml(res)) {
+        const copy = res.clone()
+        event.waitUntil(sw.caches.open(APP).then((cache) => cache.put(SHELL, copy)))
+      }
       return res
     } catch {
-      const cached = await (await sw.caches.open(PAGES)).match(key)
+      const cached = await (await sw.caches.open(APP)).match(SHELL)
       return cached ?? offlinePage()
     }
   }
 
-  const cacheFirst = async (request: Request, name: string, max: number) => {
-    const cache = await sw.caches.open(name)
+  const networkFirst = async (request: Request, key: string) => {
+    const cache = await sw.caches.open(APP)
+    try {
+      const res = await sw.fetch(request)
+      if (res.status === 200) await cache.put(key, res.clone())
+      return res
+    } catch (err) {
+      const cached = await cache.match(key)
+      if (cached) return cached
+      throw err
+    }
+  }
+
+  const cacheFirst = async (request: Request) => {
+    const cache = await sw.caches.open(APP)
     const hit = await cache.match(request)
     if (hit) return hit
     const res = await sw.fetch(request)
-    if (res.status === 200) {
-      await cache.put(request, res.clone())
-      await trim(cache, max)
-    }
+    if (res.status === 200) await cache.put(request, res.clone())
     return res
-  }
-
-  // Client-side navigations never reach the fetch handler as a document
-  // request, so the page asks for its URL to be saved.
-  const refreshPage = async (href: string) => {
-    const url = new URL(href, sw.location.origin)
-    url.hash = ''
-    if (!isPage(url)) return
-    const key = url.href
-    // The worker is stopped when idle, so freshness comes from the saved
-    // response's Date header rather than memory.
-    const saved = await (await sw.caches.open(PAGES)).match(key)
-    if (Date.now() - Date.parse(saved?.headers.get('Date') ?? '') < SAVE_INTERVAL_MS) return
-    const res = await sw.fetch(key, { credentials: 'same-origin' })
-    if (!isSavable(res)) return
-    const html = await res.clone().text()
-    await savePage(key, res)
-    await cacheAssets(html)
-  }
-
-  // A page saved before it was ever opened (a prefetched book's reader) can
-  // only hydrate offline with its route's chunks cached too.
-  const cacheAssets = async (html: string) => {
-    const paths = new Set(html.match(/\/_next\/static\/[^"'\s<>\\)]+/g))
-    for (const path of paths) {
-      await cacheFirst(new Request(new URL(path, sw.location.origin)), STATIC, MAX_STATIC).catch(
-        () => undefined
-      )
-    }
   }
 
   sw.addEventListener('fetch', (event) => {
@@ -179,25 +173,26 @@ export function serviceWorker(sw: SwScope, enabled: boolean): void {
     if (request.method !== 'GET') return
     const url = new URL(request.url)
     if (url.origin !== sw.location.origin) return
-    if (url.pathname.startsWith('/_next/static/')) {
-      event.respondWith(cacheFirst(request, STATIC, MAX_STATIC))
-    } else if (request.mode === 'navigate' && isPage(url)) {
-      url.hash = ''
-      event.respondWith(networkFirst(event, url.href))
+    if (url.pathname === ENV) {
+      event.respondWith(networkFirst(request, ENV))
+    } else if (url.pathname.startsWith('/assets/') || precache.includes(url.pathname.slice(1))) {
+      event.respondWith(cacheFirst(request))
+    } else if (
+      request.mode === 'navigate' &&
+      !SERVER_ONLY.some((p) => url.pathname.startsWith(p))
+    ) {
+      event.respondWith(shell(event))
     }
   })
 
   sw.addEventListener('message', (event) => {
     const data: unknown = event.data
     if (typeof data !== 'object' || data === null || !('type' in data)) return
-    if (data.type === 'save-page' && 'url' in data && typeof data.url === 'string') {
-      event.waitUntil(refreshPage(data.url).catch(() => undefined))
-    } else if (data.type === 'clear') {
-      event.waitUntil(deleteCaches([STATIC]))
-    }
+    // Sign-out: drop everything but the app files (e.g. offline book copies).
+    if (data.type === 'clear') event.waitUntil(deleteCaches([APP]))
   })
 }
 
-export function serviceWorkerScript(enabled: boolean): string {
-  return `(${serviceWorker.toString()})(self, ${String(enabled)});\n`
+export function serviceWorkerScript(enabled: boolean | string, precache: string[]): string {
+  return `(${serviceWorker.toString()})(self, ${String(enabled)}, ${JSON.stringify(precache)});\n`
 }

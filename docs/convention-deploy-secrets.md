@@ -7,7 +7,7 @@
 
 Every Kamal deploy secret appears in **all three** of:
 
-1. `config/deploy.{api,web,grafana}.yml` — `env.secret:`
+1. `config/deploy.{api,grafana}.yml` — `env.secret:`
 2. `.kamal/secrets`
 3. the matching `Deploy <svc> via Kamal` step's `env:` in `.github/workflows/main.yml`
 
@@ -26,7 +26,7 @@ A mismatch fails only at `kamal deploy` on `main`, post-merge:
 ## Worked examples
 
 `check_kamal_secrets.sh` cross-checks the lists. `api-lint`'s gate includes
-`config_api`/`config_web` so a config-only PR still runs it.
+`config_api` so a config-only PR still runs it.
 
 ## What violating it looked like
 

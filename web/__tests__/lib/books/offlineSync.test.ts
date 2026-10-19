@@ -14,30 +14,20 @@ import {
   syncOfflineBooks
 } from '@/lib/books/offlineSync'
 
-const mockDownload = jest.fn<Promise<unknown>, [BookFileRef]>()
-const mockDelete = jest.fn()
-const mockList = jest.fn()
-jest.mock('@/lib/books/offlineBooks', () => ({
+const mockDownload = vi.fn<(ref: BookFileRef) => Promise<unknown>>()
+const mockDelete = vi.fn()
+const mockList = vi.fn()
+vi.mock('@/lib/books/offlineBooks', () => ({
   downloadBookFile: (ref: BookFileRef) => mockDownload(ref),
   deleteStoredBook: (...args: unknown[]) => mockDelete(...args),
   listStoredBooks: () => mockList()
 }))
 
-const mockSavePage = jest.fn()
-jest.mock('@/lib/offline/session', () => ({
-  savePageForOffline: (url: string) => mockSavePage(url)
-}))
-
-const mockWarmWebPub = jest.fn()
-const mockIsWebPubWarm = jest.fn()
-jest.mock('@/lib/books/webpubCache', () => ({
+const mockWarmWebPub = vi.fn()
+const mockIsWebPubWarm = vi.fn()
+vi.mock('@/lib/books/webpubCache', () => ({
   warmWebPub: (...args: unknown[]) => mockWarmWebPub(...args),
   isWebPubWarm: (...args: unknown[]) => mockIsWebPubWarm(...args)
-}))
-
-const mockWarm = jest.fn()
-jest.mock('@/lib/books/readerModules', () => ({
-  warmReaderModules: () => mockWarm()
 }))
 
 function book(bookId: string, init: MessageInitShape<typeof UserBookSchema> = {}): UserBook {
@@ -68,7 +58,7 @@ function setOnline(online: boolean) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   localStorage.clear()
   setOnline(true)
   setConnection(undefined)
@@ -97,8 +87,8 @@ describe('planOfflineBooks', () => {
       [stored('stale', 'epub', 'old'), stored('fresh', 'epub', 'fresh-v1')]
     )
     expect(plan.downloads).toEqual([
-      { bookId: 'new', format: 'epub', version: 'new-v1', readerPath: '/books/ub-new/read' },
-      { bookId: 'stale', format: 'epub', version: 'stale-v1', readerPath: '/books/ub-stale/read' }
+      { bookId: 'new', format: 'epub', version: 'new-v1' },
+      { bookId: 'stale', format: 'epub', version: 'stale-v1' }
     ])
     expect(plan.evictions).toEqual([])
   })
@@ -175,7 +165,7 @@ describe('canPrefetch', () => {
 })
 
 describe('syncOfflineBooks', () => {
-  it('downloads each missing book once, in order, and saves its reader page', async () => {
+  it('downloads each missing book once, in order', async () => {
     const lib = library({ reading: [book('s1'), book('s2')] })
     await syncOfflineBooks(lib, { gapMs: 0 })
 
@@ -183,7 +173,6 @@ describe('syncOfflineBooks', () => {
       [{ bookId: 's1', format: 'epub', version: 's1-v1' }],
       [{ bookId: 's2', format: 'epub', version: 's2-v1' }]
     ])
-    expect(mockSavePage.mock.calls).toEqual([['/books/ub-s1/read'], ['/books/ub-s2/read']])
 
     // Once stored, a later run fetches nothing.
     mockList.mockResolvedValue([stored('s1', 'epub', 's1-v1'), stored('s2', 'epub', 's2-v1')])
@@ -218,20 +207,20 @@ describe('syncOfflineBooks', () => {
   })
 
   it('pauses between downloads', async () => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     try {
       const run = syncOfflineBooks(library({ reading: [book('g1'), book('g2')] }), {
         gapMs: 5000
       })
-      await jest.advanceTimersByTimeAsync(0)
+      await vi.advanceTimersByTimeAsync(0)
       expect(mockDownload).toHaveBeenCalledTimes(1)
-      await jest.advanceTimersByTimeAsync(4999)
+      await vi.advanceTimersByTimeAsync(4999)
       expect(mockDownload).toHaveBeenCalledTimes(1)
-      await jest.advanceTimersByTimeAsync(1)
+      await vi.advanceTimersByTimeAsync(1)
       expect(mockDownload).toHaveBeenCalledTimes(2)
       await run
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   })
 
@@ -250,17 +239,17 @@ describe('syncOfflineBooks', () => {
   })
 
   it('stops without backing off when the connection drops during the pause', async () => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
     try {
       const lib = library({ reading: [book('c1'), book('c2')] })
       const run = syncOfflineBooks(lib, { gapMs: 1000 })
-      await jest.advanceTimersByTimeAsync(0)
+      await vi.advanceTimersByTimeAsync(0)
       setOnline(false)
-      await jest.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(1000)
       await run
       expect(mockDownload).toHaveBeenCalledTimes(1)
     } finally {
-      jest.useRealTimers()
+      vi.useRealTimers()
     }
   })
 
@@ -283,13 +272,12 @@ describe('syncOfflineBooks', () => {
   })
 
   it('backs off a failed download, then retries it later', async () => {
-    const now = jest.spyOn(Date, 'now').mockReturnValue(1_000_000)
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
     try {
       mockDownload.mockRejectedValueOnce(new Error('404'))
       const lib = library({ reading: [book('bad'), book('ok')] })
       await syncOfflineBooks(lib, { gapMs: 0 })
       expect(mockDownload).toHaveBeenCalledTimes(2)
-      expect(mockSavePage).toHaveBeenCalledTimes(1)
 
       mockList.mockResolvedValue([stored('ok', 'epub', 'ok-v1')])
       mockDownload.mockClear()
@@ -320,29 +308,6 @@ describe('syncOfflineBooks', () => {
     expect(mockDownload).not.toHaveBeenCalled()
   })
 
-  it('does not warm the reader modules once every stored book is evicted', async () => {
-    mockList.mockResolvedValue([stored('gone', 'epub', 'x')])
-    await syncOfflineBooks(library({}), { gapMs: 0 })
-    expect(mockWarm).not.toHaveBeenCalled()
-  })
-
-  it('warms the reader modules while a stored book survives eviction', async () => {
-    mockList.mockResolvedValue([stored('gone', 'epub', 'x'), stored('kept', 'epub', 'kept-v1')])
-    await syncOfflineBooks(library({ wishlist: [book('kept', { status: 'to-read' })] }), {
-      gapMs: 0
-    })
-    expect(mockWarm).toHaveBeenCalled()
-  })
-
-  it('warms the reader modules while any book is stored', async () => {
-    await syncOfflineBooks(library({}), { gapMs: 0 })
-    expect(mockWarm).not.toHaveBeenCalled()
-
-    mockList.mockResolvedValue([stored('w', 'epub', 'w-v1')])
-    await syncOfflineBooks(library({ reading: [book('w')] }), { gapMs: 0 })
-    expect(mockWarm).toHaveBeenCalled()
-  })
-
   it('warms the offline copy of a freshly downloaded EPUB, but not of a PDF', async () => {
     const epub = book('e')
     const pdf = book('p', { formats: ['pdf'], fileVersions: { pdf: 'p-v1' } })
@@ -355,7 +320,6 @@ describe('syncOfflineBooks', () => {
     mockWarmWebPub.mockRejectedValue(new Error('x'))
     await syncOfflineBooks(library({ reading: [book('e')] }), { gapMs: 0 })
     expect(mockDownload).toHaveBeenCalled()
-    expect(mockSavePage).toHaveBeenCalledWith('/books/ub-e/read')
   })
 
   it('gives a stored EPUB without an offline copy one', async () => {

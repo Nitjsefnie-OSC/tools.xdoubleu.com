@@ -1,5 +1,3 @@
-'use client'
-
 import { mutate } from 'swr'
 import { useBookSeries } from '@/hooks/useBookSeries'
 import { type BreadcrumbItem } from '@/components/ui/breadcrumb'

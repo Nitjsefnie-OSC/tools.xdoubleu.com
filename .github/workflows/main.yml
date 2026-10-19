@@ -22,7 +22,6 @@ jobs:
       sentrytools: ${{ steps.filter.outputs.sentrytools }}
       infra: ${{ steps.filter.outputs.infra }}
       config_api: ${{ steps.filter.outputs.config_api }}
-      config_web: ${{ steps.filter.outputs.config_web }}
       config_grafana: ${{ steps.filter.outputs.config_grafana }}
       grafana_dockerfile: ${{ steps.proto-workflows.outputs.grafana_dockerfile }}
     steps:
@@ -40,7 +39,7 @@ jobs:
             web:
               - 'web/**'
               - '!web/**/*.md'
-            # The kobo-gateway binary ships inside the web image, so it rebuilds web.
+            # The kobo-gateway binary ships inside the api image, so it rebuilds it.
             kobo_gateway:
               - 'kobo-gateway/**'
               - '!kobo-gateway/**/*.md'
@@ -54,8 +53,6 @@ jobs:
             # Config-only changes still need a fresh :<sha> image for Kamal to deploy.
             config_api:
               - 'config/deploy.api.yml'
-            config_web:
-              - 'config/deploy.web.yml'
             # Also gates build-grafana and api-lint's `make lint/kamal-secrets`.
             config_grafana:
               - 'config/deploy.grafana.yml'
@@ -95,16 +92,21 @@ jobs:
     uses: ./.github/workflows/proto-check.yml
     secrets: inherit
 
-  # Each build-* job is gated on its own subtree; a skipped build leaves Kamal
-  # deploying the last pushed tag for that component.
+  # The api image also builds web/ and bundles the kobo-gateway downloads, so
+  # it needs build-kobo-gateway to have succeeded (not skipped); that job's gate
+  # is a superset of this one. A skipped build leaves Kamal deploying the last
+  # pushed tag.
   build-api:
-    needs: [changes, proto-check]
+    needs: [changes, proto-check, build-kobo-gateway]
     if: |
       always() &&
       (needs.proto-check.result == 'success' || needs.proto-check.result == 'skipped') &&
+      needs.build-kobo-gateway.result == 'success' &&
       (github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.api == 'true' ||
+      needs.changes.outputs.web == 'true' ||
       needs.changes.outputs.proto == 'true' ||
+      needs.changes.outputs.kobo_gateway == 'true' ||
       needs.changes.outputs.sentrytools == 'true' ||
       needs.changes.outputs.config_api == 'true' ||
       needs.changes.outputs.workflows == 'true')
@@ -131,39 +133,19 @@ jobs:
     uses: ./.github/workflows/build-grafana.yml
     secrets: inherit
 
-  # build-web stages the kobo-gateway-dist artifact into the image, so it
-  # needs build-kobo-gateway to have succeeded (not skipped); that job's gate
-  # is a superset of this one.
-  build-web:
-    needs: [changes, proto-check, build-kobo-gateway]
-    if: |
-      always() &&
-      (needs.proto-check.result == 'success' || needs.proto-check.result == 'skipped') &&
-      needs.build-kobo-gateway.result == 'success' &&
-      (github.event_name == 'workflow_dispatch' ||
-      needs.changes.outputs.web == 'true' ||
-      needs.changes.outputs.proto == 'true' ||
-      needs.changes.outputs.kobo_gateway == 'true' ||
-      needs.changes.outputs.config_web == 'true' ||
-      needs.changes.outputs.workflows == 'true')
-    name: Build Web Workflow
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/build-web.yml
-    secrets: inherit
-
-  # macOS runner (cgo + AppKit). Gated like build-web so it never skips when
-  # build-web needs its artifact; unchanged sources cache-hit.
+  # macOS runner (cgo + AppKit). Gated as a superset of build-api so it never
+  # skips when build-api needs its artifact; unchanged sources cache-hit.
   build-kobo-gateway:
     needs: changes
     if: |
       always() &&
       (github.event_name == 'workflow_dispatch' ||
-      needs.changes.outputs.kobo_gateway == 'true' ||
+      needs.changes.outputs.api == 'true' ||
       needs.changes.outputs.web == 'true' ||
       needs.changes.outputs.proto == 'true' ||
-      needs.changes.outputs.config_web == 'true' ||
+      needs.changes.outputs.kobo_gateway == 'true' ||
+      needs.changes.outputs.sentrytools == 'true' ||
+      needs.changes.outputs.config_api == 'true' ||
       needs.changes.outputs.workflows == 'true')
     name: Build Kobo Gateway Workflow
     uses: ./.github/workflows/build-kobo-gateway.yml
@@ -178,7 +160,6 @@ jobs:
       needs.changes.outputs.proto == 'true' ||
       needs.changes.outputs.sentrytools == 'true' ||
       needs.changes.outputs.config_api == 'true' ||
-      needs.changes.outputs.config_web == 'true' ||
       needs.changes.outputs.config_grafana == 'true' ||
       needs.changes.outputs.workflows == 'true')
     name: API Lint Workflow
@@ -369,7 +350,6 @@ jobs:
       [
         proto-check,
         build-api,
-        build-web,
         build-grafana,
         build-kobo-gateway,
         api-lint,
@@ -467,14 +447,13 @@ jobs:
   # host fail on the lock or racing pulls, and cancelling mid-deploy would leave
   # a half-applied release.
   deploy-kamal:
-    needs: [build-api, build-web, build-grafana, infra-apply, migration-versions]
+    needs: [build-api, build-grafana, infra-apply, migration-versions]
     if: |
       always() &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       needs.migration-versions.result == 'success' &&
       (needs.build-api.result == 'success' || needs.build-api.result == 'skipped') &&
-      (needs.build-web.result == 'success' || needs.build-web.result == 'skipped') &&
       (needs.build-grafana.result == 'success' || needs.build-grafana.result == 'skipped') &&
       (needs.infra-apply.result == 'success' || needs.infra-apply.result == 'skipped')
     concurrency:
@@ -535,25 +514,6 @@ jobs:
 
       # Kamal evaluates config/deploy.*.yml as ERB with the env below; --version
       # is the full commit SHA the build jobs tag with.
-      # web deploys first (ADR 0001): kamal-proxy needs TLS established by the
-      # root-path service before api can register. Skipped when build-web didn't
-      # run, since no web:<sha> tag exists.
-      - name: Deploy web via Kamal
-        if: needs.build-web.result == 'success'
-        env:
-          KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
-          KAMAL_REGISTRY_USERNAME: ${{ secrets.KAMAL_REGISTRY_USERNAME }}
-          KAMAL_VERSION: ${{ github.sha }}
-          RELEASE: ${{ github.sha }}
-          KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
-          SENTRY_DSN_WEB: ${{ secrets.SENTRY_DSN_WEB }}
-          # See config/deploy.web.yml.
-          POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
-          # Gates GET /metrics on web; see config/deploy.web.yml.
-          OBSERVABILITY_INGEST_SECRET: ${{ secrets.OBSERVABILITY_INGEST_SECRET }}
-        run: bundle exec kamal deploy -c config/deploy.web.yml --skip-push --version="$KAMAL_VERSION"
-
-      # After web (see above); skipped when build-api didn't run.
       - name: Deploy api via Kamal
         if: needs.build-api.result == 'success'
         env:
@@ -593,14 +553,17 @@ jobs:
           NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
           EMAIL_INBOUND_DOMAIN: ${{ secrets.EMAIL_INBOUND_DOMAIN }}
           EMAIL_INBOUND_SECRET: ${{ secrets.EMAIL_INBOUND_SECRET }}
+          # Reach the browser through /env.js; see config/deploy.api.yml.
+          SENTRY_DSN_WEB: ${{ secrets.SENTRY_DSN_WEB }}
+          POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
           # See config/deploy.api.yml.
           OBSERVABILITY_INGEST_SECRET: ${{ secrets.OBSERVABILITY_INGEST_SECRET }}
           # Grafana's admin password; get_grafana_alerts authenticates with it.
           GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
         run: bundle exec kamal deploy -c config/deploy.api.yml --skip-push --version="$KAMAL_VERSION"
 
-      # Order vs api/web doesn't matter; last so its OAuth login hits the newest
-      # api. Skipped when build-grafana didn't run.
+      # Last so its OAuth login hits the newest api. Skipped when build-grafana
+      # didn't run.
       - name: Deploy grafana via Kamal
         if: needs.build-grafana.result == 'success'
         env:
@@ -627,14 +590,13 @@ jobs:
   # rebuilds from the snapshot if apply fails (lossy rollback, no approval
   # gate). Waits for build jobs only; test flakiness says nothing about infra.
   infra-apply:
-    needs: [changes, build-api, build-web, build-kobo-gateway]
+    needs: [changes, build-api, build-kobo-gateway]
     if: |
       always() &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       (needs.changes.outputs.infra == 'true' || needs.changes.outputs.workflows == 'true') &&
       (needs.build-api.result == 'success' || needs.build-api.result == 'skipped') &&
-      (needs.build-web.result == 'success' || needs.build-web.result == 'skipped') &&
       (needs.build-kobo-gateway.result == 'success' || needs.build-kobo-gateway.result == 'skipped')
     # Shares deploy-kamal's group: both SSH into the same host.
     concurrency:
@@ -765,7 +727,6 @@ jobs:
     needs:
       [
         build-api,
-        build-web,
         build-grafana,
         build-kobo-gateway,
         api-test,

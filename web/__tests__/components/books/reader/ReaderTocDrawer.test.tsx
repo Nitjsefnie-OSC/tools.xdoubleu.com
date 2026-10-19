@@ -9,11 +9,11 @@ const TOC: ReaderTocItem[] = [
 ]
 
 function renderDrawer(currentHref?: string) {
-  const onSelect = jest.fn()
+  const onSelect = vi.fn()
   render(
     <ReaderTocDrawer
       open
-      onOpenChange={jest.fn()}
+      onOpenChange={vi.fn()}
       toc={TOC}
       currentHref={currentHref}
       onSelect={onSelect}

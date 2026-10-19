@@ -10,123 +10,132 @@ import {
   ReadSuggestionSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-jest.mock('@/hooks/useBooks', () => ({
-  useLibrary: jest.fn(),
-  useUpdateBookStatus: () => jest.fn().mockResolvedValue({}),
-  useToggleTag: () => jest.fn().mockResolvedValue({}),
-  useUpdateFinishedAt: () => jest.fn().mockResolvedValue({}),
-  useGetBookContent: jest.fn(() => ({ data: undefined, error: undefined })),
-  useUpdateBook: () => jest.fn().mockResolvedValue({})
+vi.mock('@/hooks/useBooks', () => ({
+  useLibrary: vi.fn(),
+  useUpdateBookStatus: () => vi.fn().mockResolvedValue({}),
+  useToggleTag: () => vi.fn().mockResolvedValue({}),
+  useUpdateFinishedAt: () => vi.fn().mockResolvedValue({}),
+  useGetBookContent: vi.fn(() => ({ data: undefined, error: undefined })),
+  useUpdateBook: () => vi.fn().mockResolvedValue({})
 }))
 
-const mockRouterPush = jest.fn()
-const mockUseSearchParams = jest.fn(() => new URLSearchParams())
+const mockRouterPush = vi.fn()
+const mockUseSearchParams = vi.fn(() => new URLSearchParams())
 
-jest.mock('@/hooks/useAuth', () => ({
-  useCurrentUser: jest.fn()
+vi.mock('@/hooks/useAuth', () => ({
+  useCurrentUser: vi.fn()
 }))
 
-jest.mock('@/components/books/BookSourceSync', () => {
-  return function MockBookSourceSync() {
-    return <div data-testid="book-source-sync" />
+vi.mock('@/components/books/BookSourceSync', () => {
+  return {
+    default: function MockBookSourceSync() {
+      return <div data-testid="book-source-sync" />
+    }
   }
 })
 
-jest.mock('@/components/books/BookEditDialog', () => {
-  return function MockBookEditDialog({ open }: { open: boolean }) {
-    return open ? <div data-testid="book-edit-dialog" /> : null
+vi.mock('@/components/books/BookEditDialog', () => {
+  return {
+    default: function MockBookEditDialog({ open }: { open: boolean }) {
+      return open ? <div data-testid="book-edit-dialog" /> : null
+    }
   }
 })
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(() => ({ push: mockRouterPush })),
+vi.mock('@/hooks/navigation', () => ({
+  useRouter: vi.fn(() => ({ push: mockRouterPush })),
   useSearchParams: () => mockUseSearchParams()
 }))
 
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
-
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} />
-  }
-})
-
 // Stub inline controls so detail-page tests focus on data display
-jest.mock('@/components/books/BookProgressEditor', () => {
-  return function MockProgressEditor() {
-    return <div role="progressbar" />
+vi.mock('@/components/books/BookProgressEditor', () => {
+  return {
+    default: function MockProgressEditor() {
+      return <div role="progressbar" />
+    }
   }
 })
 
-jest.mock('@/components/books/BookRatingStars', () => {
-  return function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
-    return <div aria-label={`${userBook.rating} out of 5 stars`} data-testid="rating-stars" />
+vi.mock('@/components/books/BookRatingStars', () => {
+  return {
+    default: function MockRatingStars({ userBook }: { userBook: { rating: number } }) {
+      return <div aria-label={`${userBook.rating} out of 5 stars`} data-testid="rating-stars" />
+    }
   }
 })
 
-jest.mock('@/components/books/BookFavouriteButton', () => {
-  return function MockFavButton({ userBook }: { userBook: { tags: string[] } }) {
-    return <div data-testid="favourite-button" aria-pressed={userBook.tags.includes('favourite')} />
+vi.mock('@/components/books/BookFavouriteButton', () => {
+  return {
+    default: function MockFavButton({ userBook }: { userBook: { tags: string[] } }) {
+      return (
+        <div data-testid="favourite-button" aria-pressed={userBook.tags.includes('favourite')} />
+      )
+    }
   }
 })
 
-jest.mock('@/components/books/BookOwnershipToggles', () => {
-  return function MockOwnership() {
-    return <div data-testid="ownership-toggles" />
+vi.mock('@/components/books/BookOwnershipToggles', () => {
+  return {
+    default: function MockOwnership() {
+      return <div data-testid="ownership-toggles" />
+    }
   }
 })
 
-jest.mock('@/components/books/BookShelfTagFields', () => {
-  return function MockShelfTagFields() {
-    return <div data-testid="shelf-tag-fields" />
+vi.mock('@/components/books/BookShelfTagFields', () => {
+  return {
+    default: function MockShelfTagFields() {
+      return <div data-testid="shelf-tag-fields" />
+    }
   }
 })
 
-jest.mock('@/components/books/OfflineBookBadge', () => {
-  return function MockOfflineBadge({ bookId }: { bookId: string }) {
-    return <span>offline:{bookId}</span>
+vi.mock('@/components/books/OfflineBookBadge', () => {
+  return {
+    default: function MockOfflineBadge({ bookId }: { bookId: string }) {
+      return <span>offline:{bookId}</span>
+    }
   }
 })
 
-jest.mock('@/components/books/KoboSyncToggle', () => {
-  return function MockKoboSyncToggle() {
-    return <div data-testid="kobo-sync-toggle" />
+vi.mock('@/components/books/KoboSyncToggle', () => {
+  return {
+    default: function MockKoboSyncToggle() {
+      return <div data-testid="kobo-sync-toggle" />
+    }
   }
 })
 
-jest.mock('@/components/books/RemoveBookDialog', () => {
-  return function MockRemoveBookDialog({
-    open,
-    onRemoved
-  }: {
-    open: boolean
-    onRemoved: () => void
-  }) {
-    if (!open) return null
-    return (
-      <div data-testid="remove-book-dialog">
-        <button type="button" onClick={onRemoved}>
-          Confirm remove
-        </button>
-      </div>
-    )
+vi.mock('@/components/books/RemoveBookDialog', () => {
+  return {
+    default: function MockRemoveBookDialog({
+      open,
+      onRemoved
+    }: {
+      open: boolean
+      onRemoved: () => void
+    }) {
+      if (!open) return null
+      return (
+        <div data-testid="remove-book-dialog">
+          <button type="button" onClick={onRemoved}>
+            Confirm remove
+          </button>
+        </div>
+      )
+    }
   }
 })
 
-jest.mock('swr', () => ({
-  mutate: jest.fn()
+vi.mock('swr', () => ({
+  mutate: vi.fn()
 }))
 
 import BookDetailClient from '@/app/books/[id]/BookDetailClient'
 import { useLibrary, useGetBookContent } from '@/hooks/useBooks'
 import { useCurrentUser } from '@/hooks/useAuth'
 
-const mockUseGetBookContent = jest.mocked(useGetBookContent)
+const mockUseGetBookContent = vi.mocked(useGetBookContent)
 
 const mockBook = create(BookSchema, {
   id: 'book-1',
@@ -166,15 +175,15 @@ function makeLibraryData(
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-  jest.mocked(useLibrary).mockReturnValue({
+  vi.mocked(useLibrary).mockReturnValue({
     data: makeLibraryData(),
     isLoading: false,
     error: undefined
   })
   // @ts-expect-error -- partial mock
-  jest.mocked(useCurrentUser).mockReturnValue({ data: { role: 'user' }, isLoading: false })
+  vi.mocked(useCurrentUser).mockReturnValue({ data: { role: 'user' }, isLoading: false })
 })
 
 describe('BookDetailClient', () => {
@@ -184,7 +193,7 @@ describe('BookDetailClient', () => {
       book: create(BookSchema, { ...mockBook, seriesName: 'Dune Chronicles', seriesPosition: 1 })
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([inSeries]),
       isLoading: false,
       error: undefined
@@ -198,7 +207,7 @@ describe('BookDetailClient', () => {
 
   it('shows loading state', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: undefined,
       isLoading: true,
       error: undefined
@@ -209,7 +218,7 @@ describe('BookDetailClient', () => {
 
   it('shows error state', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('fail')
@@ -235,7 +244,7 @@ describe('BookDetailClient', () => {
       book: create(BookSchema, { ...mockBook, authors: [] })
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([noAuthorBook]),
       isLoading: false,
       error: undefined
@@ -256,7 +265,7 @@ describe('BookDetailClient', () => {
       book: create(BookSchema, { ...mockBook, description: '' })
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([noDescBook]),
       isLoading: false,
       error: undefined
@@ -268,7 +277,7 @@ describe('BookDetailClient', () => {
   it('renders star rating control for a read book', () => {
     const readBook = create(UserBookSchema, { ...mockUserBook, status: 'read' })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([], [], [readBook]),
       isLoading: false,
       error: undefined
@@ -302,7 +311,7 @@ describe('BookDetailClient', () => {
   it('does not render progress editor for non-reading status', () => {
     const wishlistBook = create(UserBookSchema, { ...mockUserBook, status: 'to-read' })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([], [wishlistBook]),
       isLoading: false,
       error: undefined
@@ -334,7 +343,7 @@ describe('BookDetailClient', () => {
   it('renders favourite button for a read book', () => {
     const readBook = create(UserBookSchema, { ...mockUserBook, status: 'read' })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([], [], [readBook]),
       isLoading: false,
       error: undefined
@@ -349,7 +358,7 @@ describe('BookDetailClient', () => {
       readSuggestion: create(ReadSuggestionSchema, { format: 'epub', figureCount: 2, pages: 200 })
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([analysed]),
       isLoading: false,
       error: undefined
@@ -367,7 +376,7 @@ describe('BookDetailClient', () => {
   it('hides Kobo sync toggle when book has no epub/pdf format', () => {
     const noFormatBook = create(UserBookSchema, { ...mockUserBook, formats: [] })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([noFormatBook]),
       isLoading: false,
       error: undefined
@@ -385,7 +394,7 @@ describe('BookDetailClient', () => {
   it('shows Kobo sync toggle when book has a pdf format', () => {
     const pdfBook = create(UserBookSchema, { ...mockUserBook, formats: ['pdf'] })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([pdfBook]),
       isLoading: false,
       error: undefined
@@ -402,7 +411,7 @@ describe('BookDetailClient', () => {
     })
     const shelf = create(BookShelfSchema, { name: 'To Buy', books: [shelfBook] })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([], [], [], [shelf]),
       isLoading: false,
       error: undefined
@@ -413,7 +422,7 @@ describe('BookDetailClient', () => {
 
   function setFormats(formats: string[]) {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([create(UserBookSchema, { ...mockUserBook, formats })]),
       isLoading: false,
       error: undefined
@@ -465,7 +474,7 @@ describe('BookDetailClient', () => {
   it('does not show preview buttons when no formats', () => {
     const noFormatBook = create(UserBookSchema, { ...mockUserBook, formats: [] })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([noFormatBook]),
       isLoading: false,
       error: undefined
@@ -487,7 +496,7 @@ describe('BookDetailClient', () => {
       finishedAt: ['2026-03-10T00:00:00Z']
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([finishedBook]),
       isLoading: false,
       error: undefined
@@ -503,14 +512,14 @@ describe('BookDetailClient', () => {
 
   it('shows the metadata source sync control for an admin', () => {
     // @ts-expect-error -- partial mock
-    jest.mocked(useCurrentUser).mockReturnValue({ data: { role: 'admin' }, isLoading: false })
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { role: 'admin' }, isLoading: false })
     render(<BookDetailClient id="ub-1" />)
     expect(screen.getByTestId('book-source-sync')).toBeInTheDocument()
   })
 
   it('opens the edit dialog when Edit book is clicked for an admin', () => {
     // @ts-expect-error -- partial mock
-    jest.mocked(useCurrentUser).mockReturnValue({ data: { role: 'admin' }, isLoading: false })
+    vi.mocked(useCurrentUser).mockReturnValue({ data: { role: 'admin' }, isLoading: false })
     render(<BookDetailClient id="ub-1" />)
     expect(screen.queryByTestId('book-edit-dialog')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Edit book' }))
@@ -538,7 +547,7 @@ describe('BookDetailClient', () => {
       book: create(BookSchema, { ...mockBook, sourceUrl: 'https://example.com/article' })
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLibrary).mockReturnValue({
+    vi.mocked(useLibrary).mockReturnValue({
       data: makeLibraryData([rssBook]),
       isLoading: false,
       error: undefined

@@ -1,12 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import TrainsClient from '@/components/trains/TrainsClient'
 
-const mockUseTrainsFeedInfo = jest.fn()
-const mockUseStationSearch = jest.fn()
-const mockUseJourneySearch = jest.fn()
-const mockUseSavedCommutes = jest.fn()
+const mockUseTrainsFeedInfo = vi.fn()
+const mockUseStationSearch = vi.fn()
+const mockUseJourneySearch = vi.fn()
+const mockUseSavedCommutes = vi.fn()
 
-jest.mock('@/hooks/useTrains', () => ({
+vi.mock('@/hooks/useTrains', () => ({
   useTrainsFeedInfo: () => mockUseTrainsFeedInfo(),
   useSavedCommutes: () => mockUseSavedCommutes(),
   useStationSearch: (query: string) => mockUseStationSearch(query),
@@ -29,8 +29,8 @@ beforeEach(() => {
   mockUseJourneySearch.mockReturnValue({ data: undefined, isLoading: false, error: undefined })
   mockUseSavedCommutes.mockReturnValue({
     data: { savedCommutes: [] },
-    create: jest.fn().mockResolvedValue(undefined),
-    remove: jest.fn().mockResolvedValue(undefined)
+    create: vi.fn().mockResolvedValue(undefined),
+    remove: vi.fn().mockResolvedValue(undefined)
   })
 })
 
@@ -98,8 +98,8 @@ describe('TrainsClient', () => {
           }
         ]
       },
-      create: jest.fn(),
-      remove: jest.fn()
+      create: vi.fn(),
+      remove: vi.fn()
     })
     render(<TrainsClient />)
 

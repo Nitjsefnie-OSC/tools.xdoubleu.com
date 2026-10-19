@@ -1,45 +1,24 @@
 import React from 'react'
 import { act, render, screen, fireEvent } from '@testing-library/react'
 
-const mockRefreshSteamGame = jest.fn()
-const mockGlobalMutate = jest.fn()
+const mockRefreshSteamGame = vi.fn()
+const mockGlobalMutate = vi.fn()
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
+vi.mock('swr', async () => ({
+  ...(await vi.importActual('swr')),
   mutate: (...args: unknown[]) => mockGlobalMutate(...args)
 }))
 
-jest.mock('@/hooks/useGames', () => ({
-  useSteamGame: jest.fn(),
-  useRefreshSteamGame: jest.fn(() => mockRefreshSteamGame),
-  useSetGameFavourite: jest.fn(() => jest.fn().mockResolvedValue({}))
+vi.mock('@/hooks/useGames', () => ({
+  useSteamGame: vi.fn(),
+  useRefreshSteamGame: vi.fn(() => mockRefreshSteamGame),
+  useSetGameFavourite: vi.fn(() => vi.fn().mockResolvedValue({}))
 }))
 
 let mockSearchParams = new URLSearchParams()
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useSearchParams: () => mockSearchParams
 }))
-
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
-
-jest.mock('next/image', () => {
-  return function MockImage({
-    src,
-    alt,
-    ...props
-  }: {
-    src: string
-    alt: string
-    [key: string]: unknown
-  }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} {...props} />
-  }
-})
 
 import SteamGameClient from '@/app/games/[id]/SteamGameClient'
 import { useSteamGame, useRefreshSteamGame } from '@/hooks/useGames'
@@ -91,10 +70,10 @@ const mockHiddenAchievement = create(AchievementSchema, {
 })
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockSearchParams = new URLSearchParams()
   mockRefreshSteamGame.mockResolvedValue(undefined)
-  jest.mocked(useRefreshSteamGame).mockReturnValue(mockRefreshSteamGame)
+  vi.mocked(useRefreshSteamGame).mockReturnValue(mockRefreshSteamGame)
 })
 
 const mockSteamGameResponse = (
@@ -108,7 +87,7 @@ const mockSteamGameResponse = (
 describe('SteamGameClient', () => {
   it('shows loading state when isLoading is true', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: undefined,
       isLoading: true,
       error: undefined
@@ -120,7 +99,7 @@ describe('SteamGameClient', () => {
 
   it('shows error state when error is present', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('Failed to fetch')
@@ -132,7 +111,7 @@ describe('SteamGameClient', () => {
 
   it('renders game name when game is loaded', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -144,7 +123,7 @@ describe('SteamGameClient', () => {
 
   it('renders achievements section with unlocked achievements by default', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, mockAchievements),
       isLoading: false,
       error: undefined
@@ -159,7 +138,7 @@ describe('SteamGameClient', () => {
 
   it('gives each achievement card a solid card background', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, mockAchievements),
       isLoading: false,
       error: undefined
@@ -172,7 +151,7 @@ describe('SteamGameClient', () => {
 
   it('shows a Hidden badge for achievements without a description', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, [mockHiddenAchievement]),
       isLoading: false,
       error: undefined
@@ -185,7 +164,7 @@ describe('SteamGameClient', () => {
 
   it('does not show a Hidden badge for achievements with a description', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, mockAchievements),
       isLoading: false,
       error: undefined
@@ -198,7 +177,7 @@ describe('SteamGameClient', () => {
 
   it('renders the achievement icon with a locked square aspect ratio', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, mockAchievements),
       isLoading: false,
       error: undefined
@@ -230,7 +209,7 @@ describe('SteamGameClient', () => {
       })
     ]
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, achievements),
       isLoading: false,
       error: undefined
@@ -243,7 +222,7 @@ describe('SteamGameClient', () => {
 
   it('toggles completed achievements visibility', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, mockAchievements),
       isLoading: false,
       error: undefined
@@ -269,7 +248,7 @@ describe('SteamGameClient', () => {
       })
     ]
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, allDone),
       isLoading: false,
       error: undefined
@@ -281,7 +260,7 @@ describe('SteamGameClient', () => {
 
   it('shows no achievements message when list is empty', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -293,7 +272,7 @@ describe('SteamGameClient', () => {
 
   it('calls useSteamGame with numeric id converted from string', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: undefined
@@ -305,7 +284,7 @@ describe('SteamGameClient', () => {
 
   it('renders games link', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: undefined
@@ -318,7 +297,7 @@ describe('SteamGameClient', () => {
 
   it('does not render a distribution breadcrumb without a bucket param', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -331,7 +310,7 @@ describe('SteamGameClient', () => {
   it('renders a distribution breadcrumb linking back to the bucket overview', () => {
     mockSearchParams = new URLSearchParams({ bucket: '8', label: '80-89%' })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -345,7 +324,7 @@ describe('SteamGameClient', () => {
   it('falls back to a range label when only the bucket param is present', () => {
     mockSearchParams = new URLSearchParams({ bucket: '3' })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -358,7 +337,7 @@ describe('SteamGameClient', () => {
 
   it('displays playtime in hours', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -370,7 +349,7 @@ describe('SteamGameClient', () => {
 
   it('displays completion rate', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -382,7 +361,7 @@ describe('SteamGameClient', () => {
 
   it('displays achieved count in achievements header', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, mockAchievements),
       isLoading: false,
       error: undefined
@@ -394,7 +373,7 @@ describe('SteamGameClient', () => {
 
   it('renders achievement cards with correct statuses', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, mockAchievements),
       isLoading: false,
       error: undefined
@@ -411,7 +390,7 @@ describe('SteamGameClient', () => {
   it('shows delisted badge when game is delisted', () => {
     const delistedGame = create(GameSchema, { ...mockGame, isDelisted: true })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(delistedGame, []),
       isLoading: false,
       error: undefined
@@ -423,7 +402,7 @@ describe('SteamGameClient', () => {
 
   it('does not show delisted badge when game is not delisted', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -435,7 +414,7 @@ describe('SteamGameClient', () => {
 
   it('renders the Refresh and High poll buttons', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -448,7 +427,7 @@ describe('SteamGameClient', () => {
 
   it('toggles high poll mode label', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -464,7 +443,7 @@ describe('SteamGameClient', () => {
 
   it('displays last synced timestamp', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, []),
       isLoading: false,
       error: undefined
@@ -477,7 +456,7 @@ describe('SteamGameClient', () => {
   it('does not display last synced when lastSyncedAt is empty', () => {
     const gameNoSync = create(GameSchema, { ...mockGame, lastSyncedAt: '' })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(gameNoSync, []),
       isLoading: false,
       error: undefined
@@ -488,14 +467,14 @@ describe('SteamGameClient', () => {
   })
 
   it('calls refreshSteamGame when Refresh button is clicked', async () => {
-    const mutate = jest.fn().mockResolvedValue(undefined)
+    const mutate = vi.fn().mockResolvedValue(undefined)
     const freshRefreshResponse = create(RefreshSteamGameResponseSchema, {
       data: create(SteamGameResponseSchema, { game: mockGame, achievements: [] })
     })
     mockRefreshSteamGame.mockResolvedValue(freshRefreshResponse)
 
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useSteamGame).mockReturnValue({
+    vi.mocked(useSteamGame).mockReturnValue({
       data: mockSteamGameResponse(mockGame, mockAchievements),
       isLoading: false,
       error: undefined,
@@ -518,40 +497,40 @@ describe('SteamGameClient', () => {
 
   describe('live polling', () => {
     beforeEach(() => {
-      jest.useFakeTimers()
+      vi.useFakeTimers()
     })
 
     afterEach(() => {
-      jest.useRealTimers()
+      vi.useRealTimers()
     })
 
     it('does not poll by default (high poll mode off)', async () => {
       // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-      jest.mocked(useSteamGame).mockReturnValue({
+      vi.mocked(useSteamGame).mockReturnValue({
         data: mockSteamGameResponse(mockGame, []),
         isLoading: false,
         error: undefined,
-        mutate: jest.fn()
+        mutate: vi.fn()
       })
 
       render(<SteamGameClient id="123" />)
 
       await act(async () => {
-        jest.advanceTimersByTime(60_000)
+        vi.advanceTimersByTime(60_000)
       })
 
       expect(mockRefreshSteamGame).not.toHaveBeenCalled()
     })
 
     it('calls refreshSteamGame after 60s when high poll mode is enabled', async () => {
-      const mutate = jest.fn().mockResolvedValue(undefined)
+      const mutate = vi.fn().mockResolvedValue(undefined)
       const freshRefreshResponse = create(RefreshSteamGameResponseSchema, {
         data: create(SteamGameResponseSchema, { game: mockGame, achievements: [] })
       })
       mockRefreshSteamGame.mockResolvedValue(freshRefreshResponse)
 
       // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-      jest.mocked(useSteamGame).mockReturnValue({
+      vi.mocked(useSteamGame).mockReturnValue({
         data: mockSteamGameResponse(mockGame, mockAchievements),
         isLoading: false,
         error: undefined,
@@ -567,7 +546,7 @@ describe('SteamGameClient', () => {
       expect(mockRefreshSteamGame).not.toHaveBeenCalled()
 
       await act(async () => {
-        jest.advanceTimersByTime(60_000)
+        vi.advanceTimersByTime(60_000)
       })
 
       expect(mockRefreshSteamGame).toHaveBeenCalledWith(123)
@@ -579,11 +558,11 @@ describe('SteamGameClient', () => {
 
     it('does not call refreshSteamGame when the tab is hidden', async () => {
       // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-      jest.mocked(useSteamGame).mockReturnValue({
+      vi.mocked(useSteamGame).mockReturnValue({
         data: mockSteamGameResponse(mockGame, []),
         isLoading: false,
         error: undefined,
-        mutate: jest.fn()
+        mutate: vi.fn()
       })
 
       Object.defineProperty(document, 'hidden', { value: true, writable: true })
@@ -595,7 +574,7 @@ describe('SteamGameClient', () => {
       })
 
       await act(async () => {
-        jest.advanceTimersByTime(60_000)
+        vi.advanceTimersByTime(60_000)
       })
 
       expect(mockRefreshSteamGame).not.toHaveBeenCalled()
@@ -604,9 +583,9 @@ describe('SteamGameClient', () => {
     })
 
     it('clears the interval on unmount', async () => {
-      const mutate = jest.fn()
+      const mutate = vi.fn()
       // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-      jest.mocked(useSteamGame).mockReturnValue({
+      vi.mocked(useSteamGame).mockReturnValue({
         data: mockSteamGameResponse(mockGame, []),
         isLoading: false,
         error: undefined,
@@ -622,21 +601,21 @@ describe('SteamGameClient', () => {
       unmount()
 
       await act(async () => {
-        jest.advanceTimersByTime(120_000)
+        vi.advanceTimersByTime(120_000)
       })
 
       expect(mockRefreshSteamGame).not.toHaveBeenCalled()
     })
 
     it('stops polling when high poll mode is toggled off', async () => {
-      const mutate = jest.fn().mockResolvedValue(undefined)
+      const mutate = vi.fn().mockResolvedValue(undefined)
       const freshRefreshResponse = create(RefreshSteamGameResponseSchema, {
         data: create(SteamGameResponseSchema, { game: mockGame, achievements: [] })
       })
       mockRefreshSteamGame.mockResolvedValue(freshRefreshResponse)
 
       // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-      jest.mocked(useSteamGame).mockReturnValue({
+      vi.mocked(useSteamGame).mockReturnValue({
         data: mockSteamGameResponse(mockGame, []),
         isLoading: false,
         error: undefined,
@@ -653,18 +632,18 @@ describe('SteamGameClient', () => {
       })
 
       await act(async () => {
-        jest.advanceTimersByTime(60_000)
+        vi.advanceTimersByTime(60_000)
       })
 
       expect(mockRefreshSteamGame).not.toHaveBeenCalled()
     })
 
     it('keeps showing prior data when refreshSteamGame rejects', async () => {
-      const mutate = jest.fn()
+      const mutate = vi.fn()
       mockRefreshSteamGame.mockRejectedValue(new Error('network error'))
 
       // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-      jest.mocked(useSteamGame).mockReturnValue({
+      vi.mocked(useSteamGame).mockReturnValue({
         data: mockSteamGameResponse(mockGame, mockAchievements),
         isLoading: false,
         error: undefined,
@@ -678,7 +657,7 @@ describe('SteamGameClient', () => {
       })
 
       await act(async () => {
-        jest.advanceTimersByTime(60_000)
+        vi.advanceTimersByTime(60_000)
       })
 
       // No mutate on failure; prior data remains.

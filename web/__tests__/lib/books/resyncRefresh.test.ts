@@ -1,13 +1,13 @@
 import { renderHook, act } from '@testing-library/react'
 
-const mockTrigger = jest.fn()
+const mockTrigger = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useStartResync: () => mockTrigger
 }))
 
-jest.mock('@/lib/env', () => ({
-  getApiUrl: jest.fn(() => 'https://api.test')
+vi.mock('@/lib/env', () => ({
+  getApiUrl: vi.fn(() => 'https://api.test')
 }))
 
 import { useResyncRefresh } from '@/lib/books/resyncRefresh'
@@ -58,7 +58,7 @@ function latest() {
 
 describe('useResyncRefresh', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     MockWebSocket.instances = []
   })
 
@@ -78,7 +78,7 @@ describe('useResyncRefresh', () => {
   })
 
   it('clears counts and calls onSynced when run completes', () => {
-    const onSynced = jest.fn()
+    const onSynced = vi.fn()
     const { result } = renderHook(() => useResyncRefresh(onSynced))
     act(() => latest().emitOpen())
     act(() => latest().emit({ isRefreshing: true, lastRefresh: null, processed: 10, total: 10 }))

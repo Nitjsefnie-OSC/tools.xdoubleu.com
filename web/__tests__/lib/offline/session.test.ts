@@ -1,24 +1,19 @@
-import {
-  claimOfflineData,
-  clearOfflineData,
-  registerServiceWorker,
-  savePageForOffline
-} from '@/lib/offline/session'
+import { claimOfflineData, clearOfflineData, registerServiceWorker } from '@/lib/offline/session'
 import { clearStore, getOwner, pruneEntries, setOwner } from '@/lib/offline/store'
 import { logger } from '@/lib/logger'
 import { resetOutbox } from '@/lib/offline/outbox'
 
-jest.mock('@/lib/offline/store', () => ({
-  clearStore: jest.fn(async () => {}),
-  getOwner: jest.fn(),
-  pruneEntries: jest.fn(async () => {}),
-  setOwner: jest.fn(async () => {})
+vi.mock('@/lib/offline/store', () => ({
+  clearStore: vi.fn(async () => {}),
+  getOwner: vi.fn(),
+  pruneEntries: vi.fn(async () => {}),
+  setOwner: vi.fn(async () => {})
 }))
-jest.mock('@/lib/logger', () => ({ logger: { warn: jest.fn() } }))
-jest.mock('@/lib/offline/outbox', () => ({ resetOutbox: jest.fn() }))
+vi.mock('@/lib/logger', () => ({ logger: { warn: vi.fn() } }))
+vi.mock('@/lib/offline/outbox', () => ({ resetOutbox: vi.fn() }))
 
-const postMessage = jest.fn()
-const register = jest.fn()
+const postMessage = vi.fn()
+const register = vi.fn()
 
 function installServiceWorker() {
   Object.defineProperty(navigator, 'serviceWorker', {
@@ -31,31 +26,21 @@ function installServiceWorker() {
   })
 }
 
-function setNodeEnv(value: string) {
-  Object.defineProperty(process.env, 'NODE_ENV', { value, configurable: true, writable: true })
-}
-
 describe('offline session', () => {
-  const cachesDelete = jest.fn(async () => true)
-
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     installServiceWorker()
-    Object.defineProperty(globalThis, 'caches', {
-      value: { delete: cachesDelete },
-      configurable: true
-    })
   })
 
   afterEach(() => {
-    setNodeEnv('test')
+    vi.unstubAllEnvs()
   })
 
   it('registers the worker only in production', async () => {
     registerServiceWorker()
     expect(register).not.toHaveBeenCalled()
 
-    setNodeEnv('production')
+    vi.stubEnv('PROD', true)
     register.mockRejectedValueOnce(new Error('denied'))
     registerServiceWorker()
     expect(register).toHaveBeenCalledWith('/sw.js')
@@ -65,25 +50,16 @@ describe('offline session', () => {
     })
   })
 
-  it('asks the active worker to save a page', async () => {
-    savePageForOffline('https://tools.test/feeds')
-    await Promise.resolve()
-    await Promise.resolve()
-
-    expect(postMessage).toHaveBeenCalledWith({ type: 'save-page', url: 'https://tools.test/feeds' })
-  })
-
-  it('clears the store, the page cache and the worker state', async () => {
+  it('clears the store and the worker state', async () => {
     await clearOfflineData()
 
     expect(postMessage).toHaveBeenCalledWith({ type: 'clear' })
     expect(clearStore).toHaveBeenCalled()
-    expect(cachesDelete).toHaveBeenCalledWith('tools-pages')
     expect(resetOutbox).toHaveBeenCalled()
   })
 
   it('clears data saved for another user before claiming it', async () => {
-    jest.mocked(getOwner).mockResolvedValue('someone-else')
+    vi.mocked(getOwner).mockResolvedValue('someone-else')
 
     await claimOfflineData('me')
 
@@ -93,7 +69,7 @@ describe('offline session', () => {
   })
 
   it('keeps data already owned by the user', async () => {
-    jest.mocked(getOwner).mockResolvedValue('me')
+    vi.mocked(getOwner).mockResolvedValue('me')
 
     await claimOfflineData('me')
 
@@ -102,7 +78,7 @@ describe('offline session', () => {
   })
 
   it('claims unowned data without clearing it', async () => {
-    jest.mocked(getOwner).mockResolvedValue(undefined)
+    vi.mocked(getOwner).mockResolvedValue(undefined)
 
     await claimOfflineData('me')
 
@@ -115,11 +91,8 @@ describe('offline session without service worker support', () => {
   it('is a no-op', async () => {
     // @ts-expect-error -- simulate a browser without service workers
     delete navigator.serviceWorker
-    // @ts-expect-error -- simulate a browser without CacheStorage
-    delete globalThis.caches
 
     registerServiceWorker()
-    savePageForOffline('/feeds')
     await clearOfflineData()
 
     expect(clearStore).toHaveBeenCalled()

@@ -1,18 +1,18 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => ({
-    getSteamGame: jest.fn().mockResolvedValue({}),
-    getSteamDistribution: jest.fn().mockResolvedValue({}),
-    getSteam: jest.fn().mockResolvedValue({}),
-    getRecentlyActiveGames: jest.fn().mockResolvedValue({}),
-    getIntegrations: jest.fn().mockResolvedValue({}),
-    saveIntegrations: jest.fn().mockResolvedValue({})
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => ({
+    getSteamGame: vi.fn().mockResolvedValue({}),
+    getSteamDistribution: vi.fn().mockResolvedValue({}),
+    getSteam: vi.fn().mockResolvedValue({}),
+    getRecentlyActiveGames: vi.fn().mockResolvedValue({}),
+    getIntegrations: vi.fn().mockResolvedValue({}),
+    saveIntegrations: vi.fn().mockResolvedValue({})
   }))
 }))
-jest.mock('@/lib/gen/games/v1/games_pb', () => ({ GamesService: {} }))
-jest.mock('@/lib/env', () => ({ getApiUrl: () => 'https://api.test' }))
+vi.mock('@/lib/gen/games/v1/games_pb', () => ({ GamesService: {} }))
+vi.mock('@/lib/env', () => ({ getApiUrl: () => 'https://api.test' }))
 
 import useSWR from 'swr'
 import {
@@ -28,8 +28,8 @@ import {
 } from '@/hooks/useGames'
 import { createServiceClient } from '@/lib/client'
 
-const mockUseSWR = jest.mocked(useSWR)
-const mockCreateServiceClient = jest.mocked(createServiceClient)
+const mockUseSWR = vi.mocked(useSWR)
+const mockCreateServiceClient = vi.mocked(createServiceClient)
 
 beforeEach(() => {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
@@ -56,7 +56,7 @@ describe('useRecentlyActiveGames', () => {
   })
 
   it('fetcher calls client.getRecentlyActiveGames', async () => {
-    const mockClient = { getRecentlyActiveGames: jest.fn().mockResolvedValue({}) }
+    const mockClient = { getRecentlyActiveGames: vi.fn().mockResolvedValue({}) }
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce(mockClient)
     renderHook(() => useRecentlyActiveGames())
@@ -82,7 +82,7 @@ describe('useSteamGame', () => {
   })
 
   it('fetcher calls client.getSteamGame', async () => {
-    const mockClient = { getSteamGame: jest.fn().mockResolvedValue({}) }
+    const mockClient = { getSteamGame: vi.fn().mockResolvedValue({}) }
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce(mockClient)
     renderHook(() => useSteamGame(42))
@@ -103,7 +103,7 @@ describe('useSteamDistribution', () => {
   })
 
   it('fetcher calls client.getSteamDistribution', async () => {
-    const mockClient = { getSteamDistribution: jest.fn().mockResolvedValue({}) }
+    const mockClient = { getSteamDistribution: vi.fn().mockResolvedValue({}) }
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce(mockClient)
     renderHook(() => useSteamDistribution(10))
@@ -127,7 +127,7 @@ describe('useSteamProgress', () => {
   })
 
   it('fetcher calls client.getSteam with dates', async () => {
-    const mockClient = { getSteam: jest.fn().mockResolvedValue({}) }
+    const mockClient = { getSteam: vi.fn().mockResolvedValue({}) }
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce(mockClient)
     renderHook(() => useSteamProgress('2024-01-01', '2024-12-31'))
@@ -142,7 +142,7 @@ describe('useSteamProgress', () => {
 
 describe('useRefreshSteam', () => {
   it('POSTs the steam refresh endpoint with credentials', async () => {
-    global.fetch = jest.fn().mockResolvedValue({})
+    global.fetch = vi.fn().mockResolvedValue({})
     const { result } = renderHook(() => useRefreshSteam())
     await result.current()
     expect(global.fetch).toHaveBeenCalledWith('https://api.test/games/api/progress/steam/refresh', {
@@ -163,7 +163,7 @@ describe('useIntegrations', () => {
   })
 
   it('fetcher calls client.getIntegrations', async () => {
-    const mockClient = { getIntegrations: jest.fn().mockResolvedValue({}) }
+    const mockClient = { getIntegrations: vi.fn().mockResolvedValue({}) }
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce(mockClient)
     renderHook(() => useIntegrations())
@@ -175,7 +175,7 @@ describe('useIntegrations', () => {
 
 describe('useSaveIntegrations', () => {
   it('calls client.saveIntegrations with the integrations payload', async () => {
-    const mockSave = jest.fn().mockResolvedValue({})
+    const mockSave = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ saveIntegrations: mockSave })
     const { result } = renderHook(() => useSaveIntegrations())
@@ -188,7 +188,7 @@ describe('useSaveIntegrations', () => {
 
 describe('useRefreshSteamGame', () => {
   it('calls client.refreshSteamGame with the game id', async () => {
-    const mockRefresh = jest.fn().mockResolvedValue({})
+    const mockRefresh = vi.fn().mockResolvedValue({})
     // @ts-expect-error -- mock client returns partial shape
     mockCreateServiceClient.mockReturnValueOnce({ refreshSteamGame: mockRefresh })
     const { result } = renderHook(() => useRefreshSteamGame())

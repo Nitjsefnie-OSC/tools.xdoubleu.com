@@ -1,78 +1,56 @@
 import CategoryManager from '@/components/shoppinglist/CategoryManager'
-import SWRFallback from '@/components/SWRFallback'
-import { createServerClient } from '@/lib/server/client'
-import { fetchOrNull } from '@/lib/server/fetchers'
-import { swrKeys } from '@/lib/swrKeys'
-import { ShoppingListService } from '@/lib/gen/shoppinglist/v1/shoppinglist_pb'
 import ItemCatalog from '@/components/shoppinglist/ItemCatalog'
 import StoreManager from '@/components/shoppinglist/StoreManager'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageHeader } from '@/components/ui/page-header'
 
-export default async function ShoppingListSettingsPage() {
-  const client = await createServerClient(ShoppingListService)
-  const [categories, itemNames, itemCategories, stores] = await Promise.all([
-    fetchOrNull(() => client.listCategories({})),
-    fetchOrNull(() => client.listItemNames({})),
-    fetchOrNull(() => client.listItemCategories({})),
-    fetchOrNull(() => client.listStores({}))
-  ])
-
+export default function ShoppingListSettingsPage() {
   return (
-    <SWRFallback
-      fallback={{
-        ...(categories ? { [swrKeys.shoppingCategories('')]: categories } : {}),
-        ...(itemNames ? { [swrKeys.itemNames]: itemNames } : {}),
-        ...(itemCategories ? { [swrKeys.itemCategories]: itemCategories } : {}),
-        ...(stores ? { [swrKeys.stores]: stores } : {})
-      }}
-    >
-      <PageContainer size="form">
-        <PageHeader
-          title="Shopping List Settings"
-          breadcrumb={[{ label: 'Shopping List', href: '/shoppinglist' }, { label: 'Settings' }]}
-        />
+    <PageContainer size="form">
+      <PageHeader
+        title="Shopping List Settings"
+        breadcrumb={[{ label: 'Shopping List', href: '/shoppinglist' }, { label: 'Settings' }]}
+      />
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Categories</CardTitle>
-              <CardDescription>
-                Group items into aisles like Produce, Dairy or Bakery.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CategoryManager />
-            </CardContent>
-          </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Categories</CardTitle>
+            <CardDescription>
+              Group items into aisles like Produce, Dairy or Bakery.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CategoryManager />
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Item catalog</CardTitle>
-              <CardDescription>
-                Assign each item a category once. It applies to custom items and recipe ingredients
-                everywhere.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ItemCatalog />
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Item catalog</CardTitle>
+            <CardDescription>
+              Assign each item a category once. It applies to custom items and recipe ingredients
+              everywhere.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ItemCatalog />
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Stores</CardTitle>
-              <CardDescription>
-                Set the aisle order for each store. Exports follow the selected store&apos;s order.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <StoreManager />
-            </CardContent>
-          </Card>
-        </div>
-      </PageContainer>
-    </SWRFallback>
+        <Card>
+          <CardHeader>
+            <CardTitle>Stores</CardTitle>
+            <CardDescription>
+              Set the aisle order for each store. Exports follow the selected store&apos;s order.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <StoreManager />
+          </CardContent>
+        </Card>
+      </div>
+    </PageContainer>
   )
 }

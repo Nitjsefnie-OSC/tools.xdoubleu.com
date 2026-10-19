@@ -2,20 +2,20 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ManageDuplicatesDialog from '@/components/books/ManageDuplicatesDialog'
 
-const mockMergeBooks = jest.fn()
+const mockMergeBooks = vi.fn()
 const mockFindDuplicatesData = {
   data: undefined as { groups: unknown[] } | undefined,
   isLoading: false,
-  mutate: jest.fn()
+  mutate: vi.fn()
 }
-const mockMutate = jest.fn()
+const mockMutate = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useFindDuplicates: () => mockFindDuplicatesData,
   useMergeBooks: () => mockMergeBooks
 }))
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
@@ -63,7 +63,7 @@ function makeGroup(entries: ReturnType<typeof makeEntry>[], reason = 'isbn13') {
   return { entries, reason }
 }
 
-function renderDialog(open = true, onOpenChange = jest.fn()) {
+function renderDialog(open = true, onOpenChange = vi.fn()) {
   return render(<ManageDuplicatesDialog open={open} onOpenChange={onOpenChange} />)
 }
 
@@ -73,7 +73,7 @@ describe('ManageDuplicatesDialog', () => {
     mockMutate.mockReset()
     mockFindDuplicatesData.data = undefined
     mockFindDuplicatesData.isLoading = false
-    mockFindDuplicatesData.mutate = jest.fn()
+    mockFindDuplicatesData.mutate = vi.fn()
   })
 
   it('renders the dialog title when open', () => {

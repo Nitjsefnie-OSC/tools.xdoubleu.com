@@ -1,5 +1,3 @@
-'use client'
-
 import type { UserBook } from '@/lib/gen/books/v1/library_pb'
 import BookProgressForm, { type BookProgressSource } from '@/components/books/BookProgressForm'
 import {

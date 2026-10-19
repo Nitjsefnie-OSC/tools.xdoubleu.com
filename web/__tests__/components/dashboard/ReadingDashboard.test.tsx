@@ -1,54 +1,46 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const mockUpdateProgress = jest.fn()
-const mockUpdateBookStatus = jest.fn()
+const mockUpdateProgress = vi.fn()
+const mockUpdateBookStatus = vi.fn()
 
-jest.mock('@/hooks/useBooks', () => ({
-  useLibrary: jest.fn(),
-  useBooksProgress: jest.fn(),
+vi.mock('@/hooks/useBooks', () => ({
+  useLibrary: vi.fn(),
+  useBooksProgress: vi.fn(),
   useUpdateProgress: () => mockUpdateProgress,
   useUpdateBookStatus: () => mockUpdateBookStatus
 }))
 
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt, ...props }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} {...props} />
+vi.mock('@/components/books/BookSearchBar', () => {
+  return {
+    default: function MockBookSearchBar() {
+      return <div data-testid="book-search-bar" />
+    }
   }
 })
 
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('@/components/books/BookSearchBar', () => {
-  return function MockBookSearchBar() {
-    return <div data-testid="book-search-bar" />
+vi.mock('@/components/books/BooksProgressChart', () => {
+  return {
+    default: function MockBooksProgressChart() {
+      return <div data-testid="books-progress-chart" />
+    }
   }
 })
 
-jest.mock('@/components/books/BooksProgressChart', () => {
-  return function MockBooksProgressChart() {
-    return <div data-testid="books-progress-chart" />
+vi.mock('@/components/dashboard/DashboardShareButton', () => {
+  return {
+    default: function MockDashboardShareButton() {
+      return <div data-testid="dashboard-share-button" />
+    }
   }
 })
 
-jest.mock('@/components/dashboard/DashboardShareButton', () => {
-  return function MockDashboardShareButton() {
-    return <div data-testid="dashboard-share-button" />
-  }
-})
-
-jest.mock('swr', () => ({ mutate: jest.fn() }))
-jest.mock('@/hooks/usePhysicalCopy', () => ({
+vi.mock('swr', () => ({ mutate: vi.fn() }))
+vi.mock('@/hooks/usePhysicalCopy', () => ({
   usePhysicalCopy: () => ({ data: undefined }),
-  useUpdatePhysicalCopy: () => jest.fn()
+  useUpdatePhysicalCopy: () => vi.fn()
 }))
-jest.mock('@/hooks/useReadingState', () => ({
+vi.mock('@/hooks/useReadingState', () => ({
   useReadingState: () => ({ data: undefined })
 }))
 
@@ -62,8 +54,8 @@ import {
   GetLibraryResponseSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-const mockUseBacklogLibrary = jest.mocked(useLibrary)
-const mockUseBooksProgress = jest.mocked(useBooksProgress)
+const mockUseBacklogLibrary = vi.mocked(useLibrary)
+const mockUseBooksProgress = vi.mocked(useBooksProgress)
 
 const readingBook = create(UserBookSchema, {
   id: '1',
@@ -99,7 +91,7 @@ function mockLibrary(reading = [readingBook]) {
 
 describe('ReadingDashboard', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUpdateBookStatus.mockResolvedValue({})
   })
 

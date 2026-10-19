@@ -1,10 +1,10 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const setItemCategory = jest.fn().mockResolvedValue({})
-const mutate = jest.fn().mockResolvedValue(undefined)
+const setItemCategory = vi.fn().mockResolvedValue({})
+const mutate = vi.fn().mockResolvedValue(undefined)
 
-jest.mock('@/hooks/useShoppingList', () => ({
+vi.mock('@/hooks/useShoppingList', () => ({
   useCategories: () => ({
     data: {
       categories: [
@@ -16,11 +16,11 @@ jest.mock('@/hooks/useShoppingList', () => ({
   useItemCategories: () => ({ data: { items: [{ name: 'milk', categoryId: 'cat-dairy' }] } })
 }))
 
-jest.mock('@/lib/client', () => ({
+vi.mock('@/lib/client', () => ({
   createServiceClient: () => ({ setItemCategory })
 }))
 
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   __esModule: true,
   useSWRConfig: () => ({ mutate })
 }))
@@ -29,8 +29,8 @@ import MealPlanEntryForm from '@/components/mealplans/MealPlanEntryForm'
 import { create } from '@bufbuild/protobuf'
 import { RecipeSchema } from '@/lib/gen/recipes/v1/recipes_pb'
 
-const onSave = jest.fn()
-const onCancel = jest.fn()
+const onSave = vi.fn()
+const onCancel = vi.fn()
 
 const recipe = (id: string, name: string) => create(RecipeSchema, { id, name })
 const suggestion = (id: string, name: string, servings = 1) => ({
@@ -51,7 +51,7 @@ function renderForm(initialCustomName: string) {
   )
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('MealPlanEntryForm category picker', () => {
   it('pre-fills a row category from the name->category catalog', () => {

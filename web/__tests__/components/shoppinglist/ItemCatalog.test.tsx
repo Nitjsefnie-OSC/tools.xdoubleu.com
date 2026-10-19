@@ -18,7 +18,7 @@ const defaultNames: Name[] = [
   { name: 'rode ui', categoryId: '', excluded: false, mergedInto: 'apple' }
 ]
 
-jest.mock('@/hooks/useShoppingList', () => ({
+vi.mock('@/hooks/useShoppingList', () => ({
   useItemNames: () => ({ data: namesData, isLoading: false }),
   useCategories: () => ({
     data: {
@@ -30,14 +30,14 @@ jest.mock('@/hooks/useShoppingList', () => ({
   })
 }))
 
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn().mockResolvedValue(undefined)
 }))
 
-const enqueue = jest.mocked(enqueueWrite)
+const enqueue = vi.mocked(enqueueWrite)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   namesData = { names: defaultNames.map((n) => ({ ...n })) }
 })
 

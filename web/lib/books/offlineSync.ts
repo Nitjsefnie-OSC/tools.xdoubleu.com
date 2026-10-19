@@ -1,7 +1,6 @@
 // Keeps currently-reading books on the device in their original format, and
 // removes stored files the library no longer needs.
 import { flattenLibrary } from './bookShelves'
-import { warmReaderModules } from './readerModules'
 import {
   deleteStoredBook,
   downloadBookFile,
@@ -11,20 +10,14 @@ import {
 import { pickReaderFormat } from './readerSettings'
 import { isWebPubWarm, warmWebPub } from './webpubCache'
 import type { LibraryResponse, UserBook } from '@/lib/gen/books/v1/library_pb'
-import { savePageForOffline } from '@/lib/offline/session'
 import type { StoredBookInfo } from '@/lib/offline/store'
 
 const FINISHED = 'read'
 const DOWNLOAD_GAP_MS = 3000
 const FAILURE_BACKOFF_MS = 30 * 60 * 1000
 
-interface PlannedDownload extends BookFileRef {
-  /** The book's reader page, saved for offline use once the file is stored. */
-  readerPath: string
-}
-
 export interface OfflinePlan {
-  downloads: PlannedDownload[]
+  downloads: BookFileRef[]
   evictions: { bookId: string; format: string }[]
 }
 
@@ -57,7 +50,7 @@ export function planOfflineBooks(library: LibraryResponse, stored: StoredBookInf
     }
   }
 
-  const downloads: PlannedDownload[] = []
+  const downloads: BookFileRef[] = []
   for (const userBook of library.reading) {
     const storedFormats = storedVersions.get(userBook.bookId)
     const format = preferredBookFormat(userBook)
@@ -66,8 +59,7 @@ export function planOfflineBooks(library: LibraryResponse, stored: StoredBookInf
     downloads.push({
       bookId: userBook.bookId,
       format,
-      version,
-      readerPath: `/books/${userBook.id}/read`
+      version
     })
   }
   return { downloads, evictions }
@@ -111,7 +103,7 @@ async function syncOnce(library: LibraryResponse, gapMs: number) {
   const stored = await evict(library)
   const { downloads } = planOfflineBooks(library, stored)
   let downloaded = 0
-  for (const { readerPath, ...ref } of downloads) {
+  for (const ref of downloads) {
     if (Date.now() - (failedAt.get(refKey(ref)) ?? -Infinity) < FAILURE_BACKOFF_MS) continue
     if (downloaded > 0) await sleep(gapMs)
     if (!canPrefetch()) break
@@ -119,7 +111,6 @@ async function syncOnce(library: LibraryResponse, gapMs: number) {
       await downloadBookFile(ref)
       downloaded++
       if (ref.format === 'epub') await warmWebPub(ref.bookId).catch(() => undefined)
-      savePageForOffline(readerPath)
     } catch {
       // Losing the connection isn't the file's fault.
       if (!canPrefetch()) break
@@ -129,7 +120,6 @@ async function syncOnce(library: LibraryResponse, gapMs: number) {
   // Again, so a newly stored format replaces the old one.
   const remaining = await evict(library)
   await warmStoredEPUBs(remaining)
-  if (remaining.length > 0 && canPrefetch()) await warmReaderModules()
 }
 
 let running: Promise<void> | null = null

@@ -1,7 +1,5 @@
-'use client'
-
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { Link } from '@/components/ui/link'
+import { usePathname } from '@/hooks/navigation'
 import { useCurrentUser, useSignOut } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import SettingsIcon from '@/components/SettingsIcon'

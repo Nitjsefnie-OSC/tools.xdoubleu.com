@@ -11,46 +11,42 @@ import {
   tocItems
 } from '@/lib/books/readium'
 
-jest.mock(
-  '@readium/shared',
-  () => {
-    class LocatorLocations {
-      progression?: number
-      totalProgression?: number
-      constructor(v: { progression?: number; totalProgression?: number }) {
-        Object.assign(this, v)
+vi.mock('@readium/shared', () => {
+  class LocatorLocations {
+    progression?: number
+    totalProgression?: number
+    constructor(v: { progression?: number; totalProgression?: number }) {
+      Object.assign(this, v)
+    }
+  }
+  class Locator {
+    href: string
+    type: string
+    locations: LocatorLocations
+    constructor(v: { href: string; type: string; locations?: LocatorLocations }) {
+      this.href = v.href
+      this.type = v.type
+      this.locations = v.locations ?? new LocatorLocations({})
+    }
+  }
+  return {
+    Locator,
+    LocatorLocations,
+    HttpFetcher: class {},
+    Manifest: {
+      deserialize: (json: unknown) => (json ? { setSelfLink: vi.fn(), json } : undefined)
+    },
+    Publication: class {
+      manifest: unknown
+      constructor(v: { manifest: unknown }) {
+        this.manifest = v.manifest
       }
     }
-    class Locator {
-      href: string
-      type: string
-      locations: LocatorLocations
-      constructor(v: { href: string; type: string; locations?: LocatorLocations }) {
-        this.href = v.href
-        this.type = v.type
-        this.locations = v.locations ?? new LocatorLocations({})
-      }
-    }
-    return {
-      Locator,
-      LocatorLocations,
-      HttpFetcher: class {},
-      Manifest: {
-        deserialize: (json: unknown) => (json ? { setSelfLink: jest.fn(), json } : undefined)
-      },
-      Publication: class {
-        manifest: unknown
-        constructor(v: { manifest: unknown }) {
-          this.manifest = v.manifest
-        }
-      }
-    }
-  },
-  { virtual: true }
-)
+  }
+})
 
-const mockWebPubFetch = jest.fn()
-jest.mock('@/lib/books/webpubCache', () => ({
+const mockWebPubFetch = vi.fn()
+vi.mock('@/lib/books/webpubCache', () => ({
   webPubBaseUrl: (id: string) => `https://api.test/books/api/book/${id}/webpub/`,
   webPubFetch: (...args: unknown[]) => mockWebPubFetch(...args)
 }))

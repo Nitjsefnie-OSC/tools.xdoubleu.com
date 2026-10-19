@@ -1,5 +1,3 @@
-'use client'
-
 import { mutate } from 'swr'
 import { useUsers, useSetRole, useSetAppAccess } from '@/hooks/useUserManagement'
 import type { AppUser } from '@/lib/gen/access/v1/access_pb'

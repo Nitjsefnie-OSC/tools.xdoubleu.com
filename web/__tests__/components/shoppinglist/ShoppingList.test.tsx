@@ -34,14 +34,14 @@ describe('ShoppingList', () => {
     })
 
     it('renders delete button only for items that have an id', () => {
-      const onDelete = jest.fn()
+      const onDelete = vi.fn()
       render(<ShoppingList items={items} onDelete={onDelete} />)
       expect(screen.queryByRole('button', { name: /Remove flour/ })).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Remove milk/ })).toBeInTheDocument()
     })
 
     it('calls onDelete with the item id when delete button is clicked', async () => {
-      const onDelete = jest.fn().mockResolvedValue(undefined)
+      const onDelete = vi.fn().mockResolvedValue(undefined)
       render(<ShoppingList items={items} onDelete={onDelete} />)
       fireEvent.click(screen.getByRole('button', { name: /Remove milk/ }))
       await waitFor(() => expect(onDelete).toHaveBeenCalledWith('custom-1'))
@@ -55,13 +55,13 @@ describe('ShoppingList', () => {
     })
 
     it('renders edit button only for items that have an id', () => {
-      render(<ShoppingList items={items} onEdit={jest.fn()} />)
+      render(<ShoppingList items={items} onEdit={vi.fn()} />)
       expect(screen.queryByRole('button', { name: /Edit flour/ })).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Edit milk/ })).toBeInTheDocument()
     })
 
     it('shows an inline edit form prefilled with the item values', () => {
-      render(<ShoppingList items={items} onEdit={jest.fn()} />)
+      render(<ShoppingList items={items} onEdit={vi.fn()} />)
       fireEvent.click(screen.getByRole('button', { name: /Edit milk/ }))
       expect(screen.getByLabelText('Item name')).toHaveValue('milk')
       expect(screen.getByLabelText('Amount')).toHaveValue(1)
@@ -69,7 +69,7 @@ describe('ShoppingList', () => {
     })
 
     it('calls onEdit with the item id and edited values when saved', async () => {
-      const onEdit = jest.fn().mockResolvedValue(undefined)
+      const onEdit = vi.fn().mockResolvedValue(undefined)
       render(<ShoppingList items={items} onEdit={onEdit} />)
       fireEvent.click(screen.getByRole('button', { name: /Edit milk/ }))
       fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'oat milk' } })
@@ -86,7 +86,7 @@ describe('ShoppingList', () => {
     })
 
     it('does not call onEdit when the name is blank', () => {
-      const onEdit = jest.fn()
+      const onEdit = vi.fn()
       render(<ShoppingList items={items} onEdit={onEdit} />)
       fireEvent.click(screen.getByRole('button', { name: /Edit milk/ }))
       fireEvent.change(screen.getByLabelText('Item name'), { target: { value: '   ' } })
@@ -95,7 +95,7 @@ describe('ShoppingList', () => {
     })
 
     it('cancels editing without calling onEdit', () => {
-      const onEdit = jest.fn()
+      const onEdit = vi.fn()
       render(<ShoppingList items={items} onEdit={onEdit} />)
       fireEvent.click(screen.getByRole('button', { name: /Edit milk/ }))
       fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -111,19 +111,19 @@ describe('ShoppingList', () => {
     })
 
     it('renders export button when onExport is provided', () => {
-      render(<ShoppingList items={items} onExport={jest.fn()} />)
+      render(<ShoppingList items={items} onExport={vi.fn()} />)
       expect(screen.getByRole('button', { name: /Export/ })).toBeInTheDocument()
     })
 
     it('calls onExport when export button is clicked', () => {
-      const onExport = jest.fn()
+      const onExport = vi.fn()
       render(<ShoppingList items={items} onExport={onExport} />)
       fireEvent.click(screen.getByRole('button', { name: /Export/ }))
       expect(onExport).toHaveBeenCalledTimes(1)
     })
 
     it('renders export button in empty state when onExport is provided', () => {
-      render(<ShoppingList items={[]} onExport={jest.fn()} />)
+      render(<ShoppingList items={[]} onExport={vi.fn()} />)
       expect(screen.getByRole('button', { name: /Export/ })).toBeInTheDocument()
     })
   })

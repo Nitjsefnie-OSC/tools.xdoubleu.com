@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, DragEvent } from 'react'
 import { useUploadBookFile } from '@/hooks/useBooks'
 import type { UploadBookFileResult } from '@/hooks/useBooks'

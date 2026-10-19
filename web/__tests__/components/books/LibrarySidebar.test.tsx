@@ -137,9 +137,9 @@ describe('LibrarySidebar', () => {
         allTags={[]}
         selectedShelfId="all"
         selectedTag={null}
-        onSelectShelf={jest.fn()}
-        onSelectTag={jest.fn()}
-        onManage={jest.fn()}
+        onSelectShelf={vi.fn()}
+        onSelectTag={vi.fn()}
+        onManage={vi.fn()}
       />
     )
     expect(screen.getAllByText('All books').length).toBeGreaterThan(0)
@@ -153,8 +153,8 @@ describe('LibrarySidebar', () => {
         allTags={[]}
         selectedShelfId="all"
         selectedTag={null}
-        onSelectShelf={jest.fn()}
-        onSelectTag={jest.fn()}
+        onSelectShelf={vi.fn()}
+        onSelectTag={vi.fn()}
       />
     )
     expect(screen.queryByText('Series')).toBeNull()
@@ -169,8 +169,8 @@ describe('LibrarySidebar', () => {
         allTags={[]}
         selectedShelfId="all"
         selectedTag={null}
-        onSelectShelf={jest.fn()}
-        onSelectTag={jest.fn()}
+        onSelectShelf={vi.fn()}
+        onSelectTag={vi.fn()}
         series={[{ name: 'Discworld', owned: 2, read: 1, total: 41 }]}
       />
     )
@@ -183,7 +183,7 @@ describe('LibrarySidebar', () => {
   })
 
   it('calls onSelectShelf when a shelf button is clicked', () => {
-    const onSelectShelf = jest.fn()
+    const onSelectShelf = vi.fn()
     render(
       <LibrarySidebar
         shelves={shelves}
@@ -191,8 +191,8 @@ describe('LibrarySidebar', () => {
         selectedShelfId="all"
         selectedTag={null}
         onSelectShelf={onSelectShelf}
-        onSelectTag={jest.fn()}
-        onManage={jest.fn()}
+        onSelectTag={vi.fn()}
+        onManage={vi.fn()}
       />
     )
     const btns = screen.getAllByText('Want to read')
@@ -201,16 +201,16 @@ describe('LibrarySidebar', () => {
   })
 
   it('renders tags and calls onSelectTag when clicked', () => {
-    const onSelectTag = jest.fn()
+    const onSelectTag = vi.fn()
     render(
       <LibrarySidebar
         shelves={shelves}
         allTags={tags}
         selectedShelfId="all"
         selectedTag={null}
-        onSelectShelf={jest.fn()}
+        onSelectShelf={vi.fn()}
         onSelectTag={onSelectTag}
-        onManage={jest.fn()}
+        onManage={vi.fn()}
       />
     )
     const btns = screen.getAllByText('fantasy')
@@ -225,9 +225,9 @@ describe('LibrarySidebar', () => {
         allTags={tags}
         selectedShelfId="all"
         selectedTag={null}
-        onSelectShelf={jest.fn()}
-        onSelectTag={jest.fn()}
-        onManage={jest.fn()}
+        onSelectShelf={vi.fn()}
+        onSelectTag={vi.fn()}
+        onManage={vi.fn()}
       />
     )
     expect(screen.getAllByText('4').length).toBeGreaterThan(0)
@@ -241,24 +241,24 @@ describe('LibrarySidebar', () => {
         allTags={tags}
         selectedShelfId={null}
         selectedTag="fantasy"
-        onSelectShelf={jest.fn()}
-        onSelectTag={jest.fn()}
-        onManage={jest.fn()}
+        onSelectShelf={vi.fn()}
+        onSelectTag={vi.fn()}
+        onManage={vi.fn()}
       />
     )
     expect(screen.getAllByText('fantasy').length).toBeGreaterThan(0)
   })
 
   it('calls onManage when Edit shelves & tags is clicked', () => {
-    const onManage = jest.fn()
+    const onManage = vi.fn()
     render(
       <LibrarySidebar
         shelves={shelves}
         allTags={[]}
         selectedShelfId="all"
         selectedTag={null}
-        onSelectShelf={jest.fn()}
-        onSelectTag={jest.fn()}
+        onSelectShelf={vi.fn()}
+        onSelectTag={vi.fn()}
         onManage={onManage}
       />
     )

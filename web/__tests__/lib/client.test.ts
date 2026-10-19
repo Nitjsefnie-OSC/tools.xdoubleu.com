@@ -1,4 +1,3 @@
-/** @jest-environment node */
 import {
   createKeepaliveClient,
   createServiceClient,
@@ -37,7 +36,7 @@ describe('createServiceClient', () => {
 
 describe('transports', () => {
   it('sends keepalive only on the keepalive transport, both with credentials', async () => {
-    const fetchMock = jest
+    const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockImplementation(
         async () =>
@@ -59,7 +58,7 @@ describe('transports', () => {
   it('retries a 502 from the proxy, then succeeds', async () => {
     const ok = () =>
       new Response(new Uint8Array(), { headers: { 'Content-Type': 'application/proto' } })
-    const fetchMock = jest
+    const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response(null, { status: 502 }))
       .mockResolvedValueOnce(ok())
@@ -78,7 +77,7 @@ describe('transports', () => {
   })
 
   it('gives up after the retry budget', async () => {
-    const fetchMock = jest
+    const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockImplementation(async () => new Response(null, { status: 502 }))
     try {

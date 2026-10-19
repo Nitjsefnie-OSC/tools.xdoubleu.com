@@ -1,6 +1,4 @@
-'use client'
-
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter } from '@/hooks/navigation'
 import { useSharedList } from '@/hooks/useSharedList'
 import { listHref } from '@/lib/listScope'
 import { SegmentedTabs } from '@/components/ui/segmented-tabs'

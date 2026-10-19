@@ -1,7 +1,4 @@
-'use client'
-
 import { useState } from 'react'
-import Image from 'next/image'
 import { cn } from '@/lib/cn'
 import { posterUrl } from '@/lib/movies/format'
 
@@ -39,7 +36,7 @@ export default function MoviePoster({ posterPath, title, size = 'sm' }: MoviePos
           {title.charAt(0).toUpperCase()}
         </div>
       ) : (
-        <Image
+        <img
           src={src}
           alt=""
           width={width}

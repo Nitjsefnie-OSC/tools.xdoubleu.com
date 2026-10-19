@@ -1,8 +1,6 @@
-'use client'
-
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Link } from '@/components/ui/link'
+import { useRouter, useSearchParams } from '@/hooks/navigation'
 import { mutate } from 'swr'
 import { useLibrary } from '@/hooks/useBooks'
 import { useCurrentUser } from '@/hooks/useAuth'

@@ -104,7 +104,7 @@ describe('Popover', () => {
 
   it('flips upward (uses bottom style) when trigger is near the viewport bottom', () => {
     // Little space below, plenty above.
-    const spy = jest.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(
+    const spy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(
       new DOMRect(100, 400, 100, 90) // x, y, width, height → top=400, bottom=490
     )
     Object.defineProperty(window, 'innerHeight', { value: 500, writable: true, configurable: true })
@@ -121,7 +121,7 @@ describe('Popover', () => {
   })
 
   it('opens downward (uses top style) when there is enough space below', () => {
-    const spy = jest.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(
+    const spy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(
       new DOMRect(100, 50, 100, 30) // x, y, width, height → top=50, bottom=80
     )
     Object.defineProperty(window, 'innerHeight', { value: 768, writable: true, configurable: true })
@@ -137,7 +137,7 @@ describe('Popover', () => {
   })
 
   it('follows a controlled open prop and reports toggles through onOpenChange', () => {
-    const onOpenChange = jest.fn()
+    const onOpenChange = vi.fn()
     const trigger = ({ open, onClick }: { open: boolean; onClick: () => void }) => (
       <PopoverTrigger onClick={onClick} aria-expanded={open} aria-label="Open menu">
         Open

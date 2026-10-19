@@ -25,7 +25,7 @@ describe('Select', () => {
   })
 
   it('fires onChange', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(
       <Select aria-label="role" value="user" onChange={onChange}>
         <option value="user">User</option>

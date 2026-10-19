@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useCreateRecipe, useUpdateRecipe } from '@/hooks/useRecipes'
 import type { CreateRecipeInput, UpdateRecipeInput } from '@/hooks/useRecipes'

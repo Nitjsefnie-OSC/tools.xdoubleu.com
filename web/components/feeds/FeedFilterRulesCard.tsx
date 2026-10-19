@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { useState } from 'react'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'

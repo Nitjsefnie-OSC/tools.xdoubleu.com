@@ -1,35 +1,29 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const mockMutate = jest.fn(async () => undefined)
-const mockDeleteLearningPath = jest.fn()
-const mockRecordItemProgress = jest.fn()
-const mockSetLearningPathPaused = jest.fn()
+const mockMutate = vi.fn(async () => undefined)
+const mockDeleteLearningPath = vi.fn()
+const mockRecordItemProgress = vi.fn()
+const mockSetLearningPathPaused = vi.fn()
 
-jest.mock('@/hooks/useLearningPaths', () => ({
-  useLearningPath: jest.fn(),
+vi.mock('@/hooks/useLearningPaths', () => ({
+  useLearningPath: vi.fn(),
   useDeleteLearningPath: () => mockDeleteLearningPath,
   useRecordItemProgress: () => mockRecordItemProgress,
   useSetLearningPathPaused: () => mockSetLearningPathPaused
 }))
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+vi.mock('@/hooks/navigation', () => ({
+  useRouter: vi.fn()
 }))
 
-jest.mock('@/hooks/useTodoistConnection', () => ({
-  useTodoistConnection: jest.fn(() => ({ data: undefined }))
+vi.mock('@/hooks/useTodoistConnection', () => ({
+  useTodoistConnection: vi.fn(() => ({ data: undefined }))
 }))
-
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
 
 import PathClient from '@/app/learningpaths/[id]/PathClient'
 import { useLearningPath } from '@/hooks/useLearningPaths'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { useTodoistConnection } from '@/hooks/useTodoistConnection'
 import { create } from '@bufbuild/protobuf'
 import {
@@ -41,18 +35,18 @@ import {
   GetLearningPathResponseSchema
 } from '@/lib/gen/learningpaths/v1/learningpaths_pb'
 
-const mockRouter = { push: jest.fn() }
+const mockRouter = { push: vi.fn() }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // @ts-expect-error -- partial mock
-  jest.mocked(useRouter).mockReturnValue(mockRouter)
+  vi.mocked(useRouter).mockReturnValue(mockRouter)
 })
 
 describe('PathClient', () => {
   it('shows loading state', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: undefined,
       isLoading: true,
       error: undefined,
@@ -64,7 +58,7 @@ describe('PathClient', () => {
 
   it('shows error state', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('fail'),
@@ -93,7 +87,7 @@ describe('PathClient', () => {
       resources: [create(ResourceSchema, { id: 'r1', text: 'https://go.dev' })]
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: create(GetLearningPathResponseSchema, { learningPath }),
       isLoading: false,
       error: undefined,
@@ -145,7 +139,7 @@ describe('PathClient', () => {
       ]
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: create(GetLearningPathResponseSchema, { learningPath }),
       isLoading: false,
       error: undefined,
@@ -195,7 +189,7 @@ describe('PathClient', () => {
       ]
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: create(GetLearningPathResponseSchema, { learningPath }),
       isLoading: false,
       error: undefined,
@@ -236,7 +230,7 @@ describe('PathClient', () => {
       ]
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: create(GetLearningPathResponseSchema, { learningPath }),
       isLoading: false,
       error: undefined,
@@ -267,7 +261,7 @@ describe('PathClient', () => {
       ]
     })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: create(GetLearningPathResponseSchema, { learningPath }),
       isLoading: false,
       error: undefined,
@@ -286,7 +280,7 @@ describe('PathClient', () => {
   it('deletes the learning path after confirming and navigates back to the list', async () => {
     const learningPath = create(LearningPathSchema, { id: 'lp1', title: 'Learn Go' })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: create(GetLearningPathResponseSchema, { learningPath }),
       isLoading: false,
       error: undefined,
@@ -307,7 +301,7 @@ describe('PathClient', () => {
   it('cancels the delete confirmation', () => {
     const learningPath = create(LearningPathSchema, { id: 'lp1', title: 'Learn Go' })
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useLearningPath).mockReturnValue({
+    vi.mocked(useLearningPath).mockReturnValue({
       data: create(GetLearningPathResponseSchema, { learningPath }),
       isLoading: false,
       error: undefined,
@@ -327,9 +321,9 @@ describe('PathClient', () => {
       paused = false
     ) {
       // @ts-expect-error -- partial SWRResponse
-      jest.mocked(useTodoistConnection).mockReturnValue({ data: status })
+      vi.mocked(useTodoistConnection).mockReturnValue({ data: status })
       // @ts-expect-error -- partial SWRResponse
-      jest.mocked(useLearningPath).mockReturnValue({
+      vi.mocked(useLearningPath).mockReturnValue({
         data: create(GetLearningPathResponseSchema, {
           learningPath: create(LearningPathSchema, { id: 'lp1', title: 'Learn Go', paused })
         }),

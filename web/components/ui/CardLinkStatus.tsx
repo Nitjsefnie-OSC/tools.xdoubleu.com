@@ -1,11 +1,8 @@
-'use client'
-
-import { useLinkStatus } from 'next/link'
+import { useLinkPending } from '@/components/ui/link'
 
 /** Spinner inside a card's (relative) `<Link>` while its navigation is pending. */
 export function CardLinkStatus() {
-  const { pending } = useLinkStatus()
-  if (!pending) return null
+  if (!useLinkPending()) return null
   return (
     <span
       aria-hidden

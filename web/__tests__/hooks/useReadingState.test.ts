@@ -1,20 +1,20 @@
 import { act, renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
-const mockGetReadingState = jest.fn()
-const mockKeepaliveSave = jest.fn()
-jest.mock('@/lib/client', () => ({
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
+const mockGetReadingState = vi.fn()
+const mockKeepaliveSave = vi.fn()
+vi.mock('@/lib/client', () => ({
   createServiceClient: () => ({
     getReadingState: mockGetReadingState
   }),
   createKeepaliveClient: () => ({ updateReadingProgress: mockKeepaliveSave })
 }))
-jest.mock('@/lib/gen/books/v1/library_pb', () => ({ LibraryService: {} }))
-const mockEnqueue = jest.fn()
-jest.mock('@/lib/offline/outbox', () => ({
+vi.mock('@/lib/gen/books/v1/library_pb', () => ({ LibraryService: {} }))
+const mockEnqueue = vi.fn()
+vi.mock('@/lib/offline/outbox', () => ({
   enqueueWrite: (...args: unknown[]) => mockEnqueue(...args)
 }))
-jest.mock('@/lib/books/offlineWrites', () => ({ updateReadingProgressWrite: { id: 'progress' } }))
+vi.mock('@/lib/books/offlineWrites', () => ({ updateReadingProgressWrite: { id: 'progress' } }))
 
 import useSWR from 'swr'
 import {
@@ -25,7 +25,7 @@ import {
 import { swrKeys } from '@/lib/swrKeys'
 import { updateReadingProgressWrite as mockWrite } from '@/lib/books/offlineWrites'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 const EPUB_LOCATION = {
   fraction: 0.426,
@@ -53,24 +53,24 @@ describe('useReadingState', () => {
 
 describe('useReadingProgressSaver', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date('2026-10-02T12:00:00Z'))
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-02T12:00:00Z'))
     mockEnqueue.mockReset()
     mockEnqueue.mockResolvedValue({})
     mockKeepaliveSave.mockReset()
     mockKeepaliveSave.mockResolvedValue({})
   })
-  afterEach(() => jest.useRealTimers())
+  afterEach(() => vi.useRealTimers())
 
   it('saves the latest position once reading pauses', () => {
     const { result } = renderHook(() => useReadingProgressSaver('book-1'))
     act(() => result.current({ fraction: 0.1, section: 0, position: { href: 'a', offset: 1 } }))
-    jest.advanceTimersByTime(1000)
+    vi.advanceTimersByTime(1000)
     act(() => result.current(EPUB_LOCATION))
-    jest.advanceTimersByTime(READING_SAVE_DELAY_MS - 1)
+    vi.advanceTimersByTime(READING_SAVE_DELAY_MS - 1)
     expect(mockEnqueue).not.toHaveBeenCalled()
 
-    jest.advanceTimersByTime(1)
+    vi.advanceTimersByTime(1)
     expect(mockEnqueue).toHaveBeenCalledTimes(1)
     expect(mockEnqueue).toHaveBeenCalledWith(mockWrite, {
       bookId: 'book-1',
@@ -84,9 +84,9 @@ describe('useReadingProgressSaver', () => {
   it('sends a PDF page and saves percent alone without a position', () => {
     const { result } = renderHook(() => useReadingProgressSaver('book-1'))
     act(() => result.current({ fraction: 0.5, section: 3, position: { page: 4 } }))
-    jest.advanceTimersByTime(READING_SAVE_DELAY_MS)
+    vi.advanceTimersByTime(READING_SAVE_DELAY_MS)
     act(() => result.current({ fraction: 0.6, section: 4 }))
-    jest.advanceTimersByTime(READING_SAVE_DELAY_MS)
+    vi.advanceTimersByTime(READING_SAVE_DELAY_MS)
     expect(mockEnqueue.mock.calls[0][1]).toMatchObject({ position: { page: 4 } })
     expect(mockEnqueue.mock.calls[1][1]).toMatchObject({
       percent: 60,
@@ -110,7 +110,7 @@ describe('useReadingProgressSaver', () => {
 
     // Nothing pending: no extra save, and the timer was cleared.
     window.dispatchEvent(new Event('pagehide'))
-    jest.advanceTimersByTime(READING_SAVE_DELAY_MS)
+    vi.advanceTimersByTime(READING_SAVE_DELAY_MS)
     expect(mockEnqueue).toHaveBeenCalledTimes(2)
   })
 
@@ -147,7 +147,7 @@ describe('useReadingProgressSaver', () => {
     const { result } = renderHook(() => useReadingProgressSaver('book-1'))
     act(() => result.current(EPUB_LOCATION))
     await act(async () => {
-      jest.advanceTimersByTime(READING_SAVE_DELAY_MS)
+      vi.advanceTimersByTime(READING_SAVE_DELAY_MS)
     })
     expect(mockEnqueue).toHaveBeenCalledTimes(1)
   })
@@ -156,11 +156,11 @@ describe('useReadingProgressSaver', () => {
     const { result } = renderHook(() => useReadingProgressSaver('book-1'))
     act(() => result.current(EPUB_LOCATION))
     window.dispatchEvent(new Event('pagehide'))
-    jest.advanceTimersByTime(1000)
+    vi.advanceTimersByTime(1000)
     act(() => result.current(EPUB_LOCATION))
-    jest.advanceTimersByTime(READING_SAVE_DELAY_MS - 1)
+    vi.advanceTimersByTime(READING_SAVE_DELAY_MS - 1)
     expect(mockEnqueue).toHaveBeenCalledTimes(1)
-    jest.advanceTimersByTime(1)
+    vi.advanceTimersByTime(1)
     expect(mockEnqueue).toHaveBeenCalledTimes(2)
   })
 

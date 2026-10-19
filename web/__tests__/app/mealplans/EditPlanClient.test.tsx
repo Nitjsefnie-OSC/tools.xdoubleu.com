@@ -1,21 +1,15 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/hooks/useMealPlans', () => ({
-  useMealPlan: jest.fn()
+vi.mock('@/hooks/useMealPlans', () => ({
+  useMealPlan: vi.fn()
 }))
 
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: jest.fn() })
+vi.mock('@/hooks/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() })
 }))
 
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
-
-jest.mock('@/components/mealplans/PlanForm', () => ({
+vi.mock('@/components/mealplans/PlanForm', () => ({
   __esModule: true,
   default: () => <div data-testid="plan-form" />
 }))
@@ -27,16 +21,16 @@ import { PlanSchema, GetPlanResponseSchema } from '@/lib/gen/mealplans/v1/mealpl
 import type { GetPlanResponse } from '@/lib/gen/mealplans/v1/mealplans_pb'
 
 function mockPlan(value: { data?: GetPlanResponse; error?: Error; isLoading: boolean }) {
-  jest.mocked(useMealPlan).mockReturnValue({
+  vi.mocked(useMealPlan).mockReturnValue({
     data: value.data,
     error: value.error,
     isLoading: value.isLoading,
     isValidating: false,
-    mutate: jest.fn(async () => undefined)
+    mutate: vi.fn(async () => undefined)
   })
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('EditPlanClient', () => {
   it('shows a loading state', () => {

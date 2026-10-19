@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import Favourites from '@/components/podcasts/Favourites'
 import ShowSearchResults from '@/components/podcasts/ShowSearchResults'

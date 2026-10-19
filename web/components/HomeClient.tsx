@@ -1,7 +1,5 @@
-'use client'
-
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { useCurrentUser, useSignIn, useMFAChallenge } from '@/hooks/useAuth'
 import AppGrid, { type AppLink, type AppSection } from '@/components/AppGrid'
 import { Button } from '@/components/ui/button'

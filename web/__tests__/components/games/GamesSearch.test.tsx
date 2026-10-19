@@ -7,30 +7,14 @@ import {
   GetSteamResponseSchema
 } from '@/lib/gen/games/v1/games_pb'
 
-jest.mock('@/hooks/useGames', () => ({
-  useSteam: jest.fn()
+vi.mock('@/hooks/useGames', () => ({
+  useSteam: vi.fn()
 }))
-
-jest.mock('next/link', () => {
-  return ({
-    children,
-    href,
-    onClick
-  }: {
-    children: React.ReactNode
-    href: string
-    onClick?: () => void
-  }) => (
-    <a href={href} onClick={onClick}>
-      {children}
-    </a>
-  )
-})
 
 import GamesSearch from '@/components/games/GamesSearch'
 import { useSteam } from '@/hooks/useGames'
 
-const mockUseBacklogSteam = jest.mocked(useSteam)
+const mockUseBacklogSteam = vi.mocked(useSteam)
 
 const GAMES = {
   hades: create(GameSchema, { id: 1, name: 'Hades' }),
@@ -54,7 +38,7 @@ function mockSteam() {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
   mockUseBacklogSteam.mockReturnValue({ data: undefined, error: undefined, isLoading: true })
 })

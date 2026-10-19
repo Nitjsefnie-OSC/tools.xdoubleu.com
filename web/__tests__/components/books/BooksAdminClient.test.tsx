@@ -1,41 +1,41 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-const mockUseResyncRefresh = jest.fn().mockReturnValue({
+const mockUseResyncRefresh = vi.fn().mockReturnValue({
   connected: true,
   isRefreshing: false,
   lastRefresh: null,
   processed: null,
   total: null,
-  refresh: jest.fn()
+  refresh: vi.fn()
 })
 
-jest.mock('@/lib/books/resyncRefresh', () => ({
+vi.mock('@/lib/books/resyncRefresh', () => ({
   useResyncRefresh: (onSynced?: () => void, force?: boolean) =>
     mockUseResyncRefresh(onSynced, force)
 }))
 
-const mockCancelResync = jest.fn()
-jest.mock('@/hooks/useBooks', () => ({
+const mockCancelResync = vi.fn()
+vi.mock('@/hooks/useBooks', () => ({
   useCancelResync: () => mockCancelResync
 }))
 
-jest.mock('@/components/books/ResyncWizard', () => ({
+vi.mock('@/components/books/ResyncWizard', () => ({
   __esModule: true,
   default: () => <div data-testid="resync-wizard" />
 }))
 
-jest.mock('@/components/books/SourceStats', () => ({
+vi.mock('@/components/books/SourceStats', () => ({
   __esModule: true,
   default: () => <div data-testid="source-stats" />
 }))
 
-jest.mock('@/components/books/ManageDuplicatesDialog', () => ({
+vi.mock('@/components/books/ManageDuplicatesDialog', () => ({
   __esModule: true,
   default: ({ open }: { open: boolean }) => (open ? <div data-testid="duplicates-dialog" /> : null)
 }))
 
-jest.mock('swr', () => ({ __esModule: true, mutate: jest.fn(), default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, mutate: vi.fn(), default: vi.fn() }))
 
 import BooksAdminClient from '@/components/books/BooksAdminClient'
 
@@ -98,7 +98,7 @@ describe('BooksAdminClient', () => {
       lastRefresh: null,
       processed: 10,
       total: 100,
-      refresh: jest.fn()
+      refresh: vi.fn()
     })
     render(<BooksAdminClient />)
 

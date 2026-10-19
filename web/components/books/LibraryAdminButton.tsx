@@ -1,5 +1,3 @@
-'use client'
-
 import { useCurrentUser } from '@/hooks/useAuth'
 import { PageHeaderLink } from '@/components/ui/page-header'
 

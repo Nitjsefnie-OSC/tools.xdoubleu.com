@@ -50,11 +50,6 @@ func (app *Application) Routes() http.Handler {
 		)
 	})
 
-	mux.Handle(
-		"POST "+observabilityLogsIngestPath,
-		app.observabilityIngestRoute(),
-	)
-
 	// MCP behind OAuth 2.1 Bearer auth. The protected-resource metadata is public
 	// for discovery.
 	appsPRM := mcpauth.ProtectedResourceMetadataHandler(
@@ -116,7 +111,7 @@ func (app *Application) Routes() http.Handler {
 
 	mux.HandleFunc("GET /api/version", app.versionHandler)
 	mux.HandleFunc("GET "+healthPath, app.healthHandler)
-	mux.Handle("GET "+metricsPath, metricsHandler())
+	mux.Handle("GET "+metricsPath, metricsHandler(app.config.ObservabilityIngestSecret))
 
 	app.apps.Routes(mux)
 

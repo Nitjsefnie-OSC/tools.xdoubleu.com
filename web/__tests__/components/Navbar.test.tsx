@@ -3,34 +3,34 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import Navbar from '@/components/Navbar'
 import { GetCurrentUserResponseSchema } from '@/lib/gen/auth/v1/auth_pb'
 
-jest.mock('@/hooks/useAuth', () => ({
-  useCurrentUser: jest.fn(),
-  useSignOut: jest.fn()
+vi.mock('@/hooks/useAuth', () => ({
+  useCurrentUser: vi.fn(),
+  useSignOut: vi.fn()
 }))
 
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn()
+vi.mock('@/hooks/navigation', () => ({
+  usePathname: vi.fn()
 }))
 
-jest.mock('@/lib/offline/session', () => ({
-  clearOfflineData: jest.fn(async () => {})
+vi.mock('@/lib/offline/session', () => ({
+  clearOfflineData: vi.fn(async () => {})
 }))
 
-jest.mock('@/lib/offline/outbox', () => ({
-  flushOutbox: jest.fn(async () => {})
+vi.mock('@/lib/offline/outbox', () => ({
+  flushOutbox: vi.fn(async () => {})
 }))
 
 import { useCurrentUser, useSignOut } from '@/hooks/useAuth'
-import { usePathname } from 'next/navigation'
+import { usePathname } from '@/hooks/navigation'
 import { clearOfflineData } from '@/lib/offline/session'
 import { flushOutbox } from '@/lib/offline/outbox'
 
-const mockUseCurrentUser = jest.mocked(useCurrentUser)
-const mockUseSignOut = jest.mocked(useSignOut)
-const mockUsePathname = jest.mocked(usePathname)
+const mockUseCurrentUser = vi.mocked(useCurrentUser)
+const mockUseSignOut = vi.mocked(useSignOut)
+const mockUsePathname = vi.mocked(usePathname)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockUsePathname.mockReturnValue('/settings')
 })
 
@@ -38,7 +38,7 @@ describe('Navbar', () => {
   it('renders nothing while loading', () => {
     // @ts-expect-error -- mock returns partial hook response for test purposes
     mockUseCurrentUser.mockReturnValue({ data: undefined, isLoading: true, error: undefined })
-    mockUseSignOut.mockReturnValue(jest.fn())
+    mockUseSignOut.mockReturnValue(vi.fn())
 
     const { container } = render(<Navbar />)
     expect(container.firstChild).toBeNull()
@@ -51,7 +51,7 @@ describe('Navbar', () => {
       isLoading: false,
       error: new Error('401')
     })
-    mockUseSignOut.mockReturnValue(jest.fn())
+    mockUseSignOut.mockReturnValue(vi.fn())
 
     const { container } = render(<Navbar />)
     expect(container.firstChild).toBeNull()
@@ -64,7 +64,7 @@ describe('Navbar', () => {
       isLoading: false,
       error: undefined
     })
-    mockUseSignOut.mockReturnValue(jest.fn())
+    mockUseSignOut.mockReturnValue(vi.fn())
 
     render(<Navbar />)
 
@@ -82,7 +82,7 @@ describe('Navbar', () => {
       isLoading: false,
       error: undefined
     })
-    mockUseSignOut.mockReturnValue(jest.fn())
+    mockUseSignOut.mockReturnValue(vi.fn())
 
     render(<Navbar />)
 
@@ -96,7 +96,7 @@ describe('Navbar', () => {
       isLoading: false,
       error: undefined
     })
-    mockUseSignOut.mockReturnValue(jest.fn())
+    mockUseSignOut.mockReturnValue(vi.fn())
     mockUsePathname.mockReturnValue('/profile/books/some-token')
 
     const { container } = render(<Navbar />)
@@ -110,7 +110,7 @@ describe('Navbar', () => {
       isLoading: false,
       error: undefined
     })
-    const mockSignOut = jest.fn().mockResolvedValue({})
+    const mockSignOut = vi.fn().mockResolvedValue({})
     mockUseSignOut.mockReturnValue(mockSignOut)
 
     render(<Navbar />)
@@ -121,7 +121,7 @@ describe('Navbar', () => {
       expect(clearOfflineData).toHaveBeenCalledTimes(1)
     })
     expect(mockSignOut).toHaveBeenCalledTimes(1)
-    expect(jest.mocked(flushOutbox).mock.invocationCallOrder[0]).toBeLessThan(
+    expect(vi.mocked(flushOutbox).mock.invocationCallOrder[0]).toBeLessThan(
       mockSignOut.mock.invocationCallOrder[0]
     )
   })

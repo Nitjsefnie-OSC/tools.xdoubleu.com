@@ -2,11 +2,11 @@ import { render, screen } from '@testing-library/react'
 import BookArticleReaderDialog from '@/components/books/ArticleReaderDialog'
 import { useGetBookContent } from '@/hooks/useBooks'
 
-jest.mock('@/hooks/useBooks', () => ({
-  useGetBookContent: jest.fn()
+vi.mock('@/hooks/useBooks', () => ({
+  useGetBookContent: vi.fn()
 }))
 
-const mockHook = jest.mocked(useGetBookContent)
+const mockHook = vi.mocked(useGetBookContent)
 
 function mockContent(value: { data?: { html: string }; error?: Error }) {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
@@ -17,12 +17,12 @@ const baseProps = {
   bookId: 'book-1',
   title: 'A stored article',
   open: true,
-  onOpenChange: jest.fn()
+  onOpenChange: vi.fn()
 }
 
 describe('BookArticleReaderDialog', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('fetches the book content while open', () => {

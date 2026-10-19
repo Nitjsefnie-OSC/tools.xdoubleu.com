@@ -1,16 +1,12 @@
 import { openPdf, pageOf, pdfOutline, renderPage, tocLabelForPage } from '@/lib/books/pdf'
 
-const mockGetDocument = jest.fn()
+const mockGetDocument = vi.fn()
 const workerOptions = { workerSrc: '' }
 
-jest.mock(
-  'pdfjs-dist/legacy/build/pdf.mjs',
-  () => ({
-    GlobalWorkerOptions: workerOptions,
-    getDocument: (...a: unknown[]) => mockGetDocument(...a)
-  }),
-  { virtual: true }
-)
+vi.mock('pdfjs-dist/legacy/build/pdf.mjs', () => ({
+  GlobalWorkerOptions: workerOptions,
+  getDocument: (...a: unknown[]) => mockGetDocument(...a)
+}))
 
 describe('pageOf', () => {
   it('reads #page=N links only', () => {
@@ -23,7 +19,7 @@ describe('pageOf', () => {
 
 describe('openPdf', () => {
   it('opens a blob from its bytes and a URL with credentials', async () => {
-    const destroy = jest.fn(async () => {})
+    const destroy = vi.fn(async () => {})
     mockGetDocument.mockReturnValue({ promise: Promise.resolve({ numPages: 2 }), destroy })
     const blob = new Blob(['%PDF'])
     blob.arrayBuffer = () => Promise.resolve(new TextEncoder().encode('%PDF').buffer)
@@ -44,9 +40,9 @@ describe('openPdf', () => {
 
 describe('pdfOutline', () => {
   const pdf = {
-    getDestination: jest.fn(async (name: string) => (name === 'named' ? [{ num: 1 }] : null)),
-    getPageIndex: jest.fn(async () => 4),
-    getOutline: jest.fn()
+    getDestination: vi.fn(async (name: string) => (name === 'named' ? [{ num: 1 }] : null)),
+    getPageIndex: vi.fn(async () => 4),
+    getOutline: vi.fn()
   }
 
   it('resolves explicit, named and unresolvable destinations', async () => {
@@ -112,7 +108,7 @@ describe('renderPage', () => {
   }
 
   it('fits the page to the area at device resolution', async () => {
-    const { pdf, canvas } = setup(() => ({ promise: Promise.resolve(), cancel: jest.fn() }))
+    const { pdf, canvas } = setup(() => ({ promise: Promise.resolve(), cancel: vi.fn() }))
     await expect(renderPage(pdf, 1, canvas, 100, 100)).resolves.toBe(true)
     expect(canvas.style.width).toBe('50px')
     expect(canvas.style.height).toBe('100px')
@@ -120,14 +116,14 @@ describe('renderPage', () => {
 
   it('reports a cancelled render and rethrows other failures', async () => {
     const cancelled = Object.assign(new Error('c'), { name: 'RenderingCancelledException' })
-    let a = setup(() => ({ promise: Promise.reject(cancelled), cancel: jest.fn() }))
+    let a = setup(() => ({ promise: Promise.reject(cancelled), cancel: vi.fn() }))
     await expect(renderPage(a.pdf, 1, a.canvas, 100, 100)).resolves.toBe(false)
-    a = setup(() => ({ promise: Promise.reject(new Error('boom')), cancel: jest.fn() }))
+    a = setup(() => ({ promise: Promise.reject(new Error('boom')), cancel: vi.fn() }))
     await expect(renderPage(a.pdf, 1, a.canvas, 100, 100)).rejects.toThrow('boom')
   })
 
   it('cancels the render on abort and skips an already aborted one', async () => {
-    const cancel = jest.fn()
+    const cancel = vi.fn()
     let reject: (e: Error) => void = () => {}
     const a = setup(() => ({
       promise: new Promise<void>((_, r) => (reject = r)),

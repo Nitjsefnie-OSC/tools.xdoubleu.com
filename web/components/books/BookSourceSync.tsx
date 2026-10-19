@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { mutate } from 'swr'
 import { useBookSources, useApplyBookSource, type SourceSearchOverride } from '@/hooks/useBooks'

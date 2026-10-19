@@ -1,5 +1,3 @@
-'use client'
-
 import { type ReactNode } from 'react'
 import { TogglePill } from '@/components/ui/toggle-pill'
 import { cn } from '@/lib/cn'

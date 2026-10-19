@@ -145,9 +145,14 @@ func main() {
 		heapWatchInterval,
 	)
 
+	handler, err := app.Handler()
+	if err != nil {
+		panic(err)
+	}
+
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
-		Handler:      stripAPIPathPrefix(app.handler()),
+		Handler:      handler,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  httpReadTimeout,
 		WriteTimeout: httpWriteTimeout,
@@ -173,7 +178,7 @@ func (app *Application) handler() http.Handler {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET "+healthPath, app.healthHandler)
-	mux.Handle("GET "+metricsPath, metricsHandler())
+	mux.Handle("GET "+metricsPath, metricsHandler(app.config.ObservabilityIngestSecret))
 	return mux
 }
 

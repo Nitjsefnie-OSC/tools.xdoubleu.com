@@ -1,5 +1,3 @@
-'use client'
-
 import { Select } from '@/components/ui/select'
 import { STATUSES, STATUS_LABELS } from '@/lib/movies/format'
 

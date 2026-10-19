@@ -3,15 +3,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-const mockUpdateBookStatus = jest.fn()
-const mockMutate = jest.fn()
+const mockUpdateBookStatus = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('swr', () => ({
-  ...jest.requireActual('swr'),
+vi.mock('swr', async () => ({
+  ...(await vi.importActual('swr')),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 
-jest.mock('@/hooks/useBooks', () => ({
+vi.mock('@/hooks/useBooks', () => ({
   useUpdateBookStatus: () => mockUpdateBookStatus
 }))
 
@@ -69,7 +69,7 @@ describe('BookRatingStars', () => {
   })
 
   it('calls onSaved after successful save', async () => {
-    const onSaved = jest.fn()
+    const onSaved = vi.fn()
     render(<BookRatingStars userBook={makeBook()} onSaved={onSaved} />)
 
     fireEvent.click(screen.getByLabelText('Rate 2 stars'))

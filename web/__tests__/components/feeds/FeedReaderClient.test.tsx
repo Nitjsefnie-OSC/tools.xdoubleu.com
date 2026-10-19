@@ -2,37 +2,35 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { ItemSchema, FeedSchema } from '@/lib/gen/feeds/v1/feeds_pb'
 
-const mockUseFeeds = jest.fn()
-const mockUseFeedItems = jest.fn()
-const mockUseFetchFeedItemsPage = jest.fn()
+const mockUseFeeds = vi.fn()
+const mockUseFeedItems = vi.fn()
+const mockUseFetchFeedItemsPage = vi.fn()
 
-jest.mock('@/hooks/useFeeds', () => ({
+vi.mock('@/hooks/useFeeds', () => ({
   usePrefetchFeedBodies: () => {},
   useFeeds: () => mockUseFeeds(),
   useFeedItems: (unreadOnly: boolean, feedId?: string, bookmarkedOnly?: boolean) =>
     mockUseFeedItems(unreadOnly, feedId, bookmarkedOnly),
   useFetchFeedItemsPage: (unreadOnly: boolean, feedId?: string, bookmarkedOnly?: boolean) =>
     mockUseFetchFeedItemsPage(unreadOnly, feedId, bookmarkedOnly),
-  useUpdateItem: () => jest.fn()
+  useUpdateItem: () => vi.fn()
 }))
 
-jest.mock(
-  '@/components/feeds/ArticleReaderDialog',
-  () =>
-    (props: {
-      open: boolean
-      item: { id: string }
-      onOpenChange: (open: boolean) => void
-      onMarkRead: (itemId: string) => void
-      onSettled: (itemId: string) => void
-    }) => (
-      <div data-testid={props.open ? 'reader-open' : 'reader-closed'}>
-        <button onClick={() => props.onMarkRead(props.item.id)}>Mark read</button>
-        <button onClick={() => props.onSettled(props.item.id)}>Settle</button>
-        <button onClick={() => props.onOpenChange(false)}>Close reader</button>
-      </div>
-    )
-)
+vi.mock('@/components/feeds/ArticleReaderDialog', () => ({
+  default: (props: {
+    open: boolean
+    item: { id: string }
+    onOpenChange: (open: boolean) => void
+    onMarkRead: (itemId: string) => void
+    onSettled: (itemId: string) => void
+  }) => (
+    <div data-testid={props.open ? 'reader-open' : 'reader-closed'}>
+      <button onClick={() => props.onMarkRead(props.item.id)}>Mark read</button>
+      <button onClick={() => props.onSettled(props.item.id)}>Settle</button>
+      <button onClick={() => props.onOpenChange(false)}>Close reader</button>
+    </div>
+  )
+}))
 
 import FeedReaderClient from '@/components/feeds/FeedReaderClient'
 
@@ -54,12 +52,12 @@ function item(
 
 describe('FeedReaderClient', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     window.localStorage.clear()
     mockUseFeeds.mockReturnValue({
       data: { feeds: [create(FeedSchema, { id: 'feed-1', title: 'Example Blog' })] }
     })
-    mockUseFetchFeedItemsPage.mockReturnValue(jest.fn())
+    mockUseFetchFeedItemsPage.mockReturnValue(vi.fn())
   })
 
   it('shows a loading state', () => {
@@ -371,7 +369,7 @@ describe('FeedReaderClient', () => {
   })
 
   it('loads the next page on Load more', async () => {
-    const fetchPage = jest.fn().mockResolvedValue({ items: [item('2')], hasMore: false })
+    const fetchPage = vi.fn().mockResolvedValue({ items: [item('2')], hasMore: false })
     mockUseFetchFeedItemsPage.mockReturnValue(fetchPage)
     mockUseFeedItems.mockReturnValue({
       data: { items: [item('1')], hasMore: true },

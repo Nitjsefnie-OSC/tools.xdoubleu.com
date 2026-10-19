@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { useState } from 'react'
 import { useCurrentUser } from '@/hooks/useAuth'
 import {

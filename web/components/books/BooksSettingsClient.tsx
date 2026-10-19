@@ -1,5 +1,3 @@
-'use client'
-
 import { useRef, useState } from 'react'
 import { useImportBooks } from '@/hooks/useBooks'
 import BulkBookUploader from '@/components/books/BulkBookUploader'

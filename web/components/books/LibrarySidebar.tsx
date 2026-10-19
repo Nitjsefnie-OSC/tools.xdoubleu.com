@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/button'
 import { MenuItem } from '@/components/ui/menu-item'

@@ -1,7 +1,4 @@
-'use client'
-
 import { useState } from 'react'
-import Image from 'next/image'
 
 const SIZE = 64
 
@@ -22,7 +19,7 @@ export default function ShowArtwork({ url, title }: { url: string; title: string
           {title.charAt(0).toUpperCase()}
         </div>
       ) : (
-        <Image
+        <img
           src={url}
           alt=""
           width={SIZE}

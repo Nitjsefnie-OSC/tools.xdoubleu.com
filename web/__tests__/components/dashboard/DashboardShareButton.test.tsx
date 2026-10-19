@@ -6,17 +6,17 @@ import {
   DashboardShareSchema
 } from '@/lib/gen/dashboard/v1/dashboard_pb'
 
-const mockUseCurrentUser = jest.fn()
-const mockUseDashboardShare = jest.fn()
-const mockCreateShare = jest.fn()
-const mockDeleteShare = jest.fn()
-const mockMutate = jest.fn()
+const mockUseCurrentUser = vi.fn()
+const mockUseDashboardShare = vi.fn()
+const mockCreateShare = vi.fn()
+const mockDeleteShare = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('@/hooks/useAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useCurrentUser: () => mockUseCurrentUser()
 }))
 
-jest.mock('@/hooks/useDashboardShare', () => ({
+vi.mock('@/hooks/useDashboardShare', () => ({
   useDashboardShare: (kind: string) => mockUseDashboardShare(kind),
   useCreateDashboardShare: () => mockCreateShare,
   useDeleteDashboardShare: () => mockDeleteShare
@@ -32,7 +32,7 @@ function withShare(token: string) {
 
 describe('DashboardShareButton', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockCreateShare.mockResolvedValue({})
     mockDeleteShare.mockResolvedValue({})
     mockUseDashboardShare.mockReturnValue({
@@ -90,7 +90,7 @@ describe('DashboardShareButton', () => {
   })
 
   it('copies the link to the clipboard', async () => {
-    const writeText = jest.fn().mockResolvedValue(undefined)
+    const writeText = vi.fn().mockResolvedValue(undefined)
     Object.assign(navigator, { clipboard: { writeText } })
     mockUseCurrentUser.mockReturnValue({ data: { displayName: 'Alice' } })
     mockUseDashboardShare.mockReturnValue({ data: withShare('tok-123'), mutate: mockMutate })

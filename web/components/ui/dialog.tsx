@@ -1,5 +1,3 @@
-'use client'
-
 import * as RadixDialog from '@radix-ui/react-dialog'
 import { type CSSProperties, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'

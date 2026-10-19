@@ -3,15 +3,11 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
   packageManager: 'npm',
-  testRunner: 'jest',
-  jest: {
-    // See jest.stryker.config.js.
-    configFile: 'jest.stryker.config.js',
-    enableFindRelatedTests: true
-  },
+  testRunner: 'vitest',
+  vitest: { configFile: 'vite.config.ts' },
   reporters: ['clear-text', 'progress', 'html'],
   coverageAnalysis: 'perTest',
-  // Mirrors jest.config.js's collectCoverageFrom. package.json's overrides
+  // Mirrors the coverage `include` in vite.config.ts. package.json's overrides
   // exempt the instrumenter from the global @babel/core 7 pin: a Babel 7 parse
   // printed by its @babel/generator 8 crashes on TS function types and
   // `interface extends`.
@@ -20,12 +16,9 @@ export default {
     'lib/**/*.{ts,tsx}',
     'hooks/**/*.{ts,tsx}',
     'app/**/*.{ts,tsx}',
-    'instrumentation-client.ts',
+    'src/**/*.{ts,tsx}',
     '!lib/gen/**',
-    '!app/**/apple-icon.tsx',
-    '!app/**/icon.tsx',
-    '!app/manifest.ts',
-    '!app/layout.tsx',
+    '!src/main.tsx',
     '!**/*.d.ts'
   ],
   incremental: true,

@@ -18,7 +18,7 @@ Gate on **lines changed vs `origin/main`**, like Codecov's `codecov/patch`:
   `tools/merge_coverage.py`.
 - `diff_coverage_ts.py` fails a changed file under 80% line/branch on its
   changed lines, **or with no coverage data at all** (e.g. a new unimported
-  file). Only files in `jest.config.js`'s `collectCoverageFrom` count.
+  file). Only files in `vite.config.ts`'s `test.coverage.include` count.
 - Local numbers approximate Codecov, not predict it: Codecov's line counting
   can diverge either way (#1868), so `diff_coverage_go.py` also reports a
   conservative block-boundary-only number.

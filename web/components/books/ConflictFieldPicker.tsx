@@ -1,5 +1,3 @@
-'use client'
-
 import type { DuplicateGroup } from '@/lib/gen/books/v1/catalog_pb'
 import type { BookConflictField, FieldConflict } from './duplicateConflicts'
 import BookCover from '@/components/books/BookCover'

@@ -1,5 +1,3 @@
-'use client'
-
 import { type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'

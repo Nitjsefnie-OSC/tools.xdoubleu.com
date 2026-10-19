@@ -9,7 +9,7 @@ describe('SegmentedTabs', () => {
 
   it('marks the current option selected', () => {
     render(
-      <SegmentedTabs aria-label="Mode" value="pages" onChange={jest.fn()} options={[...options]} />
+      <SegmentedTabs aria-label="Mode" value="pages" onChange={vi.fn()} options={[...options]} />
     )
     expect(screen.getByRole('tablist', { name: 'Mode' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Pages' })).toHaveAttribute('aria-selected', 'true')
@@ -17,7 +17,7 @@ describe('SegmentedTabs', () => {
   })
 
   it('reports the chosen value', () => {
-    const onChange = jest.fn()
+    const onChange = vi.fn()
     render(
       <SegmentedTabs aria-label="Mode" value="pages" onChange={onChange} options={[...options]} />
     )

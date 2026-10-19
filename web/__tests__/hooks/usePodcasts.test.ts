@@ -7,34 +7,34 @@ const sampleKeys = [
   undefined
 ]
 let revalidated: unknown[] = []
-const mockMutate = jest.fn(async (match: (key: unknown) => boolean) => {
+const mockMutate = vi.fn(async (match: (key: unknown) => boolean) => {
   revalidated = sampleKeys.filter(match)
 })
-jest.mock('swr', () => ({
+vi.mock('swr', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
   useSWRConfig: () => ({ mutate: mockMutate })
 }))
 const mockClient = {
-  listFavourites: jest.fn().mockResolvedValue({ favourites: [] }),
-  searchShows: jest.fn().mockResolvedValue({ results: [] }),
-  addFavourite: jest.fn().mockResolvedValue({}),
-  removeFavourite: jest.fn().mockResolvedValue({})
+  listFavourites: vi.fn().mockResolvedValue({ favourites: [] }),
+  searchShows: vi.fn().mockResolvedValue({ results: [] }),
+  addFavourite: vi.fn().mockResolvedValue({}),
+  removeFavourite: vi.fn().mockResolvedValue({})
 }
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => mockClient)
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => mockClient)
 }))
-jest.mock('@/lib/gen/podcasts/v1/podcasts_pb', () => ({ PodcastsService: {} }))
+vi.mock('@/lib/gen/podcasts/v1/podcasts_pb', () => ({ PodcastsService: {} }))
 
 import useSWR from 'swr'
 import { usePodcastActions, usePodcastFavourites, usePodcastSearch } from '@/hooks/usePodcasts'
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   revalidated = []
 })
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 beforeEach(() => {
   // Runs the fetcher for a non-null key, like SWR would.

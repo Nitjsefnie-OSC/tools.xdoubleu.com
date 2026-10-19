@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/components/HomeClient', () => ({
+vi.mock('@/components/HomeClient', () => ({
   __esModule: true,
   default: () => <div data-testid="home-client" />
 }))

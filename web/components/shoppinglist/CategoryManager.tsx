@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useCategories } from '@/hooks/useShoppingList'
 import { enqueueWrite } from '@/lib/offline/outbox'

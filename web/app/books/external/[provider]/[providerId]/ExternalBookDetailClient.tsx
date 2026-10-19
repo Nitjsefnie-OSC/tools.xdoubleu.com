@@ -1,7 +1,5 @@
-'use client'
-
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { mutate } from 'swr'
 import { useExternalBook } from '@/hooks/useBooks'
 import BookCover from '@/components/books/BookCover'

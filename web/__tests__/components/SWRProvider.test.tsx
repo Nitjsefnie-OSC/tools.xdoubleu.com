@@ -1,136 +1,76 @@
-import { render, screen } from '@testing-library/react'
-import useSWR from 'swr'
-import { create } from '@bufbuild/protobuf'
+import { render, renderHook, screen } from '@testing-library/react'
 import posthog from 'posthog-js'
-import SWRProvider from '@/components/SWRProvider'
-import { swrKeys } from '@/lib/swrKeys'
+import useSWR from 'swr'
+import { persistMiddleware } from '@/lib/offline/persist'
+import SWRProvider, { useSessionEffects } from '@/components/SWRProvider'
 import { claimOfflineData } from '@/lib/offline/session'
-import { GetCurrentUserResponseSchema } from '@/lib/gen/auth/v1/auth_pb'
-import type { GetCurrentUserResponse } from '@/lib/gen/auth/v1/auth_pb'
 
-jest.mock('@/lib/offline/session', () => ({
-  claimOfflineData: jest.fn(async () => {})
+vi.mock('@/lib/offline/session', () => ({
+  claimOfflineData: vi.fn(async () => {})
 }))
 
-jest.mock('posthog-js', () => ({
-  __esModule: true,
-  default: { identify: jest.fn(), get_distinct_id: jest.fn(() => 'anon-id') }
+vi.mock('@/lib/offline/persist', () => ({
+  persistMiddleware: vi.fn((useSWRNext: unknown) => useSWRNext)
 }))
 
-function Probe() {
-  const { data } = useSWR<GetCurrentUserResponse>(
-    swrKeys.currentUser,
-    () => new Promise<never>(() => {})
-  )
-  return <span>{data ? `role:${data.role}` : 'no-user'}</span>
-}
+vi.mock('posthog-js', () => ({
+  default: { identify: vi.fn(), get_distinct_id: vi.fn(() => 'anon-id') }
+}))
 
 describe('SWRProvider', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    jest.mocked(posthog.get_distinct_id).mockReturnValue('anon-id')
-  })
-
-  it('identifies the PostHog distinct_id with the current user id', () => {
-    const user = create(GetCurrentUserResponseSchema, {
-      role: 'admin',
-      appAccess: [],
-      hasMfa: false,
-      userId: 'user-123'
-    })
+  it('saves responses for offline use', () => {
+    function Probe() {
+      const { data } = useSWR('/probe', () => 'live')
+      return <span>{data ?? 'loading'}</span>
+    }
 
     render(
-      <SWRProvider currentUser={user}>
+      <SWRProvider>
         <Probe />
       </SWRProvider>
     )
+
+    expect(screen.getByText('loading')).toBeInTheDocument()
+    expect(persistMiddleware).toHaveBeenCalled()
+  })
+})
+
+describe('useSessionEffects', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(posthog.get_distinct_id).mockReturnValue('anon-id')
+  })
+
+  it('identifies the PostHog distinct_id and claims the offline data', () => {
+    renderHook(() => useSessionEffects('user-123'))
 
     expect(posthog.identify).toHaveBeenCalledWith('user-123')
     expect(claimOfflineData).toHaveBeenCalledWith('user-123')
   })
 
   it('does not re-identify when already identified as the current user', () => {
-    const user = create(GetCurrentUserResponseSchema, {
-      role: 'admin',
-      appAccess: [],
-      hasMfa: false,
-      userId: 'user-123'
-    })
-    jest.mocked(posthog.get_distinct_id).mockReturnValue('user-123')
+    vi.mocked(posthog.get_distinct_id).mockReturnValue('user-123')
 
-    render(
-      <SWRProvider currentUser={user}>
-        <Probe />
-      </SWRProvider>
-    )
+    renderHook(() => useSessionEffects('user-123'))
 
     expect(posthog.identify).not.toHaveBeenCalled()
   })
 
-  it('re-identifies when the current user id changes', () => {
-    const userA = create(GetCurrentUserResponseSchema, {
-      role: 'admin',
-      appAccess: [],
-      hasMfa: false,
-      userId: 'user-a'
+  it('re-identifies when the user id changes', () => {
+    const { rerender } = renderHook(({ id }) => useSessionEffects(id), {
+      initialProps: { id: 'user-a' }
     })
-    const userB = create(GetCurrentUserResponseSchema, {
-      role: 'admin',
-      appAccess: [],
-      hasMfa: false,
-      userId: 'user-b'
-    })
-
-    const { rerender } = render(
-      <SWRProvider currentUser={userA}>
-        <Probe />
-      </SWRProvider>
-    )
     expect(posthog.identify).toHaveBeenCalledWith('user-a')
 
-    jest.mocked(posthog.get_distinct_id).mockReturnValue('user-a')
-    rerender(
-      <SWRProvider currentUser={userB}>
-        <Probe />
-      </SWRProvider>
-    )
+    vi.mocked(posthog.get_distinct_id).mockReturnValue('user-a')
+    rerender({ id: 'user-b' })
     expect(posthog.identify).toHaveBeenCalledWith('user-b')
   })
 
-  it('does not identify when there is no current user', () => {
-    render(
-      <SWRProvider currentUser={null}>
-        <Probe />
-      </SWRProvider>
-    )
+  it('does nothing without a current user', () => {
+    renderHook(() => useSessionEffects(undefined))
 
     expect(posthog.identify).not.toHaveBeenCalled()
     expect(claimOfflineData).not.toHaveBeenCalled()
-  })
-
-  it('exposes the server-fetched user as fallback for the current-user key', () => {
-    const user = create(GetCurrentUserResponseSchema, {
-      role: 'admin',
-      appAccess: [],
-      hasMfa: false
-    })
-
-    render(
-      <SWRProvider currentUser={user}>
-        <Probe />
-      </SWRProvider>
-    )
-
-    expect(screen.getByText('role:admin')).toBeInTheDocument()
-  })
-
-  it('provides no fallback when the server fetch returned null', () => {
-    render(
-      <SWRProvider currentUser={null}>
-        <Probe />
-      </SWRProvider>
-    )
-
-    expect(screen.getByText('no-user')).toBeInTheDocument()
   })
 })

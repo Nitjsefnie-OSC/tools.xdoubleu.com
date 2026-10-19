@@ -1,16 +1,16 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => ({
-    getFamily: jest.fn(),
-    inviteToFamily: jest.fn(),
-    acceptFamilyInvite: jest.fn(),
-    declineFamilyInvite: jest.fn(),
-    leaveFamily: jest.fn()
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => ({
+    getFamily: vi.fn(),
+    inviteToFamily: vi.fn(),
+    acceptFamilyInvite: vi.fn(),
+    declineFamilyInvite: vi.fn(),
+    leaveFamily: vi.fn()
   }))
 }))
-jest.mock('@/lib/gen/family/v1/family_pb', () => ({
+vi.mock('@/lib/gen/family/v1/family_pb', () => ({
   FamilyService: {}
 }))
 
@@ -24,8 +24,8 @@ import {
   useLeaveFamily
 } from '@/hooks/useFamily'
 
-const mockUseSWR = jest.mocked(useSWR)
-const mockCreateServiceClient = jest.mocked(createServiceClient)
+const mockUseSWR = vi.mocked(useSWR)
+const mockCreateServiceClient = vi.mocked(createServiceClient)
 
 beforeEach(() => {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
@@ -58,7 +58,7 @@ describe('useFamily', () => {
 
 describe('useInviteToFamily', () => {
   it('returns a function that calls client.inviteToFamily', () => {
-    const mockInvite = jest.fn().mockResolvedValue({})
+    const mockInvite = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       inviteToFamily: mockInvite
@@ -72,7 +72,7 @@ describe('useInviteToFamily', () => {
 
 describe('useAcceptFamilyInvite', () => {
   it('returns a function that calls client.acceptFamilyInvite', () => {
-    const mockAccept = jest.fn().mockResolvedValue({})
+    const mockAccept = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       acceptFamilyInvite: mockAccept
@@ -86,7 +86,7 @@ describe('useAcceptFamilyInvite', () => {
 
 describe('useDeclineFamilyInvite', () => {
   it('returns a function that calls client.declineFamilyInvite', () => {
-    const mockDecline = jest.fn().mockResolvedValue({})
+    const mockDecline = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       declineFamilyInvite: mockDecline
@@ -100,7 +100,7 @@ describe('useDeclineFamilyInvite', () => {
 
 describe('useLeaveFamily', () => {
   it('returns a function that calls client.leaveFamily', () => {
-    const mockLeave = jest.fn().mockResolvedValue({})
+    const mockLeave = vi.fn().mockResolvedValue({})
     mockCreateServiceClient.mockReturnValue({
       // @ts-expect-error -- mock function assigned to typed client method
       leaveFamily: mockLeave

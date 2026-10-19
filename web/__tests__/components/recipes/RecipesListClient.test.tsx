@@ -1,17 +1,10 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/hooks/useRecipes', () => ({
-  useRecipes: jest.fn(),
-  useFetchRecipesPage: jest.fn(() => jest.fn())
+vi.mock('@/hooks/useRecipes', () => ({
+  useRecipes: vi.fn(),
+  useFetchRecipesPage: vi.fn(() => vi.fn())
 }))
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
 
 import RecipesListClient from '@/components/recipes/RecipesListClient'
 import { useRecipes } from '@/hooks/useRecipes'
@@ -20,16 +13,16 @@ import { RecipeSchema, ListRecipesResponseSchema } from '@/lib/gen/recipes/v1/re
 import type { ListRecipesResponse } from '@/lib/gen/recipes/v1/recipes_pb'
 
 function mockRecipes(value: { data?: ListRecipesResponse; error?: Error; isLoading: boolean }) {
-  jest.mocked(useRecipes).mockReturnValue({
+  vi.mocked(useRecipes).mockReturnValue({
     data: value.data,
     error: value.error,
     isLoading: value.isLoading,
     isValidating: false,
-    mutate: jest.fn(async () => undefined)
+    mutate: vi.fn(async () => undefined)
   })
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('RecipesListClient', () => {
   it('shows a loading state', () => {

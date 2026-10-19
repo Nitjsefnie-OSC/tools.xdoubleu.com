@@ -1,27 +1,12 @@
-import type { Metadata } from 'next'
-import SWRFallback from '@/components/SWRFallback'
-import { createServerClient } from '@/lib/server/client'
-import { fetchOrNull } from '@/lib/server/fetchers'
-import { swrKeys } from '@/lib/swrKeys'
-import { PublicReadingDashboardService } from '@/lib/gen/dashboard/v1/reading_pb'
+import { useRouteParams } from '@/hooks/navigation'
+import { useSharedLibrary } from '@/hooks/useDashboardShare'
 import ReadingDashboardPublicLibrary from '@/components/dashboard/ReadingDashboardPublicLibrary'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageContainer } from '@/components/ui/page-container'
 
-// Token URLs are capability links — keep them out of search indexes.
-export const metadata: Metadata = {
-  title: 'Shared library',
-  robots: { index: false, follow: false }
-}
-
-export default async function ReadingDashboardPublicLibraryPage({
-  params
-}: {
-  params: Promise<{ token: string }>
-}) {
-  const { token } = await params
-  const client = await createServerClient(PublicReadingDashboardService)
-  const library = await fetchOrNull(() => client.getSharedLibrary({ token }))
+export default function ReadingDashboardPublicLibraryPage() {
+  const { token } = useRouteParams<{ token: string }>()
+  const library = useSharedLibrary(token).data
 
   return (
     <PageContainer>
@@ -36,9 +21,7 @@ export default async function ReadingDashboardPublicLibraryPage({
         ]}
       />
 
-      <SWRFallback fallback={library ? { [swrKeys.dashboardReading(token)]: library } : {}}>
-        <ReadingDashboardPublicLibrary token={token} initialData={library ?? undefined} />
-      </SWRFallback>
+      <ReadingDashboardPublicLibrary token={token} />
     </PageContainer>
   )
 }

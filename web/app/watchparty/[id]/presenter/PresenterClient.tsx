@@ -1,5 +1,3 @@
-'use client'
-
 import { useRef, useState } from 'react'
 import { useWatchPartyRTC, type ScreenControls } from '@/hooks/useWatchPartyRTC'
 import { Button } from '@/components/ui/button'

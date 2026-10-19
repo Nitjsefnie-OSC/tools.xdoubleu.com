@@ -1,19 +1,19 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
 const mockClient = {
-  getFeedInfo: jest.fn().mockResolvedValue({ feedVersion: '2026-08-31' }),
-  searchStations: jest.fn().mockResolvedValue({ stations: [{ stopId: 'SA', name: 'Alpha' }] }),
-  searchJourneys: jest.fn().mockResolvedValue({ journeys: [] }),
-  getJourneyDetail: jest.fn().mockResolvedValue({ journey: { legs: [] } }),
-  listSavedCommutes: jest.fn().mockResolvedValue({ savedCommutes: [] }),
-  createSavedCommute: jest.fn().mockResolvedValue({}),
-  deleteSavedCommute: jest.fn().mockResolvedValue({})
+  getFeedInfo: vi.fn().mockResolvedValue({ feedVersion: '2026-08-31' }),
+  searchStations: vi.fn().mockResolvedValue({ stations: [{ stopId: 'SA', name: 'Alpha' }] }),
+  searchJourneys: vi.fn().mockResolvedValue({ journeys: [] }),
+  getJourneyDetail: vi.fn().mockResolvedValue({ journey: { legs: [] } }),
+  listSavedCommutes: vi.fn().mockResolvedValue({ savedCommutes: [] }),
+  createSavedCommute: vi.fn().mockResolvedValue({}),
+  deleteSavedCommute: vi.fn().mockResolvedValue({})
 }
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => mockClient)
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => mockClient)
 }))
-jest.mock('@/lib/gen/trains/v1/trains_pb', () => ({
+vi.mock('@/lib/gen/trains/v1/trains_pb', () => ({
   TrainService: {}
 }))
 
@@ -26,7 +26,7 @@ import {
   useSavedCommutes
 } from '@/hooks/useTrains'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 beforeEach(() => {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
@@ -92,7 +92,7 @@ describe('useSavedCommutes', () => {
   })
 
   it('create posts the pair then revalidates', async () => {
-    const mutate = jest.fn().mockResolvedValue(undefined)
+    const mutate = vi.fn().mockResolvedValue(undefined)
     // @ts-expect-error -- partial SWRResponse
     mockUseSWR.mockReturnValue({ data: undefined, mutate })
     const { result } = renderHook(() => useSavedCommutes())
@@ -106,7 +106,7 @@ describe('useSavedCommutes', () => {
   })
 
   it('remove deletes by id then revalidates', async () => {
-    const mutate = jest.fn().mockResolvedValue(undefined)
+    const mutate = vi.fn().mockResolvedValue(undefined)
     // @ts-expect-error -- partial SWRResponse
     mockUseSWR.mockReturnValue({ data: undefined, mutate })
     const { result } = renderHook(() => useSavedCommutes())

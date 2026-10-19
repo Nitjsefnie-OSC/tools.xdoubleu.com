@@ -1,89 +1,105 @@
-import { render, screen } from '@testing-library/react'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import ConsentPage from '@/app/oauth/consent/page'
+import { useCurrentUser } from '@/hooks/useAuth'
+import { useSearchParams } from '@/hooks/navigation'
 import { getConsentInfo } from '@/lib/oauth2as/consentClient'
 
-jest.mock('next/headers', () => ({ cookies: jest.fn() }))
-jest.mock('next/navigation', () => ({
-  redirect: jest.fn((url: string) => {
-    throw new Error(`REDIRECT:${url}`)
-  })
+vi.mock('@/hooks/useAuth', () => ({ useCurrentUser: vi.fn() }))
+vi.mock('@/lib/oauth2as/consentClient', () => ({ getConsentInfo: vi.fn() }))
+vi.mock('@/app/oauth/consent/ConsentForm', () => ({
+  default: (props: { requestQuery: string; consentToken: string; clientName: string }) => (
+    <div data-testid="form">{`${props.requestQuery}|${props.consentToken}|${props.clientName}`}</div>
+  )
 }))
-jest.mock('@/lib/oauth2as/consentClient', () => ({ getConsentInfo: jest.fn() }))
 
-function withCookies(map: Record<string, string>) {
-  const store = {
-    get: (name: string) => (name in map ? { name, value: map[name] } : undefined)
-  }
-  // @ts-expect-error -- partial cookie store exposing only get()
-  jest.mocked(cookies).mockResolvedValue(store)
+function Where() {
+  const location = useLocation()
+  return <div data-testid="where">{location.pathname + location.search}</div>
 }
 
-async function renderPage(params?: Record<string, string | string[] | undefined>) {
-  const ui = await ConsentPage({ searchParams: Promise.resolve(params ?? {}) })
-  render(ui)
+function renderPage() {
+  render(
+    <MemoryRouter>
+      <ConsentPage />
+      <Routes>
+        <Route path="*" element={<Where />} />
+      </Routes>
+    </MemoryRouter>
+  )
+}
+
+function signedIn(signed: boolean, isLoading = false) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- only data and isLoading are read
+  vi.mocked(useCurrentUser).mockReturnValue({
+    data: signed ? { userId: 'u1' } : undefined,
+    isLoading
+  } as never)
 }
 
 describe('ConsentPage', () => {
-  beforeEach(() => jest.clearAllMocks())
-
-  it('redirects home without a client_id', async () => {
-    await expect(renderPage()).rejects.toThrow('REDIRECT:/')
-  })
-
-  it('redirects to sign-in when not authenticated', async () => {
-    withCookies({})
-    await expect(renderPage({ client_id: 'c1' })).rejects.toThrow('REDIRECT:/auth/sign-in')
-    expect(redirect).toHaveBeenCalledWith(
-      expect.stringContaining(encodeURIComponent('/oauth/consent?client_id=c1'))
+  beforeEach(() => {
+    vi.mocked(getConsentInfo).mockReset()
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('client_id=c1&scope=openid&state=s1')
     )
   })
 
-  it('renders an error when the authorization is invalid', async () => {
-    withCookies({ accessToken: 'at' })
-    jest.mocked(getConsentInfo).mockResolvedValue(null)
-    await renderPage({ client_id: 'c1' })
-    expect(
-      screen.getByText('This authorization request is invalid or has expired.')
-    ).toBeInTheDocument()
+  it('goes home without a client_id', () => {
+    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams())
+    signedIn(true)
+    renderPage()
+
+    expect(screen.getByTestId('where')).toHaveTextContent('/')
+    expect(getConsentInfo).not.toHaveBeenCalled()
   })
 
-  it('renders the consent form with client details', async () => {
-    withCookies({ accessToken: 'at' })
-    jest.mocked(getConsentInfo).mockResolvedValue({
-      clientId: 'c1',
-      clientName: 'Claude CLI',
-      scope: 'openid email',
-      consentToken: 'tok'
-    })
-    await renderPage({ client_id: 'c1', scope: 'openid email', state: 's1' })
-    expect(screen.getByText('Authorize Claude CLI')).toBeInTheDocument()
-    expect(getConsentInfo).toHaveBeenCalledWith(
-      new URLSearchParams('client_id=c1&scope=openid+email&state=s1'),
-      'at'
-    )
+  it('waits for the session before deciding anything', () => {
+    signedIn(false, true)
+    renderPage()
+
+    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    expect(getConsentInfo).not.toHaveBeenCalled()
   })
 
-  // The api refuses an approval without a valid token, so the page needn't.
-  it('still renders the form when the api issues no consent token', async () => {
-    withCookies({ accessToken: 'at' })
-    jest
-      .mocked(getConsentInfo)
-      .mockResolvedValue({ clientId: 'c1', clientName: 'Claude CLI', scope: 'openid' })
-    await renderPage({ client_id: 'c1' })
-    expect(screen.getByText('Authorize Claude CLI')).toBeInTheDocument()
+  it('sends a signed-out user to sign in and back', () => {
+    signedIn(false)
+    renderPage()
+
+    const next = encodeURIComponent('/oauth/consent?client_id=c1&scope=openid&state=s1')
+    expect(screen.getByTestId('where')).toHaveTextContent(`/auth/sign-in?next=${next}`)
   })
 
-  it('takes the first value of a repeated query param', async () => {
-    withCookies({ accessToken: 'at' })
-    jest.mocked(getConsentInfo).mockResolvedValue({
+  it('shows the consent form with the echoed request and its token', async () => {
+    signedIn(true)
+    vi.mocked(getConsentInfo).mockResolvedValue({
       clientId: 'c1',
       clientName: 'Claude CLI',
       scope: 'openid',
       consentToken: 'tok'
     })
-    await renderPage({ client_id: ['c1', 'c2'], scope: undefined })
-    expect(getConsentInfo).toHaveBeenCalledWith(new URLSearchParams('client_id=c1'), 'at')
+    renderPage()
+
+    await waitFor(() =>
+      expect(screen.getByTestId('form')).toHaveTextContent(
+        'client_id=c1&scope=openid&state=s1|tok|Claude CLI'
+      )
+    )
+  })
+
+  it('reports an invalid or expired request', async () => {
+    signedIn(true)
+    vi.mocked(getConsentInfo).mockResolvedValue(null)
+    renderPage()
+
+    await waitFor(() => expect(screen.getByText(/invalid or has expired/)).toBeInTheDocument())
+  })
+
+  it('treats a failed lookup as an invalid request', async () => {
+    signedIn(true)
+    vi.mocked(getConsentInfo).mockRejectedValue(new Error('network'))
+    renderPage()
+
+    await waitFor(() => expect(screen.getByText(/invalid or has expired/)).toBeInTheDocument())
   })
 })

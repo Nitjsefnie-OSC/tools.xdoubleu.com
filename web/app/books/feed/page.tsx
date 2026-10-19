@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import { Navigate } from 'react-router'
 
-export default function ReadingFeedPage() {
-  redirect('/feeds')
+export default function BooksFeedPage() {
+  return <Navigate to="/feeds" replace />
 }

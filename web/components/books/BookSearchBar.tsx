@@ -1,7 +1,5 @@
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { useSearchLibrary, useSearchExternal } from '@/hooks/useBooks'
 import type { ExternalBookResult } from '@/lib/gen/books/v1/library_pb'
 import { Card } from '@/components/ui/card'

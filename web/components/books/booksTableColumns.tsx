@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import type { UserBook } from '@/lib/gen/books/v1/library_pb'
 import type { SortDir } from '@/components/ui/table'
 import BookCover from '@/components/books/BookCover'

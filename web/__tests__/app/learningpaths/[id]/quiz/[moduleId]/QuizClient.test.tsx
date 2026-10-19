@@ -1,19 +1,13 @@
 import React from 'react'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 
-const mockMutate = jest.fn(async () => undefined)
-const mockRecordItemProgress = jest.fn()
+const mockMutate = vi.fn(async () => undefined)
+const mockRecordItemProgress = vi.fn()
 
-jest.mock('@/hooks/useLearningPaths', () => ({
-  useLearningPath: jest.fn(),
+vi.mock('@/hooks/useLearningPaths', () => ({
+  useLearningPath: vi.fn(),
   useRecordItemProgress: () => mockRecordItemProgress
 }))
-
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
 
 import QuizClient from '@/app/learningpaths/[id]/quiz/[moduleId]/QuizClient'
 import { useLearningPath } from '@/hooks/useLearningPaths'
@@ -29,7 +23,7 @@ import {
 
 function mockPath(state: { data?: GetLearningPathResponse; isLoading?: boolean; error?: Error }) {
   // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-  jest.mocked(useLearningPath).mockReturnValue({
+  vi.mocked(useLearningPath).mockReturnValue({
     data: undefined,
     isLoading: false,
     error: undefined,
@@ -59,7 +53,7 @@ function pathResponse() {
   return create(GetLearningPathResponseSchema, { learningPath })
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('QuizClient', () => {
   it('shows loading state', () => {

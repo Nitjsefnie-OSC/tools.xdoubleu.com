@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { swrKeys } from '@/lib/swrKeys'
 import { mutate } from 'swr'

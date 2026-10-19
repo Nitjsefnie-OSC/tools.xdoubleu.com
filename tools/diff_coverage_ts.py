@@ -26,12 +26,12 @@ import sys
 
 THRESHOLD = 80
 
-# Mirrors web/jest.config.js's collectCoverageFrom allowlist/excludes.
-INCLUDE_DIRS = ('components/', 'lib/', 'hooks/', 'app/')
-INCLUDE_SINGLE_FILES = ('instrumentation-client.ts',)
+# Mirrors web/vite.config.ts's test.coverage include/exclude.
+INCLUDE_DIRS = ('components/', 'lib/', 'hooks/', 'app/', 'src/')
+INCLUDE_SINGLE_FILES = ()
 EXCLUDE_PREFIXES = ('lib/gen/',)
-EXCLUDE_EXACT = ('app/manifest.ts', 'app/layout.tsx')
-EXCLUDE_SUFFIXES = ('/apple-icon.tsx', '/icon.tsx', '.d.ts')
+EXCLUDE_EXACT = ('src/main.tsx',)
+EXCLUDE_SUFFIXES = ('.d.ts',)
 
 
 def run_git(args, cwd):

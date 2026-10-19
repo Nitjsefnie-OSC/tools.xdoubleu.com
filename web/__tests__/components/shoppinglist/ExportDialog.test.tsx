@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import ExportDialog from '@/components/shoppinglist/ExportDialog'
 import type { ShoppingItem } from '@/lib/shoppinglist/shoppingExport'
 
-jest.mock('@/hooks/useShoppingList', () => ({
+vi.mock('@/hooks/useShoppingList', () => ({
   useStores: () => ({
     data: { stores: [{ id: 'store-1', name: 'Colruyt' }] },
     isLoading: false
@@ -38,12 +38,12 @@ const mealItems: ShoppingItem[] = [
 
 const renderDialog = (props: Partial<React.ComponentProps<typeof ExportDialog>> = {}) =>
   render(
-    <ExportDialog customItems={customItems} mealItems={mealItems} onClose={jest.fn()} {...props} />
+    <ExportDialog customItems={customItems} mealItems={mealItems} onClose={vi.fn()} {...props} />
   )
 
 beforeEach(() => {
   Object.defineProperty(navigator, 'clipboard', {
-    value: { writeText: jest.fn().mockResolvedValue(undefined) },
+    value: { writeText: vi.fn().mockResolvedValue(undefined) },
     writable: true,
     configurable: true
   })
@@ -138,14 +138,14 @@ describe('ExportDialog', () => {
   })
 
   it('calls onClose when close button is clicked', () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     renderDialog({ onClose })
     fireEvent.click(screen.getByRole('button', { name: /Close/ }))
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it('calls onClose when Escape is pressed', () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     renderDialog({ onClose })
     fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
@@ -168,7 +168,7 @@ describe('ExportDialog', () => {
   })
 
   it('Share to Apple Notes calls navigator.share when available', async () => {
-    const mockShare = jest.fn().mockResolvedValue(undefined)
+    const mockShare = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'share', {
       value: mockShare,
       writable: true,
@@ -183,7 +183,7 @@ describe('ExportDialog', () => {
 
   it('Share to Apple Notes does not throw when user cancels the share sheet', async () => {
     const abortError = new DOMException('Share cancelled', 'AbortError')
-    const mockShare = jest.fn().mockRejectedValue(abortError)
+    const mockShare = vi.fn().mockRejectedValue(abortError)
     Object.defineProperty(navigator, 'share', {
       value: mockShare,
       writable: true,
@@ -197,12 +197,12 @@ describe('ExportDialog', () => {
   })
 
   it('Download .txt triggers file download', () => {
-    const mockClick = jest.fn()
+    const mockClick = vi.fn()
     renderDialog()
-    const mockAppendChild = jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn())
-    const mockRemoveChild = jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn())
+    const mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation(vi.fn())
+    const mockRemoveChild = vi.spyOn(document.body, 'removeChild').mockImplementation(vi.fn())
     const realCreate = document.createElement.bind(document)
-    jest.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
       if (tag === 'a') {
         const el = realCreate('a')
         el.click = mockClick
@@ -214,6 +214,6 @@ describe('ExportDialog', () => {
     expect(mockClick).toHaveBeenCalled()
     mockAppendChild.mockRestore()
     mockRemoveChild.mockRestore()
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 })

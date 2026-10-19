@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import SettingsIcon from '@/components/SettingsIcon'
 import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'

@@ -1,6 +1,4 @@
-'use client'
-
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { useLearningPath } from '@/hooks/useLearningPaths'
 import LearningPathForm from '@/components/learningpaths/LearningPathForm'
 import { PageContainer } from '@/components/ui/page-container'

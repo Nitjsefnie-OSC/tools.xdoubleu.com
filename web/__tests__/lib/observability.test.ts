@@ -22,11 +22,11 @@ describe('observability formatters', () => {
 
 describe('isAutomatedActionStale', () => {
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date('2026-01-01T12:00:00Z'))
+    vi.useFakeTimers().setSystemTime(new Date('2026-01-01T12:00:00Z'))
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('is not stale once finished, regardless of how long it ran', () => {

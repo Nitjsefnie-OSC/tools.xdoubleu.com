@@ -1,7 +1,5 @@
-'use client'
-
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import { Button } from '@/components/ui/button'
 import { getApiUrl, getRelease } from '@/lib/env'
 

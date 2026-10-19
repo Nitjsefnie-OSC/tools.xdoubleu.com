@@ -2,11 +2,11 @@ import React from 'react'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 
-const mockAdd = jest.fn()
+const mockAdd = vi.fn()
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMovieSearch: jest.fn(),
-  useMoviesActions: jest.fn(() => ({ add: mockAdd }))
+vi.mock('@/hooks/useMovies', () => ({
+  useMovieSearch: vi.fn(),
+  useMoviesActions: vi.fn(() => ({ add: mockAdd }))
 }))
 
 import MovieSearchResults from '@/components/movies/MovieSearchResults'
@@ -27,7 +27,7 @@ const results = create(SearchTitlesResponseSchema, {
 
 function mockSearch(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useMovieSearch).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useMovieSearch).mockReturnValue({ isLoading: false, ...value })
 }
 
 function deferred() {
@@ -38,7 +38,7 @@ function deferred() {
   return { promise, resolve }
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => vi.clearAllMocks())
 
 describe('MovieSearchResults', () => {
   it('shows type and release, or type alone when undated', () => {

@@ -3,20 +3,24 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 
-jest.mock('@/components/books/BookProgressBar', () => {
-  return function MockProgressBar() {
-    return <div role="progressbar" data-testid="progress-bar" />
+vi.mock('@/components/books/BookProgressBar', () => {
+  return {
+    default: function MockProgressBar() {
+      return <div role="progressbar" data-testid="progress-bar" />
+    }
   }
 })
 
-jest.mock('@/components/books/BookProgressForm', () => {
-  return function MockProgressForm() {
-    return <div data-testid="progress-form" />
+vi.mock('@/components/books/BookProgressForm', () => {
+  return {
+    default: function MockProgressForm() {
+      return <div data-testid="progress-form" />
+    }
   }
 })
 
-const mockTrack = jest.fn()
-jest.mock('@/lib/analytics', () => ({
+const mockTrack = vi.fn()
+vi.mock('@/lib/analytics', () => ({
   track: (...args: unknown[]) => mockTrack(...args)
 }))
 

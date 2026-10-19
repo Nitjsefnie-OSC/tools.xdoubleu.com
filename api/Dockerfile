@@ -1,5 +1,30 @@
 # Build context is the repo root: api/go.mod's `replace` needs
-# ../sentrytools, so paths are repo-root-relative until WORKDIR /app/api.
+# ../sentrytools, and the web build needs web/, so paths are repo-root-relative
+# until WORKDIR /app/api.
+FROM node:24-alpine AS web-builder
+
+ARG RELEASE=dev
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+
+WORKDIR /app/web
+
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+
+# build-api.yml stages the kobo-gateway downloads into web/public/downloads
+# before `docker build`; Vite copies public/ into dist/, so the api serves them
+# at /downloads/. The .sig is present only on signed (main) builds.
+COPY web ./
+
+ENV RELEASE=${RELEASE} \
+    SENTRY_ORG=${SENTRY_ORG} \
+    SENTRY_PROJECT=${SENTRY_PROJECT}
+# The auth token is a secret mount (not an ARG) so it never ends up in image
+# layers; without it the Sentry plugin skips the source-map upload.
+RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
+    npm run build
+
 FROM golang:1.27-alpine AS builder
 
 WORKDIR /app
@@ -20,9 +45,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o ./bin/api ./cmd/api
 # WebAssembly backend under wazero, no CGO). "nonroot" is uid/gid 65532.
 FROM gcr.io/distroless/static-debian12:nonroot AS server
 
+# May lag RELEASE when kobo-gateway's build cache-hit (see web/lib/env.ts).
+ARG KOBO_GATEWAY_RELEASE=dev
+ENV KOBO_GATEWAY_RELEASE=${KOBO_GATEWAY_RELEASE} \
+    WEB_DIR=/app/web
+
 WORKDIR /app
 
 COPY --from=builder /app/api/bin/api ./bin/api
+COPY --from=web-builder /app/web/dist ./web
 
 EXPOSE 8000
 

@@ -3,8 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { GetNotificationSettingsResponseSchema } from '@/lib/gen/observability/v1/observability_pb'
 import NotificationToggleList from '@/components/notifications/NotificationToggleList'
 
-const mockUpdateNotificationSettings = jest.fn()
-jest.mock('@/hooks/useMonitoring', () => ({
+const mockUpdateNotificationSettings = vi.fn()
+vi.mock('@/hooks/useMonitoring', () => ({
   useUpdateNotificationSettings: () => mockUpdateNotificationSettings
 }))
 

@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect } from 'react'
 import { useLibrary } from '@/hooks/useBooks'
 import { syncOfflineBooks } from '@/lib/books/offlineSync'

@@ -2,28 +2,28 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ConnectError } from '@connectrpc/connect'
 import ResetPasswordPage from '@/app/auth/reset-password/page'
 
-const mockGet = jest.fn()
+const mockGet = vi.fn()
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useSearchParams: () => ({ get: mockGet })
 }))
 
-jest.mock('@/hooks/useAuth', () => ({
-  useResetPassword: jest.fn()
+vi.mock('@/hooks/useAuth', () => ({
+  useResetPassword: vi.fn()
 }))
 
 import { useResetPassword } from '@/hooks/useAuth'
 
-const mockUseResetPassword = jest.mocked(useResetPassword)
+const mockUseResetPassword = vi.mocked(useResetPassword)
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockGet.mockReturnValue(null)
 })
 
 describe('ResetPasswordPage', () => {
   it('shows the invalid state when there is no token query param', async () => {
-    mockUseResetPassword.mockReturnValue(jest.fn())
+    mockUseResetPassword.mockReturnValue(vi.fn())
 
     render(<ResetPasswordPage />)
 
@@ -32,7 +32,7 @@ describe('ResetPasswordPage', () => {
 
   it('shows the password form when a token is present', async () => {
     mockGet.mockReturnValue('reset-token')
-    mockUseResetPassword.mockReturnValue(jest.fn())
+    mockUseResetPassword.mockReturnValue(vi.fn())
 
     render(<ResetPasswordPage />)
 
@@ -41,7 +41,7 @@ describe('ResetPasswordPage', () => {
 
   it('rejects mismatched passwords', async () => {
     mockGet.mockReturnValue('reset-token')
-    const mockResetPassword = jest.fn()
+    const mockResetPassword = vi.fn()
     mockUseResetPassword.mockReturnValue(mockResetPassword)
 
     render(<ResetPasswordPage />)
@@ -60,7 +60,7 @@ describe('ResetPasswordPage', () => {
 
   it('rejects a too-short password', async () => {
     mockGet.mockReturnValue('reset-token')
-    const mockResetPassword = jest.fn()
+    const mockResetPassword = vi.fn()
     mockUseResetPassword.mockReturnValue(mockResetPassword)
 
     render(<ResetPasswordPage />)
@@ -79,7 +79,7 @@ describe('ResetPasswordPage', () => {
 
   it('resets the password and shows the done state on success', async () => {
     mockGet.mockReturnValue('reset-token')
-    const mockResetPassword = jest.fn().mockResolvedValue({})
+    const mockResetPassword = vi.fn().mockResolvedValue({})
     mockUseResetPassword.mockReturnValue(mockResetPassword)
 
     render(<ResetPasswordPage />)
@@ -99,7 +99,7 @@ describe('ResetPasswordPage', () => {
   it('shows a ConnectError message when resetting the password fails', async () => {
     mockGet.mockReturnValue('reset-token')
     mockUseResetPassword.mockReturnValue(
-      jest.fn().mockRejectedValue(new ConnectError('Reset token expired'))
+      vi.fn().mockRejectedValue(new ConnectError('Reset token expired'))
     )
 
     render(<ResetPasswordPage />)
@@ -119,7 +119,7 @@ describe('ResetPasswordPage', () => {
   // before submit.
   it('flips to the invalid state if the token disappears before submit', async () => {
     mockGet.mockReturnValue('reset-token')
-    const mockResetPassword = jest.fn()
+    const mockResetPassword = vi.fn()
     mockUseResetPassword.mockReturnValue(mockResetPassword)
 
     render(<ResetPasswordPage />)
@@ -139,7 +139,7 @@ describe('ResetPasswordPage', () => {
 
   it('shows a generic error message when resetting the password fails for a non-Connect reason', async () => {
     mockGet.mockReturnValue('reset-token')
-    mockUseResetPassword.mockReturnValue(jest.fn().mockRejectedValue(new Error('network down')))
+    mockUseResetPassword.mockReturnValue(vi.fn().mockRejectedValue(new Error('network down')))
 
     render(<ResetPasswordPage />)
 

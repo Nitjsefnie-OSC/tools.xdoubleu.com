@@ -1,8 +1,8 @@
 import React from 'react'
 let mockListParam = ''
-const mockReplace = jest.fn()
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({ push: jest.fn(), replace: mockReplace }),
+const mockReplace = vi.fn()
+vi.mock('@/hooks/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: mockReplace }),
   usePathname: () => '/movies',
   useSearchParams: () => new URLSearchParams(mockListParam)
 }))
@@ -11,34 +11,19 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError } from '@connectrpc/connect'
 
-const mockAdd = jest.fn()
-const mockSetStatus = jest.fn()
-const mockFetchPage = jest.fn()
+const mockAdd = vi.fn()
+const mockSetStatus = vi.fn()
+const mockFetchPage = vi.fn()
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMoviesBacklog: jest.fn(),
-  useFetchMoviesBacklogPage: jest.fn(() => mockFetchPage),
-  useMovieSearch: jest.fn(),
-  useMoviesActions: jest.fn(() => ({
+vi.mock('@/hooks/useMovies', () => ({
+  useMoviesBacklog: vi.fn(),
+  useFetchMoviesBacklogPage: vi.fn(() => mockFetchPage),
+  useMovieSearch: vi.fn(),
+  useMoviesActions: vi.fn(() => ({
     add: mockAdd,
     setStatus: mockSetStatus,
-    remove: jest.fn()
+    remove: vi.fn()
   }))
-}))
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('next/image', () => ({
-  __esModule: true,
-  default: ({ src, onError }: { src: string; onError: () => void }) => (
-    // eslint-disable-next-line @next/next/no-img-element -- next/image stand-in
-    <img src={src} alt="" data-testid="poster" onError={onError} />
-  )
 }))
 
 import MoviesClient from '@/components/movies/MoviesClient'
@@ -70,23 +55,23 @@ const avatar = create(BacklogEntrySchema, {
 
 function mockBacklog(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useMoviesBacklog).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useMoviesBacklog).mockReturnValue({ isLoading: false, ...value })
 }
 
 function mockSearch(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useMovieSearch).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useMovieSearch).mockReturnValue({ isLoading: false, ...value })
 }
 
 function search(text: string) {
   fireEvent.change(screen.getByLabelText('Search TMDB'), { target: { value: text } })
   act(() => {
-    jest.advanceTimersByTime(300)
+    vi.advanceTimersByTime(300)
   })
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockSearch({})
 })
 
@@ -106,7 +91,7 @@ describe('MoviesClient backlog', () => {
     expect(screen.getByRole('link', { name: /The Matrix/ })).toHaveAttribute('href', '/movies/e-1')
     expect(screen.getByText(/1999/)).toBeInTheDocument()
     expect(screen.getByText(/Releases 2099-12-18/)).toBeInTheDocument()
-    expect(screen.getByTestId('poster')).toHaveAttribute(
+    expect(screen.getByRole('presentation')).toHaveAttribute(
       'src',
       'https://image.tmdb.org/t/p/w92/matrix.jpg'
     )
@@ -118,8 +103,8 @@ describe('MoviesClient backlog', () => {
   it('falls back to an initial when the poster fails to load', () => {
     mockBacklog({ data: create(ListBacklogResponseSchema, { entries: [matrix] }) })
     render(<MoviesClient />)
-    fireEvent.error(screen.getByTestId('poster'))
-    expect(screen.queryByTestId('poster')).not.toBeInTheDocument()
+    fireEvent.error(screen.getByRole('presentation'))
+    expect(screen.queryByRole('presentation')).not.toBeInTheDocument()
     expect(screen.getByText('T')).toBeInTheDocument()
   })
 
@@ -160,7 +145,7 @@ describe('MoviesClient backlog', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Series' }))
     fireEvent.change(screen.getByLabelText('Sort'), { target: { value: 'title' } })
 
-    expect(jest.mocked(useMoviesBacklog)).toHaveBeenLastCalledWith({
+    expect(vi.mocked(useMoviesBacklog)).toHaveBeenLastCalledWith({
       status: 'watched',
       mediaType: 'series',
       sort: 'title',
@@ -184,7 +169,7 @@ describe('MoviesClient backlog', () => {
     fireEvent.click(chip)
 
     expect(chip).toHaveAttribute('aria-pressed', 'true')
-    expect(jest.mocked(useMoviesBacklog)).toHaveBeenLastCalledWith(
+    expect(vi.mocked(useMoviesBacklog)).toHaveBeenLastCalledWith(
       expect.objectContaining({ onMyServices: true })
     )
   })
@@ -240,16 +225,16 @@ describe('MoviesClient search', () => {
 
   beforeEach(() => {
     mockBacklog({})
-    jest.useFakeTimers()
+    vi.useFakeTimers()
   })
-  afterEach(() => jest.useRealTimers())
+  afterEach(() => vi.useRealTimers())
 
   it('waits for typing to pause before searching', () => {
     render(<MoviesClient />)
     fireEvent.change(screen.getByLabelText('Search TMDB'), { target: { value: 'br' } })
     expect(screen.getByRole('region', { name: 'Backlog' })).toBeInTheDocument()
     act(() => {
-      jest.advanceTimersByTime(300)
+      vi.advanceTimersByTime(300)
     })
     expect(screen.queryByRole('region', { name: 'Backlog' })).not.toBeInTheDocument()
   })
@@ -266,17 +251,17 @@ describe('MoviesClient search', () => {
     const input = screen.getByLabelText('Search TMDB')
     fireEvent.change(input, { target: { value: 'ab' } })
     act(() => {
-      jest.advanceTimersByTime(200)
+      vi.advanceTimersByTime(200)
     })
     fireEvent.change(input, { target: { value: 'abc' } })
     act(() => {
-      jest.advanceTimersByTime(200)
+      vi.advanceTimersByTime(200)
     })
     expect(screen.getByRole('region', { name: 'Backlog' })).toBeInTheDocument()
     act(() => {
-      jest.advanceTimersByTime(100)
+      vi.advanceTimersByTime(100)
     })
-    expect(jest.mocked(useMovieSearch).mock.calls.map(([q]) => q)).toEqual(['abc'])
+    expect(vi.mocked(useMovieSearch).mock.calls.map(([q]) => q)).toEqual(['abc'])
   })
 
   it('shows results with quick actions or the existing status', () => {

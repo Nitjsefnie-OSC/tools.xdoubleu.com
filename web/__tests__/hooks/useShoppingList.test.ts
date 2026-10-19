@@ -1,26 +1,27 @@
 import { renderHook } from '@testing-library/react'
 
-jest.mock('swr', () => ({ __esModule: true, default: jest.fn() }))
+vi.mock('swr', () => ({ __esModule: true, default: vi.fn() }))
 const mockClient = {
-  getCustomList: jest.fn().mockResolvedValue({}),
-  getMealPlanExportItems: jest.fn().mockResolvedValue({ items: [] }),
-  getPlanIngredientGroups: jest.fn().mockResolvedValue({ groups: [] }),
-  listCategories: jest.fn().mockResolvedValue({}),
-  listStores: jest.fn().mockResolvedValue({}),
-  getStoreCategories: jest.fn().mockResolvedValue({}),
-  listItemNames: jest.fn().mockResolvedValue({}),
-  listItemCategories: jest.fn().mockResolvedValue({}),
-  listIngredientUnits: jest.fn().mockResolvedValue({}),
-  listPlans: jest.fn().mockResolvedValue({ plans: [] })
+  getCustomList: vi.fn().mockResolvedValue({}),
+  getMealPlanExportItems: vi.fn().mockResolvedValue({ items: [] }),
+  getPlanIngredientGroups: vi.fn().mockResolvedValue({ groups: [] }),
+  listCategories: vi.fn().mockResolvedValue({}),
+  listStores: vi.fn().mockResolvedValue({}),
+  getStoreCategories: vi.fn().mockResolvedValue({}),
+  listItemNames: vi.fn().mockResolvedValue({}),
+  listItemCategories: vi.fn().mockResolvedValue({}),
+  listIngredientUnits: vi.fn().mockResolvedValue({}),
+  listPlans: vi.fn().mockResolvedValue({ plans: [] })
 }
 
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => mockClient)
+vi.mock('@/lib/client', () => ({
+  transport: {},
+  createServiceClient: vi.fn(() => mockClient)
 }))
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn().mockResolvedValue(undefined)
 }))
-jest.mock('@/lib/gen/mealplans/v1/mealplans_pb', () => ({
+vi.mock('@/lib/gen/mealplans/v1/mealplans_pb', () => ({
   MealPlansService: {}
 }))
 
@@ -46,7 +47,7 @@ import {
   queueItemCategory
 } from '@/hooks/useShoppingList'
 
-const mockUseSWR = jest.mocked(useSWR)
+const mockUseSWR = vi.mocked(useSWR)
 
 // Invoke the captured SWR fetcher (typeof guard avoids an unsafe assertion).
 async function callFetcher() {
@@ -307,7 +308,7 @@ describe('useAllPlanIngredientGroups', () => {
 })
 
 describe('queueCategory', () => {
-  beforeEach(() => jest.mocked(enqueueWrite).mockClear())
+  beforeEach(() => vi.mocked(enqueueWrite).mockClear())
   const categories = [create(CategorySchema, { id: 'cat-1', name: 'Produce' })]
 
   it('reuses a same-named category', async () => {

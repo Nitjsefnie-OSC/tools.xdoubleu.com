@@ -1,50 +1,47 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-const mockPush = jest.fn()
-const mockRefresh = jest.fn()
+const mockPush = vi.fn()
+const mockRefresh = vi.fn()
 
-jest.mock('@/hooks/useGames', () => ({
-  useSteam: jest.fn(),
-  useSteamProgress: jest.fn(),
-  useRecentlyActiveGames: jest.fn()
+vi.mock('@/hooks/useGames', () => ({
+  useSteam: vi.fn(),
+  useSteamProgress: vi.fn(),
+  useRecentlyActiveGames: vi.fn()
 }))
 
-jest.mock('@/lib/games/steamRefresh', () => ({
-  useSteamRefresh: jest.fn()
+vi.mock('@/lib/games/steamRefresh', () => ({
+  useSteamRefresh: vi.fn()
 }))
 
-jest.mock('swr', () => ({ mutate: jest.fn() }))
+vi.mock('swr', () => ({ mutate: vi.fn() }))
 import { mutate } from 'swr'
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ push: mockPush })
 }))
 
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('@/components/dashboard/DashboardShareButton', () => {
-  return function MockDashboardShareButton() {
-    return <div data-testid="profile-share-button" />
+vi.mock('@/components/dashboard/DashboardShareButton', () => {
+  return {
+    default: function MockDashboardShareButton() {
+      return <div data-testid="profile-share-button" />
+    }
   }
 })
 
-jest.mock('@/components/games/SteamDistributionChart', () => {
-  return function MockSteamDistributionChart({
-    onBucketClick
-  }: {
-    onBucketClick: (bucket: number) => void
-  }) {
-    return (
-      <button data-testid="distribution-chart" onClick={() => onBucketClick(3)}>
-        chart
-      </button>
-    )
+vi.mock('@/components/games/SteamDistributionChart', () => {
+  return {
+    default: function MockSteamDistributionChart({
+      onBucketClick
+    }: {
+      onBucketClick: (bucket: number) => void
+    }) {
+      return (
+        <button data-testid="distribution-chart" onClick={() => onBucketClick(3)}>
+          chart
+        </button>
+      )
+    }
   }
 })
 
@@ -60,10 +57,10 @@ import {
   GetRecentlyActiveGamesResponseSchema
 } from '@/lib/gen/games/v1/games_pb'
 
-const mockUseBacklogSteam = jest.mocked(useSteam)
-const mockUseSteamProgress = jest.mocked(useSteamProgress)
-const mockUseRecentlyActiveGames = jest.mocked(useRecentlyActiveGames)
-const mockUseSteamRefresh = jest.mocked(useSteamRefresh)
+const mockUseBacklogSteam = vi.mocked(useSteam)
+const mockUseSteamProgress = vi.mocked(useSteamProgress)
+const mockUseRecentlyActiveGames = vi.mocked(useRecentlyActiveGames)
+const mockUseSteamRefresh = vi.mocked(useSteamRefresh)
 
 function mockRefreshState(overrides: Partial<ReturnType<typeof useSteamRefresh>> = {}) {
   mockUseSteamRefresh.mockReturnValue({
@@ -118,7 +115,7 @@ function mockNoProgress() {
 
 describe('GamesDashboard', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockRefreshState()
   })
 

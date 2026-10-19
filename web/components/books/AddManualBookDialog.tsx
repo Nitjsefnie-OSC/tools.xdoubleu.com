@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useCreateBook, useLibrary } from '@/hooks/useBooks'
 import {

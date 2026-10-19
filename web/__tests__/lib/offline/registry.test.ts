@@ -6,13 +6,13 @@ import {
   ShoppingListService
 } from '@/lib/gen/shoppinglist/v1/shoppinglist_pb'
 
-jest.mock('@/lib/client', () => ({
-  transport: { unary: jest.fn(async () => ({})) },
-  keepaliveTransport: { unary: jest.fn(async () => ({})) }
+vi.mock('@/lib/client', () => ({
+  transport: { unary: vi.fn(async () => ({})) },
+  keepaliveTransport: { unary: vi.fn(async () => ({})) }
 }))
 
 describe('defineOfflineWrite', () => {
-  const apply = jest.fn((_key: unknown, data: unknown) => data)
+  const apply = vi.fn((_key: unknown, data: unknown) => data)
   const write = defineOfflineWrite({
     method: ShoppingListService.method.deleteShoppingItem,
     apply,
@@ -21,7 +21,7 @@ describe('defineOfflineWrite', () => {
   })
   const bytes = write.encode({ itemId: 'i1' })
 
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it('identifies the write by service and method', () => {
     expect(write.id).toBe('shoppinglist.v1.ShoppingListService/DeleteShoppingItem')

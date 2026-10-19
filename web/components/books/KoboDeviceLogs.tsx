@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { useKoboDeviceLogs, useClearKoboDeviceLogs } from '@/hooks/useBooks'
 import { Button } from '@/components/ui/button'

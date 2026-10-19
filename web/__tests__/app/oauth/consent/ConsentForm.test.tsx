@@ -1,19 +1,15 @@
-import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ConsentForm from '@/app/oauth/consent/ConsentForm'
+import { leaveTo } from '@/lib/navigate'
+import { decideAuthorization } from '@/lib/oauth2as/consentClient'
 
-const mockApprove = jest.fn()
-const mockDeny = jest.fn()
-
-jest.mock('@/app/oauth/consent/actions', () => ({
-  approveAuthorization: (query: string, token: string) => mockApprove(query, token),
-  denyAuthorization: (query: string) => mockDeny(query)
-}))
+vi.mock('@/lib/oauth2as/consentClient', () => ({ decideAuthorization: vi.fn() }))
+vi.mock('@/lib/navigate', () => ({ leaveTo: vi.fn(), reloadPage: vi.fn() }))
 
 describe('ConsentForm', () => {
   beforeEach(() => {
-    mockApprove.mockReset().mockResolvedValue(undefined)
-    mockDeny.mockReset().mockResolvedValue(undefined)
+    vi.mocked(decideAuthorization).mockReset().mockResolvedValue('https://cb?code=1')
+    vi.mocked(leaveTo).mockReset()
   })
 
   it('renders the client name and human-readable scopes', () => {
@@ -42,7 +38,7 @@ describe('ConsentForm', () => {
     expect(screen.getByText('custom:scope')).toBeInTheDocument()
   })
 
-  it('approves with the original request query and consent token', async () => {
+  it('approves with the original request query and consent token, then follows the redirect', async () => {
     render(
       <ConsentForm
         consentToken="tok"
@@ -52,13 +48,14 @@ describe('ConsentForm', () => {
       />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }))
-    await waitFor(() =>
-      expect(mockApprove).toHaveBeenCalledWith('client_id=c1&scope=openid', 'tok')
-    )
-    expect(mockDeny).not.toHaveBeenCalled()
+
+    await waitFor(() => expect(leaveTo).toHaveBeenCalledWith('https://cb?code=1'))
+    const [query, decision, token] = vi.mocked(decideAuthorization).mock.calls[0]
+    expect(query.toString()).toBe('client_id=c1&scope=openid')
+    expect([decision, token]).toEqual(['allow', 'tok'])
   })
 
-  it('denies with the original request query', async () => {
+  it('denies with the original request query and no consent token', async () => {
     render(
       <ConsentForm
         consentToken="tok"
@@ -68,17 +65,24 @@ describe('ConsentForm', () => {
       />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Deny' }))
-    await waitFor(() => expect(mockDeny).toHaveBeenCalledWith('client_id=c1&scope=openid'))
+
+    await waitFor(() => expect(leaveTo).toHaveBeenCalled())
+    const [query, decision, token] = vi.mocked(decideAuthorization).mock.calls[0]
+    expect(query.toString()).toBe('client_id=c1&scope=openid')
+    expect([decision, token]).toEqual(['deny', undefined])
   })
 
-  it('surfaces an error when the action rejects', async () => {
-    mockApprove.mockRejectedValue(new Error('boom'))
+  it('surfaces an error and re-enables the buttons when the decision fails', async () => {
+    vi.mocked(decideAuthorization).mockRejectedValue(new Error('boom'))
     render(
       <ConsentForm consentToken="tok" requestQuery="client_id=c1" clientName="X" scope="openid" />
     )
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }))
+
     await waitFor(() =>
       expect(screen.getByText('Something went wrong. Please try again.')).toBeInTheDocument()
     )
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled()
+    expect(leaveTo).not.toHaveBeenCalled()
   })
 })

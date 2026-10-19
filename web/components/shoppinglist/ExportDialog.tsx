@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo, useState } from 'react'
 import { useStores, useStoreCategories, useItemCategories } from '@/hooks/useShoppingList'
 import {

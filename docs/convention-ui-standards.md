@@ -12,7 +12,6 @@
 - **Mobile-first.**
   - Primitives are 44px tall below `sm` and compact above it. Fields are ≥16px.
   - No fixed pixel sizes, no `vh`/`h-screen` (use `dvh`), and no bare `grid-cols-N≥3`.
-- **Server Components by default.** Use Client Components only for interactivity.
 - **Primitives for every control and repeated pattern.** The inventory is [`web/components/ui/README.md`](../web/components/ui/README.md) (generated). If nothing fits, add a primitive.
   - `PageHeader` for the page `<h1>`. Its `actions` are all bordered: `PageHeaderLink`/`PageHeaderSettingsLink` to navigate, `secondary` buttons for commands. Only create (default) and delete (destructive) stand out.
   - `PageContainer size` for page width. The shell owns padding.
@@ -25,7 +24,7 @@
 - **Theme tokens only.** Colours, shadows and corner radii come from `app/globals.css`, which `ui/theme-tokens` reads. No `dark:`. Add a token rather than using a palette colour. Corners stay squared: `rounded-full` is only for square circles (`size-*`, equal `h-`/`w-`), never a pill.
 - **Class overrides** go through `cn()` (`lib/cn.ts`), never through a template literal.
 - **Pending buttons** use `Saving…`. Always `…`, never `...`.
-- **Pinch-zoom is disabled** for an app-like feel (the `viewport` export in `app/layout.tsx`). That makes 16px fields and 44px targets mandatory.
+- **Pinch-zoom is disabled** for an app-like feel (the viewport meta in `web/index.html`). That makes 16px fields and 44px targets mandatory.
 
 ## Why
 
@@ -37,12 +36,11 @@
 - **Tailwind v4, CSS-first**: there is no `tailwind.config.ts`. `app/globals.css` defines RGB-triple variables per scheme via `@theme inline`, plus `@theme` for shadow and radius tokens.
 - **Light/dark** keys off `:root[data-theme='dark']`.
   - `lib/theme.ts` stores `auto`/`light`/`dark` in localStorage.
-  - It exports `themeInitScript`, inlined in `app/layout.tsx`'s `<head>` to avoid a flash.
+  - `public/theme-init.js` repeats its resolution in `index.html`'s `<head>` to avoid a flash.
   - The toggle is on `/settings`.
 
 ## What violating it looked like
 
-- **Server/client trap:** a Server Component that imports any file pulling in client hooks fails only at `next build`, not in `tsc`, ESLint or Jest. Put shared constants in a React-free `lib/` module; that is why `lib/theme.ts` has no React imports.
 - **#1412:** these rules were documented but unchecked, and the code drifted (raw `<input>` in 19 places). The ESLint selectors and the generated catalog fixed it. When adding a rule, say what fails when it's broken; if nothing does, build that check first.
 - **#1626:** the regex rules only saw plain-string classNames, so drift moved into `cn()` and template literals. By then there were:
   - 145 `size="sm"` buttons under 44px

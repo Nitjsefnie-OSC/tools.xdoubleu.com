@@ -48,7 +48,7 @@ describe('Table primitives', () => {
 
 describe('SortableHeader', () => {
   it('calls onSort when clicked', () => {
-    const onSort = jest.fn()
+    const onSort = vi.fn()
     render(
       <Table>
         <TableHeader>
@@ -70,7 +70,7 @@ describe('SortableHeader', () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <SortableHeader dir="asc" onSort={jest.fn()}>
+            <SortableHeader dir="asc" onSort={vi.fn()}>
               Title
             </SortableHeader>
           </TableRow>
@@ -86,7 +86,7 @@ describe('SortableHeader', () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <SortableHeader dir="desc" onSort={jest.fn()}>
+            <SortableHeader dir="desc" onSort={vi.fn()}>
               Title
             </SortableHeader>
           </TableRow>
@@ -102,7 +102,7 @@ describe('SortableHeader', () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <SortableHeader dir={null} onSort={jest.fn()}>
+            <SortableHeader dir={null} onSort={vi.fn()}>
               Title
             </SortableHeader>
           </TableRow>

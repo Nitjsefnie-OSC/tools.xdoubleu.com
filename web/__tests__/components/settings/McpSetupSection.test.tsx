@@ -11,7 +11,7 @@ describe('McpSetupSection', () => {
   })
 
   it('copies the apps MCP command to the clipboard', async () => {
-    const writeText = jest.fn().mockResolvedValue(undefined)
+    const writeText = vi.fn().mockResolvedValue(undefined)
     Object.assign(navigator, { clipboard: { writeText } })
 
     render(<McpSetupSection />)

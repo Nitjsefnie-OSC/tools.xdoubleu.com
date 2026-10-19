@@ -7,27 +7,22 @@ import {
   GetSharedRecentlyActiveGamesResponseSchema
 } from '@/lib/gen/dashboard/v1/games_pb'
 
-const mockUseSharedSteam = jest.fn()
-const mockUseSharedSteamProgress = jest.fn()
-const mockUseSharedRecentlyActiveGames = jest.fn()
+const mockUseSharedSteam = vi.fn()
+const mockUseSharedSteamProgress = vi.fn()
+const mockUseSharedRecentlyActiveGames = vi.fn()
 
-jest.mock('@/hooks/useDashboardShare', () => ({
+vi.mock('@/hooks/useDashboardShare', () => ({
   useSharedSteam: () => mockUseSharedSteam(),
   useSharedSteamProgress: () => mockUseSharedSteamProgress(),
   useSharedRecentlyActiveGames: () => mockUseSharedRecentlyActiveGames()
 }))
 
-jest.mock('@/components/games/SteamDistributionChart', () => () => (
-  <div data-testid="distribution-chart" />
-))
-jest.mock('@/components/games/SteamProgressChart', () => () => <div data-testid="progress-chart" />)
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
+vi.mock('@/components/games/SteamDistributionChart', () => ({
+  default: () => <div data-testid="distribution-chart" />
+}))
+vi.mock('@/components/games/SteamProgressChart', () => ({
+  default: () => <div data-testid="progress-chart" />
+}))
 
 import GamesDashboardPublicClient from '@/components/dashboard/GamesDashboardPublicClient'
 
@@ -63,7 +58,7 @@ function makeRecent() {
 
 describe('GamesDashboardPublicClient', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUseSharedSteamProgress.mockReturnValue({ data: undefined, isLoading: false })
     mockUseSharedRecentlyActiveGames.mockReturnValue({ data: makeRecent() })
   })

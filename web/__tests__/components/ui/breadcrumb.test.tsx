@@ -1,12 +1,5 @@
 import { render, screen } from '@testing-library/react'
 
-jest.mock('next/link', () => ({
-  __esModule: true,
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
-  )
-}))
-
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 
 describe('Breadcrumb', () => {

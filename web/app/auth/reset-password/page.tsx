@@ -1,8 +1,6 @@
-'use client'
-
 import { useState } from 'react'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { Link } from '@/components/ui/link'
+import { useSearchParams } from '@/hooks/navigation'
 import { ConnectError } from '@connectrpc/connect'
 import { useResetPassword } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'

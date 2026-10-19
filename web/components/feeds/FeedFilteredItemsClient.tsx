@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useMemo, useState, type Dispatch } from 'react'
 import { useFeeds } from '@/hooks/useFeeds'
 import {

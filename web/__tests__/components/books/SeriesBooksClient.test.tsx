@@ -3,41 +3,17 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { create } from '@bufbuild/protobuf'
 import { GetSeriesResponseSchema } from '@/lib/gen/books/v1/library_pb'
 
-const mockAddBook = jest.fn()
-const mockMutate = jest.fn()
+const mockAddBook = vi.fn()
+const mockMutate = vi.fn()
 
-jest.mock('@/hooks/useBookSeries', () => ({ useBookSeries: jest.fn() }))
-jest.mock('@/hooks/useBooks', () => ({ useCreateBook: () => mockAddBook }))
-jest.mock('swr', () => ({ mutate: (...args: unknown[]) => mockMutate(...args) }))
-
-jest.mock('next/link', () => {
-  const Link = ({
-    children,
-    href,
-    'aria-label': ariaLabel
-  }: {
-    children: React.ReactNode
-    href: string
-    'aria-label'?: string
-  }) => (
-    <a href={href} aria-label={ariaLabel}>
-      {children}
-    </a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt }: { src: string; alt: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} />
-  }
-})
+vi.mock('@/hooks/useBookSeries', () => ({ useBookSeries: vi.fn() }))
+vi.mock('@/hooks/useBooks', () => ({ useCreateBook: () => mockAddBook }))
+vi.mock('swr', () => ({ mutate: (...args: unknown[]) => mockMutate(...args) }))
 
 import SeriesBooksClient from '@/components/books/SeriesBooksClient'
 import { useBookSeries } from '@/hooks/useBookSeries'
 
-const mockUseBookSeries = jest.mocked(useBookSeries)
+const mockUseBookSeries = vi.mocked(useBookSeries)
 
 function series(overrides = {}) {
   return create(GetSeriesResponseSchema, {

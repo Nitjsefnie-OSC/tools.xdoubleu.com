@@ -10,7 +10,7 @@ import {
   updateShoppingItemWrite
 } from '@/lib/shoppinglist/offlineWrites'
 
-// Mutable meal-plan mock state (mock-prefixed for jest.mock); reset per test.
+// Mutable meal-plan mock state (mock-prefixed for vi.mock); reset per test.
 let mockMealExport: { data: { items: unknown[] }; isLoading: boolean } = {
   data: { items: [] },
   isLoading: false
@@ -19,7 +19,7 @@ let mockListLoading = false
 let mockPlanGroups: { data: { groups: unknown[] } } = { data: { groups: [] } }
 let mockAliases: Record<string, string> = {}
 
-jest.mock('@/hooks/useShoppingList', () => ({
+vi.mock('@/hooks/useShoppingList', () => ({
   useCustomList: () => ({
     data: { items: [{ id: 'i1', name: 'Milk', amount: '1', unit: 'L' }] },
     isLoading: mockListLoading
@@ -35,17 +35,17 @@ jest.mock('@/hooks/useShoppingList', () => ({
   useItemAliases: () => mockAliases
 }))
 
-jest.mock('@/lib/offline/outbox', () => ({
-  enqueueWrite: jest.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/offline/outbox', () => ({
+  enqueueWrite: vi.fn().mockResolvedValue(undefined)
 }))
 
-const enqueue = jest.mocked(enqueueWrite)
+const enqueue = vi.mocked(enqueueWrite)
 const uuid = expect.stringMatching(/^[0-9a-f-]{36}$/)
 
 import ShoppingListPageClient from '@/components/shoppinglist/ShoppingListPageClient'
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockMealExport = { data: { items: [] }, isLoading: false }
   mockPlanGroups = { data: { groups: [] } }
   mockListLoading = false

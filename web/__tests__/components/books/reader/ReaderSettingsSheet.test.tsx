@@ -6,11 +6,11 @@ function renderSheet(fontSize: number) {
   render(
     <ReaderSettingsSheet
       open
-      onOpenChange={jest.fn()}
+      onOpenChange={vi.fn()}
       theme="light"
-      onThemeChange={jest.fn()}
+      onThemeChange={vi.fn()}
       fontSize={fontSize}
-      onFontSizeChange={jest.fn()}
+      onFontSizeChange={vi.fn()}
       reflowable
     />
   )

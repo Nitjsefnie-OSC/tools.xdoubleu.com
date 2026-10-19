@@ -1,27 +1,20 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
-const mockRefresh = jest.fn()
-const mockSetGameFavourite = jest.fn().mockResolvedValue({})
+const mockRefresh = vi.fn()
+const mockSetGameFavourite = vi.fn().mockResolvedValue({})
 
-jest.mock('@/hooks/useGames', () => ({
-  useSteam: jest.fn(),
+vi.mock('@/hooks/useGames', () => ({
+  useSteam: vi.fn(),
   useSetGameFavourite: () => mockSetGameFavourite
 }))
 
-jest.mock('@/lib/games/steamRefresh', () => ({
-  useSteamRefresh: jest.fn()
+vi.mock('@/lib/games/steamRefresh', () => ({
+  useSteamRefresh: vi.fn()
 }))
 
-jest.mock('swr', () => ({ mutate: jest.fn() }))
+vi.mock('swr', () => ({ mutate: vi.fn() }))
 import { mutate } from 'swr'
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
 
 import GamesLibrary from '@/components/games/GamesLibrary'
 import { useSteam } from '@/hooks/useGames'
@@ -33,8 +26,8 @@ import {
   GetSteamResponseSchema
 } from '@/lib/gen/games/v1/games_pb'
 
-const mockUseBacklogSteam = jest.mocked(useSteam)
-const mockUseSteamRefresh = jest.mocked(useSteamRefresh)
+const mockUseBacklogSteam = vi.mocked(useSteam)
+const mockUseSteamRefresh = vi.mocked(useSteamRefresh)
 
 function mockRefreshState(overrides: Partial<ReturnType<typeof useSteamRefresh>> = {}) {
   mockUseSteamRefresh.mockReturnValue({
@@ -79,7 +72,7 @@ function mockSteam() {
 
 describe('GamesLibrary', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockRefreshState()
   })
 

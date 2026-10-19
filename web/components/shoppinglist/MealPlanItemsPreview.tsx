@@ -1,5 +1,3 @@
-'use client'
-
 import { prepareForExport, formatOrigins } from '@/lib/shoppinglist/shoppingExport'
 import type { ShoppingItem } from '@/lib/shoppinglist/shoppingExport'
 import { LoadingState } from '@/components/ui/states'

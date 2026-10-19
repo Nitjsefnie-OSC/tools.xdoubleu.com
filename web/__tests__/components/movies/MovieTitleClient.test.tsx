@@ -3,14 +3,14 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { create } from '@bufbuild/protobuf'
 import { Code, ConnectError } from '@connectrpc/connect'
 
-const mockSetStatus = jest.fn()
-const mockRemove = jest.fn()
-const mockAdd = jest.fn()
-const mockPush = jest.fn()
+const mockSetStatus = vi.fn()
+const mockRemove = vi.fn()
+const mockAdd = vi.fn()
+const mockPush = vi.fn()
 
-jest.mock('@/hooks/useMovies', () => ({
-  useMovieTitle: jest.fn(),
-  useMoviesActions: jest.fn(() => ({
+vi.mock('@/hooks/useMovies', () => ({
+  useMovieTitle: vi.fn(),
+  useMoviesActions: vi.fn(() => ({
     add: mockAdd,
     setStatus: mockSetStatus,
     remove: mockRemove
@@ -18,17 +18,10 @@ jest.mock('@/hooks/useMovies', () => ({
 }))
 
 let mockSearch = ''
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
   useSearchParams: () => new URLSearchParams(mockSearch)
 }))
-
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
 
 import MovieTitleClient from '@/components/movies/MovieTitleClient'
 import { useMovieTitle } from '@/hooks/useMovies'
@@ -40,7 +33,7 @@ import {
 
 function mockTitle(value: { data?: unknown; error?: Error; isLoading?: boolean }) {
   // @ts-expect-error -- partial SWRResponse
-  jest.mocked(useMovieTitle).mockReturnValue({ isLoading: false, ...value })
+  vi.mocked(useMovieTitle).mockReturnValue({ isLoading: false, ...value })
 }
 
 const spirited = create(GetTitleResponseSchema, {
@@ -59,7 +52,7 @@ const spirited = create(GetTitleResponseSchema, {
 })
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockSearch = ''
 })
 

@@ -47,9 +47,7 @@ Exits 1 on anything `broken`. Flags: `--json`, `--theme dark`, `--base-url`,
 
 **Page needs live backend data** (renders only `Loading…`/error here): add a
 temporary route under `app/` rendering the client component with mock props,
-audit it, then delete it. Don't prefix the folder with `_` (Next.js 404s
-private folders). After deleting, `rm -rf .next` before `npm run lint`/`npm
-run build`, or a stale `routes.d.ts` entry fails `tsc`.
+audit it, then delete it.
 
 If the app can't start, do the static checks alone and mark findings
 unmeasured.

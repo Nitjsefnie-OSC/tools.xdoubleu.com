@@ -1,22 +1,8 @@
+import { useRouteParams } from '@/hooks/navigation'
 import QuizClient from './QuizClient'
-import SWRFallback from '@/components/SWRFallback'
-import { createServerClient } from '@/lib/server/client'
-import { fetchOrNull } from '@/lib/server/fetchers'
-import { swrKeys } from '@/lib/swrKeys'
-import { LearningPathsService } from '@/lib/gen/learningpaths/v1/learningpaths_pb'
 
-export default async function ModuleQuizPage({
-  params
-}: {
-  params: Promise<{ id: string; moduleId: string }>
-}) {
-  const { id, moduleId } = await params
-  const client = await createServerClient(LearningPathsService)
-  const learningPath = await fetchOrNull(() => client.getLearningPath({ id }))
+export default function ModuleQuizPage() {
+  const { id, moduleId } = useRouteParams<{ id: string; moduleId: string }>()
 
-  return (
-    <SWRFallback fallback={learningPath ? { [swrKeys.learningPath(id)]: learningPath } : {}}>
-      <QuizClient id={id} moduleId={moduleId} />
-    </SWRFallback>
-  )
+  return <QuizClient id={id} moduleId={moduleId} />
 }

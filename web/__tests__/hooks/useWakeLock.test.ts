@@ -11,7 +11,7 @@ class MockSentinel {
 
   removeEventListener() {}
 
-  release = jest.fn(async () => {
+  release = vi.fn(async () => {
     if (this.released) return
     this.released = true
     this.listeners['release']?.forEach((cb) => cb())
@@ -35,7 +35,7 @@ describe('useWakeLock', () => {
 
   it('acquires and releases the wake lock on toggle', async () => {
     const sentinel = new MockSentinel()
-    const request = jest.fn().mockResolvedValue(sentinel)
+    const request = vi.fn().mockResolvedValue(sentinel)
     Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true })
 
     const { result } = renderHook(() => useWakeLock())
@@ -56,7 +56,7 @@ describe('useWakeLock', () => {
   })
 
   it('stays inactive if the wake lock request rejects', async () => {
-    const request = jest.fn().mockRejectedValue(new Error('denied'))
+    const request = vi.fn().mockRejectedValue(new Error('denied'))
     Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true })
 
     const { result } = renderHook(() => useWakeLock())
@@ -69,7 +69,7 @@ describe('useWakeLock', () => {
   it('re-requests the wake lock when the tab becomes visible again while still wanted', async () => {
     const sentinel1 = new MockSentinel()
     const sentinel2 = new MockSentinel()
-    const request = jest.fn().mockResolvedValueOnce(sentinel1).mockResolvedValueOnce(sentinel2)
+    const request = vi.fn().mockResolvedValueOnce(sentinel1).mockResolvedValueOnce(sentinel2)
     Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true })
 
     const { result } = renderHook(() => useWakeLock())
@@ -93,7 +93,7 @@ describe('useWakeLock', () => {
 
   it('does not re-request the wake lock on visibility change once turned off', async () => {
     const sentinel = new MockSentinel()
-    const request = jest.fn().mockResolvedValue(sentinel)
+    const request = vi.fn().mockResolvedValue(sentinel)
     Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true })
 
     const { result } = renderHook(() => useWakeLock())
@@ -114,7 +114,7 @@ describe('useWakeLock', () => {
 
   it('releases the wake lock on unmount', async () => {
     const sentinel = new MockSentinel()
-    const request = jest.fn().mockResolvedValue(sentinel)
+    const request = vi.fn().mockResolvedValue(sentinel)
     Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true })
 
     const { result, unmount } = renderHook(() => useWakeLock())

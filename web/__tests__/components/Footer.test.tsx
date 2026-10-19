@@ -1,22 +1,22 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import Footer from '@/components/Footer'
 
-jest.mock('@/lib/env', () => ({
-  getRelease: jest.fn(),
-  getApiUrl: jest.fn(() => 'https://api.example.com/api')
+vi.mock('@/lib/env', () => ({
+  getRelease: vi.fn(),
+  getApiUrl: vi.fn(() => 'https://api.example.com/api')
 }))
 
 import { getRelease } from '@/lib/env'
 
-const mockGetRelease = jest.mocked(getRelease)
-const mockFetch = jest.fn()
+const mockGetRelease = vi.mocked(getRelease)
+const mockFetch = vi.fn()
 
 function jsonResponse(release: string, ok = true) {
   return { ok, json: () => Promise.resolve({ release }) }
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   mockGetRelease.mockReturnValue('')
   mockFetch.mockImplementation((url: string) => {
     if (url.endsWith('/api/version')) return Promise.resolve(jsonResponse(''))

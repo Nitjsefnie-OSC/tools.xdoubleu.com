@@ -2,19 +2,19 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import UnhealthyFeeds from '@/components/feeds/UnhealthyFeeds'
 
-const mockUseCurrentUser = jest.fn()
-const mockUseUnhealthyFeeds = jest.fn()
+const mockUseCurrentUser = vi.fn()
+const mockUseUnhealthyFeeds = vi.fn()
 
-jest.mock('@/hooks/useAuth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useCurrentUser: () => mockUseCurrentUser()
 }))
-jest.mock('@/hooks/useFeeds', () => ({
+vi.mock('@/hooks/useFeeds', () => ({
   useUnhealthyFeeds: (enabled: boolean) => mockUseUnhealthyFeeds(enabled)
 }))
 
 describe('UnhealthyFeeds', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUseUnhealthyFeeds.mockReturnValue({ data: undefined })
   })
 

@@ -2,13 +2,6 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import ReadingFeedsSummaryCard from '@/components/dashboard/ReadingFeedsSummaryCard'
 
-jest.mock('next/link', () => {
-  const Link = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  return Object.assign(Link, { useLinkStatus: () => ({ pending: false }) })
-})
-
 describe('ReadingFeedsSummaryCard', () => {
   it('renders nothing without a summary', () => {
     const { container } = render(<ReadingFeedsSummaryCard />)

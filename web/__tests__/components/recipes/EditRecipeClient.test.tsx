@@ -1,45 +1,41 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/hooks/useRecipes', () => ({
-  useRecipe: jest.fn()
+vi.mock('@/hooks/useRecipes', () => ({
+  useRecipe: vi.fn()
 }))
 
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn()
+vi.mock('@/hooks/navigation', () => ({
+  useRouter: vi.fn()
 }))
 
-jest.mock('next/link', () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-})
-
-jest.mock('@/components/recipes/RecipeForm', () => {
-  return function MockRecipeForm() {
-    return <div data-testid="recipe-form">recipe-form-mock</div>
+vi.mock('@/components/recipes/RecipeForm', () => {
+  return {
+    default: function MockRecipeForm() {
+      return <div data-testid="recipe-form">recipe-form-mock</div>
+    }
   }
 })
 
 import EditRecipeClient from '@/app/recipes/[id]/edit/EditRecipeClient'
 import { useRecipe } from '@/hooks/useRecipes'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/hooks/navigation'
 import { create } from '@bufbuild/protobuf'
 import { RecipeSchema, GetRecipeResponseSchema } from '@/lib/gen/recipes/v1/recipes_pb'
 
-const mockRouter = { push: jest.fn() }
+const mockRouter = { push: vi.fn() }
 const mockRecipe = create(RecipeSchema, { id: 'recipe-1', name: 'Pasta Carbonara' })
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // @ts-expect-error -- mock router returns partial AppRouterInstance
-  jest.mocked(useRouter).mockReturnValue(mockRouter)
+  vi.mocked(useRouter).mockReturnValue(mockRouter)
 })
 
 describe('EditRecipeClient', () => {
   it('shows loading state when isLoading is true', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: undefined,
       isLoading: true,
       error: undefined
@@ -51,7 +47,7 @@ describe('EditRecipeClient', () => {
 
   it('shows error state when error is present', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('Failed to fetch')
@@ -63,7 +59,7 @@ describe('EditRecipeClient', () => {
 
   it('renders RecipeForm when recipe is loaded', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: create(GetRecipeResponseSchema, { recipe: mockRecipe, isOwner: true }),
       isLoading: false,
       error: undefined
@@ -75,7 +71,7 @@ describe('EditRecipeClient', () => {
 
   it('calls useRecipe with the provided id', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: undefined
@@ -87,7 +83,7 @@ describe('EditRecipeClient', () => {
 
   it('renders back link with correct href', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: undefined
@@ -100,7 +96,7 @@ describe('EditRecipeClient', () => {
 
   it('renders page title', () => {
     // @ts-expect-error -- mock returns partial SWRResponse for test purposes
-    jest.mocked(useRecipe).mockReturnValue({
+    vi.mocked(useRecipe).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: undefined

@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useState } from 'react'
 import { mutate } from 'swr'
 import { useSteam } from '@/hooks/useGames'

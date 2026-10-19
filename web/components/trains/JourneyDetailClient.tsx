@@ -1,5 +1,3 @@
-'use client'
-
 import { PageContainer } from '@/components/ui/page-container'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/ui/page-header'

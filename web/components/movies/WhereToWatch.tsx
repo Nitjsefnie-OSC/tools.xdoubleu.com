@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { logoUrl } from '@/lib/movies/format'
 import type { ProviderOffers } from '@/lib/gen/movies/v1/movies_pb'
@@ -36,7 +35,7 @@ export default function WhereToWatch({ offers, watchLink }: WhereToWatchProps) {
                 {group.providers.map((p) => (
                   <li key={p.id} className="flex items-center gap-2 text-sm">
                     {p.logoPath && (
-                      <Image
+                      <img
                         src={logoUrl(p.logoPath)}
                         alt=""
                         width={32}

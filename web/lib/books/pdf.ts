@@ -14,7 +14,7 @@ export function pageOf(href: string): number | null {
 }
 
 /** Where the pdf.js worker is served from. */
-export const pdfWorkerUrl = () =>
+const pdfWorkerUrl = () =>
   new URL('pdfjs-dist/legacy/build/pdf.worker.min.mjs', import.meta.url).toString()
 
 /** Opens a PDF from its bytes, or from a URL fetched with the session cookie. */

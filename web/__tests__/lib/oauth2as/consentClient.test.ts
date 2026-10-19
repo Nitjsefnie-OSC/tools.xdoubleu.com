@@ -2,36 +2,40 @@ import { decideAuthorization, getConsentInfo } from '@/lib/oauth2as/consentClien
 
 const originalFetch = global.fetch
 
+function jsonResponse(body: unknown, ok = true) {
+  return { ok, json: vi.fn().mockResolvedValue(body) }
+}
+
 describe('consentClient', () => {
   afterEach(() => {
     global.fetch = originalFetch
-    jest.resetAllMocks()
+    vi.resetAllMocks()
   })
 
   describe('getConsentInfo', () => {
     it('returns null without a client_id', async () => {
-      global.fetch = jest.fn()
+      global.fetch = vi.fn()
       expect(await getConsentInfo(new URLSearchParams())).toBeNull()
       expect(global.fetch).not.toHaveBeenCalled()
     })
 
     it('returns null when the api responds with an error', async () => {
-      global.fetch = jest.fn().mockResolvedValue({ ok: false })
+      global.fetch = vi.fn().mockResolvedValue({ ok: false })
       expect(await getConsentInfo(new URLSearchParams('client_id=c1'))).toBeNull()
     })
 
     it('fetches the full request with the session and maps the response', async () => {
-      const json = jest.fn().mockResolvedValue({
-        client_id: 'c1',
-        client_name: 'Claude CLI',
-        scope: 'openid email',
-        consent_token: 'tok'
-      })
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, json })
+      global.fetch = vi.fn().mockResolvedValue(
+        jsonResponse({
+          client_id: 'c1',
+          client_name: 'Claude CLI',
+          scope: 'openid email',
+          consent_token: 'tok'
+        })
+      )
 
       const info = await getConsentInfo(
-        new URLSearchParams('client_id=c1&scope=openid+email&state=s1'),
-        'at'
+        new URLSearchParams('client_id=c1&scope=openid+email&state=s1')
       )
 
       expect(info).toEqual({
@@ -42,70 +46,71 @@ describe('consentClient', () => {
       })
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/oauth2/consent-info?client_id=c1&scope=openid+email&state=s1'),
-        expect.objectContaining({ cache: 'no-store', headers: { cookie: 'accessToken=at' } })
+        expect.objectContaining({ cache: 'no-store', credentials: 'include' })
       )
     })
 
-    it('omits the cookie without a session', async () => {
-      const json = jest.fn().mockResolvedValue({ client_id: 'c1', client_name: 'X', scope: '' })
-      global.fetch = jest.fn().mockResolvedValue({ ok: true, json })
+    it('has no consent token without a session', async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValue(jsonResponse({ client_id: 'c1', client_name: 'X', scope: '' }))
 
       const info = await getConsentInfo(new URLSearchParams('client_id=c1'))
 
       expect(info?.consentToken).toBeUndefined()
-      const [, init] = jest.mocked(global.fetch).mock.calls[0]
-      expect(init).toEqual(expect.objectContaining({ headers: undefined }))
     })
   })
 
   describe('decideAuthorization', () => {
     it('posts the decision and returns the redirect location', async () => {
-      const headers = new Headers({ location: 'https://cb?code=1' })
-      global.fetch = jest.fn().mockResolvedValue({ headers })
+      global.fetch = vi.fn().mockResolvedValue(jsonResponse({ location: 'https://cb?code=1' }))
 
       const location = await decideAuthorization(
         new URLSearchParams('client_id=c1&state=s1'),
         'allow',
-        'accessToken=at',
         'tok'
       )
 
       expect(location).toBe('https://cb?code=1')
-      const [url, init] = jest.mocked(global.fetch).mock.calls[0]
+      const [url, init] = vi.mocked(global.fetch).mock.calls[0]
       expect(url).toContain('/oauth2/authorize?')
       expect(url).toContain('consent=allow')
       expect(url).toContain('client_id=c1')
       expect(init).toEqual(
         expect.objectContaining({
           method: 'POST',
-          redirect: 'manual',
-          headers: { cookie: 'accessToken=at', 'X-OAuth-Consent-Token': 'tok' }
+          credentials: 'include',
+          headers: { Accept: 'application/json', 'X-OAuth-Consent-Token': 'tok' }
         })
       )
     })
 
+    it('sends no consent token when denying', async () => {
+      global.fetch = vi
+        .fn()
+        .mockResolvedValue(jsonResponse({ location: 'https://cb?error=denied' }))
+
+      await decideAuthorization(new URLSearchParams('client_id=c1'), 'deny')
+
+      const [, init] = vi.mocked(global.fetch).mock.calls[0]
+      expect(init).toEqual(expect.objectContaining({ headers: { Accept: 'application/json' } }))
+    })
+
     it('throws when the api does not return a redirect location', async () => {
-      global.fetch = jest.fn().mockResolvedValue({ headers: new Headers() })
+      global.fetch = vi.fn().mockResolvedValue(jsonResponse({}))
       await expect(
-        decideAuthorization(new URLSearchParams('client_id=c1'), 'deny', 'accessToken=at')
+        decideAuthorization(new URLSearchParams('client_id=c1'), 'deny')
       ).rejects.toThrow('Failed to deny authorization')
     })
 
-    it('throws an approve-specific message when denied a redirect location', async () => {
-      global.fetch = jest.fn().mockResolvedValue({ headers: new Headers() })
+    it('throws an approve-specific message when approval returns no location', async () => {
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        json: vi.fn().mockRejectedValue(new SyntaxError('not json'))
+      })
       await expect(
-        decideAuthorization(new URLSearchParams('client_id=c1'), 'allow', 'accessToken=at')
+        decideAuthorization(new URLSearchParams('client_id=c1'), 'allow', 'tok')
       ).rejects.toThrow('Failed to approve authorization')
-    })
-
-    it('omits the cookie header when there is no session cookie', async () => {
-      const headers = new Headers({ location: 'https://cb?code=1' })
-      global.fetch = jest.fn().mockResolvedValue({ headers })
-
-      await decideAuthorization(new URLSearchParams('client_id=c1'), 'allow', '')
-
-      const [, init] = jest.mocked(global.fetch).mock.calls[0]
-      expect(init).toEqual(expect.objectContaining({ headers: undefined }))
     })
   })
 })

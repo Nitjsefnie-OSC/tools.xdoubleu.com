@@ -11,11 +11,11 @@ import { ConnectError, Code } from '@connectrpc/connect'
 import FeedFilterRulesCard from '@/components/feeds/FeedFilterRulesCard'
 import { FilterRuleKind } from '@/lib/gen/feeds/v1/feeds_pb'
 
-const mockUseFeeds = jest.fn()
-const mockUseFilterRules = jest.fn()
-const mockCreate = jest.fn()
-const mockDelete = jest.fn()
-jest.mock('@/hooks/useFeeds', () => ({
+const mockUseFeeds = vi.fn()
+const mockUseFilterRules = vi.fn()
+const mockCreate = vi.fn()
+const mockDelete = vi.fn()
+vi.mock('@/hooks/useFeeds', () => ({
   useFeeds: () => mockUseFeeds(),
   useFilterRules: () => mockUseFilterRules(),
   useCreateFilterRule: () => mockCreate,
@@ -54,7 +54,7 @@ const submitButton = () => screen.getByRole('button', { name: /Add rule|Addingâ€
 
 describe('FeedFilterRulesCard', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockUseFeeds.mockReturnValue({ data: { feeds } })
     mockUseFilterRules.mockReturnValue({ data: { rules }, error: undefined, isLoading: false })
   })

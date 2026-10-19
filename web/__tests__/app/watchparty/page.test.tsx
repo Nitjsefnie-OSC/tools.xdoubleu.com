@@ -1,13 +1,13 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-jest.mock('@/lib/client', () => ({
-  createServiceClient: jest.fn(() => ({
-    createRoom: jest.fn(),
-    joinRoom: jest.fn()
+vi.mock('@/lib/client', () => ({
+  createServiceClient: vi.fn(() => ({
+    createRoom: vi.fn(),
+    joinRoom: vi.fn()
   }))
 }))
-jest.mock('@/lib/gen/watchparty/v1/rooms_pb', () => ({ RoomService: {} }))
+vi.mock('@/lib/gen/watchparty/v1/rooms_pb', () => ({ RoomService: {} }))
 
 import WatchpartyPage from '@/app/watchparty/page'
 

@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from '@/components/ui/link'
 import type { ExternalBookResult } from '@/lib/gen/books/v1/library_pb'
 import BookCover from '@/components/books/BookCover'
 import { Badge } from '@/components/ui/badge'

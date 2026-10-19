@@ -3,9 +3,9 @@ import { create } from '@bufbuild/protobuf'
 import { UserBookSchema, BookSchema, LibraryResponseSchema } from '@/lib/gen/books/v1/library_pb'
 import type { DashboardChartState } from '@/hooks/useDashboardChartState'
 
-jest.mock('@/components/books/BooksProgressChart', () => () => (
-  <div data-testid="books-progress-chart" />
-))
+vi.mock('@/components/books/BooksProgressChart', () => ({
+  default: () => <div data-testid="books-progress-chart" />
+}))
 
 import BooksDashboardView from '@/components/books/BooksDashboardView'
 
@@ -26,11 +26,11 @@ function makeLibrary() {
 function makeChart(view: 'ytd' | 'all' = 'ytd'): DashboardChartState<'ytd' | 'all'> {
   return {
     view,
-    setView: jest.fn(),
+    setView: vi.fn(),
     start: '2025-01-01',
-    setStart: jest.fn(),
+    setStart: vi.fn(),
     end: '2026-01-01',
-    setEnd: jest.fn()
+    setEnd: vi.fn()
   }
 }
 

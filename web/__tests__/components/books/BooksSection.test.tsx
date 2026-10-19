@@ -1,67 +1,71 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-jest.mock('@/hooks/useBooks', () => ({
-  useLibrary: jest.fn()
+vi.mock('@/hooks/useBooks', () => ({
+  useLibrary: vi.fn()
 }))
 
 // The query lives in ?q=; router.replace mutates this and a re-render picks
 // it up, like a real navigation.
 let currentSearchParams = new URLSearchParams()
-const mockReplace = jest.fn((url: string) => {
+const mockReplace = vi.fn((url: string) => {
   const qIndex = url.indexOf('?')
   currentSearchParams = new URLSearchParams(qIndex >= 0 ? url.slice(qIndex + 1) : '')
 })
 
-jest.mock('next/navigation', () => ({
+vi.mock('@/hooks/navigation', () => ({
   useRouter: () => ({ replace: mockReplace }),
   useSearchParams: () => currentSearchParams
 }))
 
-jest.mock('@/components/books/BookSearchBar', () => {
-  return function MockBookSearchBar({
-    query,
-    onChange
-  }: {
-    query: string
-    onChange: (v: string) => void
-  }) {
-    return (
-      <input
-        data-testid="book-search-bar"
-        value={query}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Search books…"
-      />
-    )
+vi.mock('@/components/books/BookSearchBar', () => {
+  return {
+    default: function MockBookSearchBar({
+      query,
+      onChange
+    }: {
+      query: string
+      onChange: (v: string) => void
+    }) {
+      return (
+        <input
+          data-testid="book-search-bar"
+          value={query}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Search books…"
+        />
+      )
+    }
   }
 })
 
-jest.mock('@/components/books/BooksLibrary', () => {
-  return function MockBooksLibrary({
-    library,
-    searchQuery,
-    onSaved
-  }: {
-    library: { reading: unknown[] }
-    searchQuery: string
-    onSaved: () => void
-  }) {
-    return (
-      <div
-        data-testid="books-library"
-        data-reading-count={library.reading.length}
-        data-search-query={searchQuery}
-      >
-        <button data-testid="trigger-saved" onClick={onSaved}>
-          save
-        </button>
-      </div>
-    )
+vi.mock('@/components/books/BooksLibrary', () => {
+  return {
+    default: function MockBooksLibrary({
+      library,
+      searchQuery,
+      onSaved
+    }: {
+      library: { reading: unknown[] }
+      searchQuery: string
+      onSaved: () => void
+    }) {
+      return (
+        <div
+          data-testid="books-library"
+          data-reading-count={library.reading.length}
+          data-search-query={searchQuery}
+        >
+          <button data-testid="trigger-saved" onClick={onSaved}>
+            save
+          </button>
+        </div>
+      )
+    }
   }
 })
 
-jest.mock('swr', () => ({ mutate: jest.fn() }))
+vi.mock('swr', () => ({ mutate: vi.fn() }))
 
 import BooksSection from '@/components/books/BooksSection'
 import { useLibrary } from '@/hooks/useBooks'
@@ -74,7 +78,7 @@ import {
   GetLibraryResponseSchema
 } from '@/lib/gen/books/v1/library_pb'
 
-const mockUseBacklogLibrary = jest.mocked(useLibrary)
+const mockUseBacklogLibrary = vi.mocked(useLibrary)
 
 function mockLibrary() {
   const readingBook = create(UserBookSchema, {
@@ -101,7 +105,7 @@ function mockLibrary() {
 
 describe('BooksSection', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     currentSearchParams = new URLSearchParams()
   })
 
@@ -163,7 +167,7 @@ describe('BooksSection', () => {
     fireEvent.change(screen.getByPlaceholderText('Search books…'), {
       target: { value: 'dune' }
     })
-    expect(mockReplace).toHaveBeenCalledWith('/books/library?q=dune', { scroll: false })
+    expect(mockReplace).toHaveBeenCalledWith('/books/library?q=dune')
   })
 
   it('restores the query from the URL on mount (back-navigation)', () => {
