@@ -5,8 +5,8 @@ vi.mock('@/hooks/useMealPlans', () => ({
   useUpdatePlan: vi.fn(),
   useRotateICalToken: vi.fn()
 }))
-vi.mock('@/lib/gen/mealplans/v1/mealplans_pb', () => ({
-  ...vi.requireActual('@/lib/gen/mealplans/v1/mealplans_pb'),
+vi.mock('@/lib/gen/mealplans/v1/mealplans_pb', async () => ({
+  ...(await vi.importActual('@/lib/gen/mealplans/v1/mealplans_pb')),
   UpdatePlanRequest: vi.fn().mockImplementation((d) => d)
 }))
 

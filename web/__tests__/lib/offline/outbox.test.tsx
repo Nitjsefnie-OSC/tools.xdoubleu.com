@@ -48,15 +48,15 @@ vi.mock('@/lib/offline/store', () => {
   let queued: Record<string, unknown>[] = []
   let failed: Record<string, unknown>[] = []
   let seq = 0
+  const memoryOnly = { on: false }
   return {
     mockReset: () => {
       queued = []
       failed = []
     },
-    mockMemoryOnly: { on: false },
-    addQueued: vi.fn(async function (this: unknown, write: Record<string, unknown>) {
-      const self = vi.requireMock<{ mockMemoryOnly: { on: boolean } }>('@/lib/offline/store')
-      if (self.mockMemoryOnly.on) return undefined
+    mockMemoryOnly: memoryOnly,
+    addQueued: vi.fn(async (write: Record<string, unknown>) => {
+      if (memoryOnly.on) return undefined
       seq++
       queued.push({ ...write, seq })
       return seq
@@ -75,10 +75,10 @@ vi.mock('@/lib/offline/store', () => {
   }
 })
 
-const storeMock = vi.requireMock<{
+const storeMock = (await import('@/lib/offline/store')) as unknown as {
   mockReset: () => void
   mockMemoryOnly: { on: boolean }
-}>('@/lib/offline/store')
+}
 
 const write: OfflineWrite = shoppingListWrites[0]
 const send = vi.mocked(write.send)
@@ -308,9 +308,7 @@ describe('outbox', () => {
   })
 
   it('shows failures stored by an earlier session once loaded', async () => {
-    const { addFailed } = vi.requireMock<{ addFailed: (f: unknown) => Promise<void> }>(
-      '@/lib/offline/store'
-    )
+    const { addFailed } = await import('@/lib/offline/store')
     await addFailed({ description: 'Old', reason: 'gone' })
     resetOutbox()
 

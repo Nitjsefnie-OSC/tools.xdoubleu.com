@@ -275,7 +275,7 @@ describe('startScreen / stopScreen', () => {
   })
 
   it('reports an error when display capture is refused', async () => {
-    jest
+    vi
       .mocked(navigator.mediaDevices.getDisplayMedia)
       .mockRejectedValueOnce(new Error('Permission denied'))
     const { controller, setError } = makeController('presenter')
@@ -285,7 +285,7 @@ describe('startScreen / stopScreen', () => {
 
   it('stopScreen stops tracks, closes the connection, and restores the cam', async () => {
     const screenStream = makeStream()
-    jest
+    vi
       .mocked(navigator.mediaDevices.getDisplayMedia)
       .mockResolvedValueOnce(asStream(screenStream))
     const { controller, refs, mainVideoRef, onSharingChange } = makeController('presenter')
@@ -306,7 +306,7 @@ describe('startScreen / stopScreen', () => {
 
   it('ends the share when the captured track ends (browser stop button)', async () => {
     const screenStream = makeStream()
-    jest
+    vi
       .mocked(navigator.mediaDevices.getDisplayMedia)
       .mockResolvedValueOnce(asStream(screenStream))
     const { controller, refs } = makeController('presenter')

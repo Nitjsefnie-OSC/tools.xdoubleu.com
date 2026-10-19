@@ -17,8 +17,8 @@ const mockRevertGateway = vi.fn()
 const mockUpdateGateway = vi.fn()
 
 // Only the network calls are stubbed.
-vi.mock('@/lib/books/gatewayClient', () => ({
-  ...vi.requireActual('@/lib/books/gatewayClient'),
+vi.mock('@/lib/books/gatewayClient', async () => ({
+  ...(await vi.importActual('@/lib/books/gatewayClient')),
   configureGateway: (...args: unknown[]) => mockConfigureGateway(...args),
   revertGateway: (...args: unknown[]) => mockRevertGateway(...args),
   updateGateway: (...args: unknown[]) => mockUpdateGateway(...args)

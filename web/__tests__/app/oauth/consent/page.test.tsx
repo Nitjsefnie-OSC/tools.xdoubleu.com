@@ -68,7 +68,7 @@ describe('ConsentPage', () => {
   // The api refuses an approval without a valid token, so the page needn't.
   it('still renders the form when the api issues no consent token', async () => {
     withCookies({ accessToken: 'at' })
-    jest
+    vi
       .mocked(getConsentInfo)
       .mockResolvedValue({ clientId: 'c1', clientName: 'Claude CLI', scope: 'openid' })
     await renderPage({ client_id: 'c1' })

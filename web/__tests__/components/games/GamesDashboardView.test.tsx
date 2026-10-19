@@ -17,7 +17,7 @@ vi.mock('@/components/games/SteamDistributionChart', () => {
     )
   }
 })
-vi.mock('@/components/games/SteamProgressChart', () => () => <div data-testid="progress-chart" />)
+vi.mock('@/components/games/SteamProgressChart', () => ({ default: () => <div data-testid="progress-chart" /> }))
 
 import GamesDashboardView from '@/components/games/GamesDashboardView'
 

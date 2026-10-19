@@ -1,8 +1,7 @@
 import {
   claimOfflineData,
   clearOfflineData,
-  registerServiceWorker,
-  savePageForOffline
+  registerServiceWorker
 } from '@/lib/offline/session'
 import { clearStore, getOwner, pruneEntries, setOwner } from '@/lib/offline/store'
 import { logger } from '@/lib/logger'
@@ -31,31 +30,21 @@ function installServiceWorker() {
   })
 }
 
-function setNodeEnv(value: string) {
-  Object.defineProperty(process.env, 'NODE_ENV', { value, configurable: true, writable: true })
-}
-
 describe('offline session', () => {
-  const cachesDelete = vi.fn(async () => true)
-
   beforeEach(() => {
     vi.clearAllMocks()
     installServiceWorker()
-    Object.defineProperty(globalThis, 'caches', {
-      value: { delete: cachesDelete },
-      configurable: true
-    })
   })
 
   afterEach(() => {
-    setNodeEnv('test')
+    vi.unstubAllEnvs()
   })
 
   it('registers the worker only in production', async () => {
     registerServiceWorker()
     expect(register).not.toHaveBeenCalled()
 
-    setNodeEnv('production')
+    vi.stubEnv('PROD', true)
     register.mockRejectedValueOnce(new Error('denied'))
     registerServiceWorker()
     expect(register).toHaveBeenCalledWith('/sw.js')
@@ -65,20 +54,11 @@ describe('offline session', () => {
     })
   })
 
-  it('asks the active worker to save a page', async () => {
-    savePageForOffline('https://tools.test/feeds')
-    await Promise.resolve()
-    await Promise.resolve()
-
-    expect(postMessage).toHaveBeenCalledWith({ type: 'save-page', url: 'https://tools.test/feeds' })
-  })
-
-  it('clears the store, the page cache and the worker state', async () => {
+  it('clears the store and the worker state', async () => {
     await clearOfflineData()
 
     expect(postMessage).toHaveBeenCalledWith({ type: 'clear' })
     expect(clearStore).toHaveBeenCalled()
-    expect(cachesDelete).toHaveBeenCalledWith('tools-pages')
     expect(resetOutbox).toHaveBeenCalled()
   })
 
@@ -115,11 +95,8 @@ describe('offline session without service worker support', () => {
   it('is a no-op', async () => {
     // @ts-expect-error -- simulate a browser without service workers
     delete navigator.serviceWorker
-    // @ts-expect-error -- simulate a browser without CacheStorage
-    delete globalThis.caches
 
     registerServiceWorker()
-    savePageForOffline('/feeds')
     await clearOfflineData()
 
     expect(clearStore).toHaveBeenCalled()

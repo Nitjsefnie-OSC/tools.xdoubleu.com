@@ -632,7 +632,7 @@ describe('useUploadBookFile', () => {
   })
 
   it('re-uploads the blob and retries finalize on FailedPrecondition after alreadyExists', async () => {
-    const mockCreate = jest
+    const mockCreate = vi
       .fn()
       .mockResolvedValueOnce({ uploadId: '', url: '', alreadyExists: true })
       .mockResolvedValueOnce({
@@ -640,7 +640,7 @@ describe('useUploadBookFile', () => {
         url: 'https://r2.example.com/put-retry',
         alreadyExists: false
       })
-    const mockFinalize = jest
+    const mockFinalize = vi
       .fn()
       .mockRejectedValueOnce(new ConnectError('blob missing', Code.FailedPrecondition))
       .mockResolvedValueOnce({ matchedExisting: false, recognizedTitle: 'Recovered Title' })
@@ -674,7 +674,7 @@ describe('useUploadBookFile', () => {
   })
 
   it('throws when the blob-recovery PUT fails on FailedPrecondition retry', async () => {
-    const mockCreate = jest
+    const mockCreate = vi
       .fn()
       .mockResolvedValueOnce({ uploadId: '', url: '', alreadyExists: true })
       .mockResolvedValueOnce({
@@ -682,7 +682,7 @@ describe('useUploadBookFile', () => {
         url: 'https://r2.example.com/put-retry',
         alreadyExists: false
       })
-    const mockFinalize = jest
+    const mockFinalize = vi
       .fn()
       .mockRejectedValueOnce(new ConnectError('blob missing', Code.FailedPrecondition))
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: mockFinalize }
@@ -741,7 +741,7 @@ describe('useUploadBookFile', () => {
   })
 
   it('retries after a ResourceExhausted (rate-limited) response and succeeds', async () => {
-    const mockCreate = jest
+    const mockCreate = vi
       .fn()
       .mockRejectedValueOnce(new ConnectError('rate limit exceeded', Code.ResourceExhausted))
       .mockResolvedValueOnce({
@@ -764,7 +764,7 @@ describe('useUploadBookFile', () => {
   })
 
   it('gives up after repeated ResourceExhausted responses', async () => {
-    const mockCreate = jest
+    const mockCreate = vi
       .fn()
       .mockRejectedValue(new ConnectError('rate limit exceeded', Code.ResourceExhausted))
     const partialClient = { createBookUpload: mockCreate, finalizeBookUpload: vi.fn() }
@@ -801,7 +801,7 @@ describe('useRegisterKoboDevice', () => {
   })
 
   it('calls client.registerKoboDevice with name and serial', async () => {
-    const mockRegister = jest
+    const mockRegister = vi
       .fn()
       .mockResolvedValue({ device: { id: 'dev-1' }, rawToken: 'tok123' })
     // @ts-expect-error -- mock client returns partial shape

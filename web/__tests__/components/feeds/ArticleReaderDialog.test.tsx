@@ -7,9 +7,9 @@ import { ItemSchema } from '@/lib/gen/feeds/v1/feeds_pb'
 const markRead = vi.fn()
 const updateItem = vi.fn()
 
-vi.mock('@/components/feeds/FeedBookmarkButton', () => () => (
+vi.mock('@/components/feeds/FeedBookmarkButton', () => ({ default: () => (
   <div data-testid="bookmark-button" />
-))
+) }))
 vi.mock('@/components/feeds/FeedItemMarkReadButton', () => ({
   __esModule: true,
   default: forwardRef(function MockMarkReadButton(_props: unknown, ref) {
@@ -91,10 +91,10 @@ describe('ArticleReaderDialog', () => {
   })
 
   it('does not auto-mark read on mount when the content already fits without scrolling', () => {
-    const clientHeight = jest
+    const clientHeight = vi
       .spyOn(HTMLElement.prototype, 'clientHeight', 'get')
       .mockReturnValue(300)
-    const scrollHeight = jest
+    const scrollHeight = vi
       .spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
       .mockReturnValue(200)
 

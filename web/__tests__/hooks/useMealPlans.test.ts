@@ -16,6 +16,7 @@ vi.mock('@/lib/offline/outbox', () => ({
 }))
 
 import useSWR from 'swr'
+import { createServiceClient } from '@/lib/client'
 import { enqueueWrite, flushOutbox } from '@/lib/offline/outbox'
 import {
   createMealWrite,
@@ -86,7 +87,7 @@ describe('useMealSuggestions', () => {
 describe('useRotateICalToken', () => {
   it('calls client.rotateICalToken with the plan id', () => {
     const rotateICalToken = vi.fn()
-    vi.mocked(vi.requireMock('@/lib/client').createServiceClient).mockReturnValueOnce({
+    vi.mocked(createServiceClient).mockReturnValueOnce({
       rotateICalToken
     })
     const { result } = renderHook(() => useRotateICalToken())

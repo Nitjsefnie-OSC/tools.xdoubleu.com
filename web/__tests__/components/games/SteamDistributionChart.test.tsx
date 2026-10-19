@@ -1,10 +1,9 @@
-import React from 'react'
+import React, { Children, cloneElement } from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import SteamDistributionChart from '@/components/games/SteamDistributionChart'
 
 // Renders one clickable element per data entry to exercise onBucketClick.
 vi.mock('recharts', () => {
-  const ReactLib = require('react')
   const Bar = ({ onClick, data }: { onClick?: (entry: unknown) => void; data?: unknown[] }) => (
     <>
       {(data ?? []).map((entry, i) => (
@@ -15,8 +14,8 @@ vi.mock('recharts', () => {
   return {
     BarChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
       <div data-testid="bar-chart">
-        {ReactLib.Children.map(children, (child: React.ReactElement) =>
-          child && child.type === Bar ? ReactLib.cloneElement(child, { data }) : child
+        {Children.map(children, (child: React.ReactElement) =>
+          child && child.type === Bar ? cloneElement(child, { data }) : child
         )}
       </div>
     ),

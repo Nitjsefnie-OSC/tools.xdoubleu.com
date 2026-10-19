@@ -20,8 +20,8 @@ const mockClient = {
   setEmailNewPicks: vi.fn().mockResolvedValue({})
 }
 vi.mock('@/lib/client', () => ({ createServiceClient: vi.fn(() => mockClient) }))
-vi.mock('@/lib/gen/taste/v1/taste_pb', () => ({
-  ...vi.requireActual('@/lib/gen/taste/v1/taste_pb'),
+vi.mock('@/lib/gen/taste/v1/taste_pb', async () => ({
+  ...(await vi.importActual('@/lib/gen/taste/v1/taste_pb')),
   TasteService: {}
 }))
 

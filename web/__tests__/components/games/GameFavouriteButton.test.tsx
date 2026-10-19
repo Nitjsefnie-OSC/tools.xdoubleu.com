@@ -6,8 +6,8 @@ import { GameSchema } from '@/lib/gen/games/v1/games_pb'
 const mockSetGameFavourite = vi.fn()
 const mockMutate = vi.fn()
 
-vi.mock('swr', () => ({
-  ...vi.requireActual('swr'),
+vi.mock('swr', async () => ({
+  ...(await vi.importActual('swr')),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 

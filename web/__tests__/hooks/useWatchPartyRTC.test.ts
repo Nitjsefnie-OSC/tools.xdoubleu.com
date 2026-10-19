@@ -223,7 +223,7 @@ describe('useWatchPartyRTC — toggle controls', () => {
 
 describe('useWatchPartyRTC — getUserMedia error', () => {
   it('sets error when getUserMedia rejects', async () => {
-    jest
+    vi
       .mocked(navigator.mediaDevices.getUserMedia)
       .mockRejectedValueOnce(new Error('Permission denied'))
     const { result } = renderHook(() =>

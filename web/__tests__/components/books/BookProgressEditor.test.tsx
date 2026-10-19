@@ -6,8 +6,8 @@ import { UserBookSchema, BookSchema } from '@/lib/gen/books/v1/library_pb'
 const mockUpdateProgress = vi.fn()
 const mockMutate = vi.fn()
 
-vi.mock('swr', () => ({
-  ...vi.requireActual('swr'),
+vi.mock('swr', async () => ({
+  ...(await vi.importActual('swr')),
   mutate: (...args: unknown[]) => mockMutate(...args)
 }))
 

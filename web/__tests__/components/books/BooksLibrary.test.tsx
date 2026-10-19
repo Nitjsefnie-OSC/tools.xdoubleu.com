@@ -14,8 +14,8 @@ const mockCreateBook = vi.fn()
 
 // AddManualBookDialog also calls useLibrary; vi.mock factories can't use
 // imports, so stub a minimal shape.
-vi.mock('@/hooks/useBooks', () => ({
-  ...vi.requireActual('@/hooks/useBooks'),
+vi.mock('@/hooks/useBooks', async () => ({
+  ...(await vi.importActual('@/hooks/useBooks')),
   useSearchExternal: () => mockSearchExternal,
   useCreateBook: () => mockCreateBook,
   useLibrary: () => ({

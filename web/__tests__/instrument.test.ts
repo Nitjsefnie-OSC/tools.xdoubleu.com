@@ -1,15 +1,14 @@
-export {}
-
-const mockSentryInit = vi.fn()
-const mockPostHogInit = vi.fn()
+const { mockSentryInit, mockPostHogInit } = vi.hoisted(() => ({
+  mockSentryInit: vi.fn(),
+  mockPostHogInit: vi.fn()
+}))
 
 vi.mock('@sentry/react', () => ({
   init: mockSentryInit,
-  captureRouterTransitionStart: vi.fn()
+  browserTracingIntegration: vi.fn(() => ({ name: 'BrowserTracing' }))
 }))
 
 vi.mock('posthog-js', () => ({
-  __esModule: true,
   default: { init: mockPostHogInit }
 }))
 
@@ -20,25 +19,27 @@ vi.mock('@/lib/env', () => ({
   getPostHogHost: vi.fn(() => 'https://eu.i.posthog.com')
 }))
 
-describe('instrumentation-client', () => {
+import { getPostHogKey } from '@/lib/env'
+
+describe('instrument', () => {
   beforeEach(() => {
     vi.resetModules()
     mockSentryInit.mockClear()
     mockPostHogInit.mockClear()
   })
 
-  it('always initializes Sentry', () => {
-    require('../instrumentation-client')
+  it('always initializes Sentry', async () => {
+    await import('@/src/instrument')
 
     expect(mockSentryInit).toHaveBeenCalledWith(
       expect.objectContaining({ dsn: 'https://example@sentry.io/123', release: 'v1.0.0' })
     )
   })
 
-  it('initializes PostHog when a key is configured', () => {
-    vi.mocked(require('@/lib/env').getPostHogKey).mockReturnValue('phc_abc123')
+  it('initializes PostHog when a key is configured', async () => {
+    vi.mocked(getPostHogKey).mockReturnValue('phc_abc123')
 
-    require('../instrumentation-client')
+    await import('@/src/instrument')
 
     expect(mockPostHogInit).toHaveBeenCalledWith('phc_abc123', {
       api_host: 'https://eu.i.posthog.com',
@@ -51,10 +52,10 @@ describe('instrumentation-client', () => {
     })
   })
 
-  it('skips PostHog initialization when no key is configured', () => {
-    vi.mocked(require('@/lib/env').getPostHogKey).mockReturnValue('')
+  it('skips PostHog initialization when no key is configured', async () => {
+    vi.mocked(getPostHogKey).mockReturnValue('')
 
-    require('../instrumentation-client')
+    await import('@/src/instrument')
 
     expect(mockPostHogInit).not.toHaveBeenCalled()
   })

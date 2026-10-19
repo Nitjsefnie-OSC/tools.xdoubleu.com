@@ -13,13 +13,9 @@ const getFeedItem = vi.fn()
 const client = { listFeedItems, getFeedItem } as unknown as Client<typeof FeedService>
 
 // A fresh module per test: the prefetch runs once per page load.
-function load(): typeof import('@/lib/feeds/prefetch') {
-  let mod: typeof import('@/lib/feeds/prefetch') | undefined
-  vi.isolateModules(() => {
-    mod = vi.requireActual<typeof import('@/lib/feeds/prefetch')>('@/lib/feeds/prefetch')
-  })
-  if (!mod) throw new Error('module not loaded')
-  return mod
+async function load(): Promise<typeof import('@/lib/feeds/prefetch')> {
+  vi.resetModules()
+  return import('@/lib/feeds/prefetch')
 }
 
 function setOnline(online: boolean) {
@@ -36,7 +32,7 @@ beforeEach(() => {
       { id: 'empty', hasContent: false }
     ]
   })
-  jest
+  vi
     .mocked(loadEntry)
     .mockImplementation(async (key) =>
       key === '/feeds/item/saved' ? { key, data: {}, savedAt: 1 } : undefined
@@ -48,7 +44,7 @@ beforeEach(() => {
 
 describe('prefetchFeedBodies', () => {
   it('saves the bodies of unread items not saved yet, once per page load', async () => {
-    const { prefetchFeedBodies } = load()
+    const { prefetchFeedBodies } = await load()
     await prefetchFeedBodies(client)
     await prefetchFeedBodies(client)
 
@@ -61,12 +57,12 @@ describe('prefetchFeedBodies', () => {
 
   it('does nothing offline', async () => {
     setOnline(false)
-    await load().prefetchFeedBodies(client)
+    await (await load()).prefetchFeedBodies(client)
     expect(listFeedItems).not.toHaveBeenCalled()
   })
 
   it('retries on a later visit after a failure', async () => {
-    const { prefetchFeedBodies } = load()
+    const { prefetchFeedBodies } = await load()
     listFeedItems.mockRejectedValueOnce(new TypeError('Failed to fetch'))
     await prefetchFeedBodies(client)
     await prefetchFeedBodies(client)

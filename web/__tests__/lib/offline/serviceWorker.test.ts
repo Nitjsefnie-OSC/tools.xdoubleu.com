@@ -51,10 +51,12 @@ class FakeCacheStorage {
 
 type Listener = (event: SwFetchEvent & SwMessageEvent) => void
 
+const PRECACHE = ['assets/index-abc.js', 'assets/index-abc.css', 'icon.svg']
+
 function setup(enabled = true) {
   const listeners = new Map<string, Listener>()
   const caches = new FakeCacheStorage()
-  const fetch = vi.fn<Promise<Response>, [RequestInfo | URL, RequestInit?]>()
+  const fetch = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>()
   const scope: SwScope = {
     location: { origin: ORIGIN },
     caches,
@@ -64,7 +66,7 @@ function setup(enabled = true) {
     fetch,
     addEventListener: (type: string, listener: Listener) => listeners.set(type, listener)
   }
-  serviceWorker(scope, enabled)
+  serviceWorker(scope, enabled, PRECACHE)
 
   async function dispatch(type: string, extra: { request?: Request; data?: unknown } = {}) {
     const waits: Promise<unknown>[] = []
@@ -100,34 +102,75 @@ function html(body = 'page', init: ResponseInit = {}) {
 }
 
 describe('serviceWorker', () => {
-  it('activates immediately and drops stale caches', async () => {
+  it('precaches the shell and the build files on install', async () => {
+    const { caches, fetch, scope, dispatch } = setup()
+    fetch.mockImplementation(async (req) =>
+      keyOf(req) === `${ORIGIN}/` ? html('shell') : new Response('file')
+    )
+
+    await dispatch('install')
+
+    expect(scope.skipWaiting).toHaveBeenCalled()
+    const files = [...(caches.stores.get('tools-app')?.entries.keys() ?? [])].sort()
+    expect(files).toEqual(
+      [
+        `${ORIGIN}/`,
+        `${ORIGIN}/assets/index-abc.css`,
+        `${ORIGIN}/assets/index-abc.js`,
+        `${ORIGIN}/icon.svg`
+      ].sort()
+    )
+  })
+
+  it('installs even when a file cannot be fetched', async () => {
+    const { fetch, scope, dispatch } = setup()
+    fetch.mockRejectedValue(new TypeError('Failed to fetch'))
+
+    await dispatch('install')
+
+    expect(scope.skipWaiting).toHaveBeenCalled()
+  })
+
+  it('does not cache a failed file on install', async () => {
+    const { caches, fetch, dispatch } = setup()
+    fetch.mockResolvedValue(new Response('', { status: 404 }))
+
+    await dispatch('install')
+
+    expect(caches.stores.get('tools-app')?.entries.size).toBe(0)
+  })
+
+  it('claims clients, drops stale caches and prunes assets a new build dropped', async () => {
     const { caches, scope, dispatch } = setup()
     await caches.open('tools-pages')
     await caches.open('tools-old')
     await caches.open('other-app')
+    const app = await caches.open('tools-app')
+    await app.put(`${ORIGIN}/assets/old-123.js`, new Response('old'))
+    await app.put(`${ORIGIN}/assets/index-abc.js`, new Response('current'))
+    await app.put(`${ORIGIN}/`, html('shell'))
 
-    await dispatch('install')
     await dispatch('activate')
 
-    expect(scope.skipWaiting).toHaveBeenCalled()
     expect(scope.clients.claim).toHaveBeenCalled()
-    expect(await caches.keys()).toEqual(['tools-pages', 'other-app'])
+    expect((await caches.keys()).sort()).toEqual(['other-app', 'tools-app'])
+    expect([...app.entries.keys()].sort()).toEqual([`${ORIGIN}/`, `${ORIGIN}/assets/index-abc.js`])
   })
 
-  it('saves navigations and serves them when the network fails', async () => {
+  it('serves the saved shell for any navigation when the network fails', async () => {
     const { caches, fetch, dispatch } = setup()
     fetch.mockResolvedValueOnce(html('fresh'))
 
     const online = await dispatch('fetch', navigate('/shoppinglist#top'))
     expect(await online?.text()).toBe('fresh')
-    expect(caches.stores.get('tools-pages')?.entries.has(`${ORIGIN}/shoppinglist`)).toBe(true)
+    expect(caches.stores.get('tools-app')?.entries.has(`${ORIGIN}/`)).toBe(true)
 
     fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'))
-    const offline = await dispatch('fetch', navigate('/shoppinglist'))
+    const offline = await dispatch('fetch', navigate('/books/7/read'))
     expect(await offline?.text()).toBe('fresh')
   })
 
-  it('serves an offline page for a navigation never saved', async () => {
+  it('serves an offline page when no shell was ever saved', async () => {
     const { fetch, dispatch } = setup()
     fetch.mockRejectedValue(new TypeError('Failed to fetch'))
 
@@ -144,31 +187,22 @@ describe('serviceWorker', () => {
       'a non-HTML response',
       () => new Response('{}', { headers: { 'Content-Type': 'application/json' } })
     ]
-  ])('does not save %s', async (_, response) => {
+  ])('does not save %s as the shell', async (_, response) => {
     const { caches, fetch, dispatch } = setup()
     fetch.mockResolvedValueOnce(response())
 
     await dispatch('fetch', navigate('/feeds'))
 
-    expect(caches.stores.get('tools-pages')?.entries.size ?? 0).toBe(0)
-  })
-
-  it('keeps only the newest 100 pages', async () => {
-    const { caches, fetch, dispatch } = setup()
-    fetch.mockImplementation(async () => html())
-
-    for (let i = 0; i <= 100; i++) await dispatch('fetch', navigate(`/recipes/${i}`))
-
-    const keys = [...(caches.stores.get('tools-pages')?.entries.keys() ?? [])]
-    expect(keys).toHaveLength(100)
-    expect(keys[0]).toBe(`${ORIGIN}/recipes/1`)
+    expect(caches.stores.get('tools-app')?.entries.size ?? 0).toBe(0)
   })
 
   it.each([
-    ['an online-only page', navigate('/auth/login')],
+    ['an api route', navigate('/api/version')],
+    ['an OAuth discovery document', navigate('/.well-known/openid-configuration')],
+    ['a download', navigate('/downloads/kobo-gateway.zip')],
     ['a cross-origin request', { request: new Request('https://elsewhere.test/x') }],
     ['a POST', { request: new Request(`${ORIGIN}/api/x`, { method: 'POST' }) }],
-    ['a same-origin subresource', { request: new Request(`${ORIGIN}/icon.svg`) }]
+    ['an uncached same-origin subresource', { request: new Request(`${ORIGIN}/other.png`) }]
   ])('leaves %s to the network', async (_, event) => {
     const { fetch, dispatch } = setup()
 
@@ -176,9 +210,9 @@ describe('serviceWorker', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
-  it('serves static assets cache-first', async () => {
+  it('serves hashed assets cache-first', async () => {
     const { fetch, dispatch } = setup()
-    const asset = () => ({ request: new Request(`${ORIGIN}/_next/static/chunks/a.js`) })
+    const asset = () => ({ request: new Request(`${ORIGIN}/assets/chunk-9.js`) })
     fetch.mockResolvedValueOnce(new Response('js'))
 
     expect(await (await dispatch('fetch', asset()))?.text()).toBe('js')
@@ -186,128 +220,75 @@ describe('serviceWorker', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
-  it('does not cache a failed static asset', async () => {
+  it('serves other precached files cache-first', async () => {
+    const { fetch, dispatch } = setup()
+    fetch.mockResolvedValueOnce(new Response('<svg/>'))
+
+    await dispatch('fetch', { request: new Request(`${ORIGIN}/icon.svg`) })
+    await dispatch('fetch', { request: new Request(`${ORIGIN}/icon.svg`) })
+
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not cache a failed asset', async () => {
     const { caches, fetch, dispatch } = setup()
     fetch.mockResolvedValueOnce(new Response('', { status: 404 }))
 
-    await dispatch('fetch', { request: new Request(`${ORIGIN}/_next/static/chunks/b.js`) })
+    await dispatch('fetch', { request: new Request(`${ORIGIN}/assets/chunk-b.js`) })
 
-    expect(caches.stores.get('tools-static')?.entries.size).toBe(0)
+    expect(caches.stores.get('tools-app')?.entries.size).toBe(0)
   })
 
-  it('saves a page on request, at most once per interval', async () => {
-    const { caches, fetch, dispatch } = setup()
-    fetch.mockImplementation(async () => html('saved'))
-
-    await dispatch('message', { data: { type: 'save-page', url: `${ORIGIN}/feeds?x=1#a` } })
-    await dispatch('message', { data: { type: 'save-page', url: `${ORIGIN}/feeds?x=1` } })
-
-    expect(fetch).toHaveBeenCalledTimes(1)
-    expect(fetch).toHaveBeenCalledWith(`${ORIGIN}/feeds?x=1`, { credentials: 'same-origin' })
-    expect(caches.stores.get('tools-pages')?.entries.has(`${ORIGIN}/feeds?x=1`)).toBe(true)
-  })
-
-  it("caches a saved page's static assets, so it can hydrate offline", async () => {
-    const { caches, fetch, dispatch } = setup()
-    const page =
-      '<link rel="stylesheet" href="/_next/static/css/a.css">' +
-      '<script src="/_next/static/chunks/read.js" async></script>' +
-      '<script>self.__next_f.push([1,"\\"/_next/static/chunks/read.js\\""])</script>'
-    fetch.mockImplementation(async (req) =>
-      keyOf(req).includes('/_next/static/') ? new Response('asset') : html(page)
-    )
-    const assets = await caches.open('tools-static')
-    await assets.put(`${ORIGIN}/_next/static/css/a.css`, new Response('old'))
-
-    await dispatch('message', { data: { type: 'save-page', url: '/books/1/read' } })
-
-    expect([...assets.entries.keys()].sort()).toEqual([
-      `${ORIGIN}/_next/static/chunks/read.js`,
-      `${ORIGIN}/_next/static/css/a.css`
-    ])
-    // The page, then only the asset that wasn't cached yet.
-    expect(fetch).toHaveBeenCalledTimes(2)
-  })
-
-  it('saves nothing for a response that is not a page', async () => {
-    const { caches, fetch, dispatch } = setup()
-    fetch.mockResolvedValue(new Response('{}', { headers: { 'Content-Type': 'application/json' } }))
-
-    await dispatch('message', { data: { type: 'save-page', url: '/feeds' } })
-
-    expect(fetch).toHaveBeenCalledTimes(1)
-    expect(caches.stores.get('tools-pages')?.entries.size ?? 0).toBe(0)
-  })
-
-  it('saves the page even when an asset fails', async () => {
-    const { caches, fetch, dispatch } = setup()
-    fetch.mockImplementation(async (req) => {
-      if (keyOf(req).includes('/_next/static/')) throw new TypeError('Failed to fetch')
-      return html('<script src="/_next/static/chunks/x.js"></script>')
-    })
-
-    await dispatch('message', { data: { type: 'save-page', url: '/feeds' } })
-
-    expect(caches.stores.get('tools-pages')?.entries.has(`${ORIGIN}/feeds`)).toBe(true)
-  })
-
-  it('re-saves a page once its saved copy is older than the interval', async () => {
+  it('serves env.js network-first and falls back to the saved copy offline', async () => {
     const { fetch, dispatch } = setup()
-    const stale = new Date(Date.now() - 11 * 60_000).toUTCString()
-    fetch.mockResolvedValueOnce(
-      new Response('old', { headers: { 'Content-Type': 'text/html', Date: stale } })
-    )
-    fetch.mockImplementation(async () => html('new'))
+    const env = () => ({ request: new Request(`${ORIGIN}/env.js`) })
+    fetch.mockResolvedValueOnce(new Response('window.__ENV__={}'))
 
-    await dispatch('message', { data: { type: 'save-page', url: '/feeds' } })
-    await dispatch('message', { data: { type: 'save-page', url: '/feeds' } })
-    await dispatch('message', { data: { type: 'save-page', url: '/feeds' } })
+    expect(await (await dispatch('fetch', env()))?.text()).toBe('window.__ENV__={}')
 
-    expect(fetch).toHaveBeenCalledTimes(2)
+    fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    expect(await (await dispatch('fetch', env()))?.text()).toBe('window.__ENV__={}')
   })
 
-  it('ignores save requests for online-only pages and swallows fetch failures', async () => {
-    const { caches, fetch, dispatch } = setup()
+  it('lets env.js fail when it was never saved', async () => {
+    const { fetch, dispatch } = setup()
     fetch.mockRejectedValue(new TypeError('Failed to fetch'))
 
-    await dispatch('message', { data: { type: 'save-page', url: '/monitoring' } })
-    expect(fetch).not.toHaveBeenCalled()
-
-    await dispatch('message', { data: { type: 'save-page', url: '/feeds' } })
-    expect(caches.stores.get('tools-pages')?.entries.size).toBe(0)
+    await expect(dispatch('fetch', { request: new Request(`${ORIGIN}/env.js`) })).rejects.toThrow(
+      'Failed to fetch'
+    )
   })
 
   it('ignores malformed messages', async () => {
-    const { fetch, dispatch } = setup()
+    const { caches, dispatch } = setup()
+    await caches.open('tools-webpub')
 
     await dispatch('message', { data: null })
     await dispatch('message', { data: 'clear' })
-    await dispatch('message', { data: { type: 'save-page' } })
+    await dispatch('message', { data: { type: 'other' } })
 
-    expect(fetch).not.toHaveBeenCalled()
+    expect(await caches.keys()).toEqual(['tools-webpub'])
   })
 
-  it('clears saved pages but keeps static assets', async () => {
-    const { caches, fetch, dispatch } = setup()
-    fetch.mockImplementation(async () => html())
-    await caches.open('tools-static')
-    await dispatch('message', { data: { type: 'save-page', url: '/feeds' } })
+  it('clears everything but the app files on request', async () => {
+    const { caches, dispatch } = setup()
+    await caches.open('tools-app')
+    await caches.open('tools-webpub')
 
     await dispatch('message', { data: { type: 'clear' } })
-    expect(await caches.keys()).toEqual(['tools-static'])
 
-    // Nothing saved any more, so the next request fetches again.
-    await dispatch('message', { data: { type: 'save-page', url: '/feeds' } })
-    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(await caches.keys()).toEqual(['tools-app'])
   })
 
   it('unregisters and deletes its caches when disabled', async () => {
     const { caches, scope, listeners, dispatch } = setup(false)
-    await caches.open('tools-pages')
-    await caches.open('tools-static')
+    await caches.open('tools-app')
+    await caches.open('tools-webpub')
 
+    await dispatch('install')
     await dispatch('activate')
 
+    expect(scope.skipWaiting).toHaveBeenCalled()
     expect(await caches.keys()).toEqual([])
     expect(scope.registration.unregister).toHaveBeenCalled()
     expect(listeners.has('fetch')).toBe(false)
@@ -315,8 +296,14 @@ describe('serviceWorker', () => {
 })
 
 describe('serviceWorkerScript', () => {
-  it('invokes the worker with the enabled flag', () => {
-    expect(serviceWorkerScript(true)).toMatch(/\)\(self, true\);\n$/)
-    expect(serviceWorkerScript(false)).toMatch(/\)\(self, false\);\n$/)
+  it('invokes the worker with the enabled flag and the precache list', () => {
+    expect(serviceWorkerScript(true, ['a.js'])).toMatch(/\)\(self, true, \["a\.js"\]\);\n$/)
+    expect(serviceWorkerScript(false, [])).toMatch(/\)\(self, false, \[\]\);\n$/)
+  })
+
+  it('leaves a placeholder token for the api to fill in', () => {
+    expect(serviceWorkerScript('__OFFLINE_ENABLED__', [])).toContain(
+      '(self, __OFFLINE_ENABLED__, [])'
+    )
   })
 })

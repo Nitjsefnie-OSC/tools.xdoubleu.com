@@ -4,8 +4,8 @@ import { act, render, screen, fireEvent } from '@testing-library/react'
 const mockRefreshSteamGame = vi.fn()
 const mockGlobalMutate = vi.fn()
 
-vi.mock('swr', () => ({
-  ...vi.requireActual('swr'),
+vi.mock('swr', async () => ({
+  ...(await vi.importActual('swr')),
   mutate: (...args: unknown[]) => mockGlobalMutate(...args)
 }))
 

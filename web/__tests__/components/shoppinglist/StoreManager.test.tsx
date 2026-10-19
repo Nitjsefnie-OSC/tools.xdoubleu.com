@@ -10,8 +10,8 @@ import {
 
 // jsdom has no layout, so @dnd-kit can't drag; a trigger button calls
 // onDragEnd to exercise the real reorder logic.
-vi.mock('@dnd-kit/core', () => {
-  const actual = vi.requireActual('@dnd-kit/core')
+vi.mock('@dnd-kit/core', async () => {
+  const actual = (await vi.importActual('@dnd-kit/core'))
   return {
     ...actual,
     DndContext: ({

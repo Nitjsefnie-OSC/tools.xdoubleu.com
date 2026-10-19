@@ -5,8 +5,8 @@ const mockOpenPdf = vi.fn()
 const mockRenderPage = vi.fn()
 const mockOutline = vi.fn()
 
-vi.mock('@/lib/books/pdf', () => {
-  const actual = vi.requireActual('@/lib/books/pdf')
+vi.mock('@/lib/books/pdf', async () => {
+  const actual = (await vi.importActual('@/lib/books/pdf'))
   return {
     ...actual,
     openPdf: (...a: unknown[]) => mockOpenPdf(...a),

@@ -29,8 +29,8 @@ vi.mock('@/hooks/useBooks', () => ({
   useUpdateBookStatus: () => vi.fn()
 }))
 
-vi.mock('swr', () => ({
-  ...vi.requireActual('swr'),
+vi.mock('swr', async () => ({
+  ...(await vi.importActual('swr')),
   mutate: vi.fn()
 }))
 
