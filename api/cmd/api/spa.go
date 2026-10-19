@@ -7,7 +7,8 @@ import (
 )
 
 // Handler is the whole server: the built web app in front of the API when
-// WEB_DIR is set on the web role, else just the API (local development runs Vite's dev server).
+// WEB_DIR is set on the web role, else just the API (local development runs
+// Vite's dev server).
 // It strips the /api prefix kamal-proxy no longer splits off.
 func (app *Application) Handler() (http.Handler, error) {
 	api := stripAPIPathPrefix(app.handler())

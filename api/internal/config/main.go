@@ -274,7 +274,6 @@ func (c parser) envRole() string {
 	return role
 }
 
-//nolint:funlen //flat list of env reads
 func New(logger *slog.Logger) Config {
 	var cfg Config
 
