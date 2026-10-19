@@ -8,7 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func scrape(t *testing.T, h http.Handler, authorization string) *httptest.ResponseRecorder {
+func scrape(
+	t *testing.T,
+	h http.Handler,
+	authorization string,
+) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodGet, metricsPath, nil)
 	if authorization != "" {

@@ -232,6 +232,28 @@ func (c parser) envBool(key string, defaultValue bool) bool {
 	return value
 }
 
+// loadMonitoring reads the Prometheus and Grafana settings.
+func (c parser) loadMonitoring(cfg *Config) {
+	cfg.PrometheusURL = c.envStr(
+		"PROMETHEUS_URL", "http://prometheus:9090",
+	)
+	cfg.GrafanaURL = c.envStr(
+		"GRAFANA_URL", "https://tools.xdoubleu.com/grafana",
+	)
+	cfg.GrafanaAdminPassword = c.envSecret("GRAFANA_ADMIN_PASSWORD", "")
+	cfg.ObservabilityIngestSecret = c.envSecret("OBSERVABILITY_INGEST_SECRET", "")
+}
+
+// loadWeb reads what the api needs to serve the web build.
+func (c parser) loadWeb(cfg *Config) {
+	cfg.WebDir = c.envStr("WEB_DIR", "")
+	cfg.SentryDsnWeb = c.envSecret("SENTRY_DSN_WEB", "")
+	cfg.PostHogKey = c.envSecret("POSTHOG_KEY", "")
+	cfg.PostHogHost = c.envStr("POSTHOG_HOST", "")
+	cfg.KoboGatewayRelease = c.envStr("KOBO_GATEWAY_RELEASE", "dev")
+	cfg.OfflineDisabled = c.envStr("OFFLINE_DISABLED", "") == "1"
+}
+
 func New(logger *slog.Logger) Config {
 	var cfg Config
 
@@ -294,21 +316,8 @@ func New(logger *slog.Logger) Config {
 	cfg.EmailInboundDomain = p.envStr("EMAIL_INBOUND_DOMAIN", "")
 	cfg.EmailInboundSecret = p.envSecret("EMAIL_INBOUND_SECRET", "")
 
-	cfg.PrometheusURL = p.envStr(
-		"PROMETHEUS_URL", "http://prometheus:9090",
-	)
-	cfg.GrafanaURL = p.envStr(
-		"GRAFANA_URL", "https://tools.xdoubleu.com/grafana",
-	)
-	cfg.GrafanaAdminPassword = p.envSecret("GRAFANA_ADMIN_PASSWORD", "")
-	cfg.ObservabilityIngestSecret = p.envSecret("OBSERVABILITY_INGEST_SECRET", "")
-
-	cfg.WebDir = p.envStr("WEB_DIR", "")
-	cfg.SentryDsnWeb = p.envSecret("SENTRY_DSN_WEB", "")
-	cfg.PostHogKey = p.envSecret("POSTHOG_KEY", "")
-	cfg.PostHogHost = p.envStr("POSTHOG_HOST", "")
-	cfg.KoboGatewayRelease = p.envStr("KOBO_GATEWAY_RELEASE", "dev")
-	cfg.OfflineDisabled = p.envStr("OFFLINE_DISABLED", "") == "1"
+	p.loadMonitoring(&cfg)
+	p.loadWeb(&cfg)
 
 	return cfg
 }

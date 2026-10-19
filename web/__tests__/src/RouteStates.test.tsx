@@ -1,9 +1,11 @@
 import * as Sentry from '@sentry/react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
+import { reloadPage } from '@/lib/navigate'
 import { NotFound, RouteError } from '@/src/RouteStates'
 
 vi.mock('@sentry/react', () => ({ captureException: vi.fn() }))
+vi.mock('@/lib/navigate', () => ({ reloadPage: vi.fn(), leaveTo: vi.fn() }))
 
 function Boom(): never {
   throw new Error('kaboom')
@@ -28,8 +30,6 @@ describe('RouteError', () => {
   })
 
   it('reports a render error to Sentry and offers a reload', () => {
-    const reload = vi.fn()
-    vi.stubGlobal('location', { ...window.location, reload })
     renderAt('/', [{ path: '/', Component: Boom, ErrorBoundary: RouteError }])
 
     expect(screen.getByRole('heading', { name: 'Something went wrong' })).toBeInTheDocument()
@@ -38,8 +38,7 @@ describe('RouteError', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
-    expect(reload).toHaveBeenCalled()
-    vi.unstubAllGlobals()
+    expect(reloadPage).toHaveBeenCalled()
   })
 
   it('does not report an HTTP-style route response', () => {

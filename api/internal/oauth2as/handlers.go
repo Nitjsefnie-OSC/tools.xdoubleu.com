@@ -48,7 +48,7 @@ func AuthorizeHandler(
 		// The consent page decides through fetch, which can't read a redirect's
 		// Location, so it asks for the destination as JSON instead.
 		if strings.Contains(r.Header.Get("Accept"), "application/json") {
-			w = &locationAsJSON{ResponseWriter: w}
+			w = &locationAsJSON{ResponseWriter: w, captured: false}
 		}
 
 		ar, err := provider.NewAuthorizeRequest(ctx, r)
@@ -107,7 +107,8 @@ type locationAsJSON struct {
 
 func (l *locationAsJSON) WriteHeader(code int) {
 	location := l.Header().Get("Location")
-	if code < http.StatusMultipleChoices || code >= http.StatusBadRequest || location == "" {
+	redirect := code >= http.StatusMultipleChoices && code < http.StatusBadRequest
+	if !redirect || location == "" {
 		l.ResponseWriter.WriteHeader(code)
 		return
 	}

@@ -58,6 +58,9 @@ func (h *Handler) indexFor(urlPath string) []byte {
 	return body
 }
 
-var htmlEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", `"`, "&quot;") //nolint:gochecknoglobals //read-only
+//nolint:gochecknoglobals //read-only
+var htmlEscaper = strings.NewReplacer(
+	"&", "&amp;", "<", "&lt;", ">", "&gt;", `"`, "&quot;",
+)
 
 func htmlEscape(s string) string { return htmlEscaper.Replace(s) }

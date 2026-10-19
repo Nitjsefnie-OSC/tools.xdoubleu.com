@@ -24,10 +24,14 @@ const (
 	swFile    = "sw.js"
 	// offlineEnabledToken is the placeholder web/vite.config.ts leaves in the
 	// service worker for the OFFLINE_DISABLED kill switch.
+	//nolint:gosec // a placeholder, not a credential
 	offlineEnabledToken = "__OFFLINE_ENABLED__"
 	immutableCache      = "public, max-age=31536000, immutable"
 	revalidateCache     = "no-cache"
 	noStore             = "no-store"
+	extJS               = ".js"
+	extMJS              = ".mjs"
+	extManifest         = ".webmanifest"
 	maxLogsBodyBytes    = 64 * 1024
 	maxVitalsBodyBytes  = 1024
 	logsPerMinute       = 60
@@ -118,9 +122,9 @@ func New(cfg Config, logger *slog.Logger) (*Handler, error) {
 
 func registerMimeTypes() {
 	for ext, typ := range map[string]string{
-		".webmanifest": "application/manifest+json",
-		".mjs":         "text/javascript; charset=utf-8",
-		".js":          "text/javascript; charset=utf-8",
+		extManifest: "application/manifest+json",
+		extMJS:      "text/javascript; charset=utf-8",
+		extJS:       "text/javascript; charset=utf-8",
 	} {
 		_ = mime.AddExtensionType(ext, typ)
 	}
@@ -208,6 +212,7 @@ func (h *Handler) serveBytes(
 	if r.Method == http.MethodHead {
 		return
 	}
+	//nolint:gosec // body is server-side config or a file from the build
 	_, _ = w.Write(body)
 }
 
@@ -221,9 +226,9 @@ func (h *Handler) serveRelease(w http.ResponseWriter, r *http.Request) {
 //
 //nolint:gochecknoglobals //read-only lookup
 var missingAssetExts = map[string]bool{
-	".js": true, ".mjs": true, ".css": true, ".map": true, ".png": true,
+	extJS: true, extMJS: true, ".css": true, ".map": true, ".png": true,
 	".jpg": true, ".jpeg": true, ".svg": true, ".ico": true, ".webp": true,
-	".woff": true, ".woff2": true, ".json": true, ".webmanifest": true,
+	".woff": true, ".woff2": true, ".json": true, extManifest: true,
 	".txt": true, ".zip": true, ".sig": true, ".wasm": true, ".xml": true,
 }
 
@@ -232,8 +237,9 @@ func (h *Handler) serveStatic(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(clean, "/")
 
 	if name != "" && name != indexFile && name != swFile {
-		if info, err := os.Stat(filepath.Join(h.cfg.Dir, filepath.FromSlash(name))); err == nil &&
-			!info.IsDir() {
+		full := filepath.Join(h.cfg.Dir, filepath.FromSlash(name))
+		//nolint:gosec // name is path.Clean-ed, so it stays under the build directory
+		if info, err := os.Stat(full); err == nil && !info.IsDir() {
 			h.serveFile(w, r, name, info.ModTime())
 			return
 		}
@@ -259,6 +265,7 @@ func (h *Handler) serveFile(
 	if h.gzip.serve(w, r, full, name, modTime) {
 		return
 	}
+	//nolint:gosec // full is path.Clean-ed under the build directory
 	f, err := os.Open(full)
 	if err != nil {
 		http.NotFound(w, r)
@@ -276,6 +283,7 @@ func (h *Handler) serveIndex(w http.ResponseWriter, r *http.Request, urlPath str
 	if r.Method == http.MethodHead {
 		return
 	}
+	//nolint:gosec // the shell comes from the build; only a fixed title is injected
 	_, _ = w.Write(body)
 }
 

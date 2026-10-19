@@ -8,6 +8,10 @@ vi.mock('@/hooks/useMealPlans', () => ({
   useMoveMeal: vi.fn(),
   useMealSuggestions: vi.fn(() => ({ data: undefined }))
 }))
+vi.mock('@/hooks/useShoppingList', () => ({
+  useCategories: () => ({ data: undefined }),
+  useItemCategories: () => ({ data: undefined })
+}))
 vi.mock('@/lib/env', () => ({ getApiUrl: () => 'http://localhost' }))
 vi.mock('@/lib/mealplans/mealPlanCalendar', () => {
   const week = Array.from({ length: 7 }, (_, i) => {

@@ -4,6 +4,7 @@ import { isRouteErrorResponse, useRouteError } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageHeader } from '@/components/ui/page-header'
+import { reloadPage } from '@/lib/navigate'
 
 export function NotFound() {
   return (
@@ -24,7 +25,7 @@ export function RouteError() {
     <PageContainer size="narrow">
       <PageHeader title="Something went wrong" description="An unexpected error occurred." />
       {/* A reload also recovers from a stale deploy's missing route chunk. */}
-      <Button onClick={() => window.location.reload()}>Try again</Button>
+      <Button onClick={reloadPage}>Try again</Button>
     </PageContainer>
   )
 }

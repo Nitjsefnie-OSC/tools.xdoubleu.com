@@ -79,7 +79,8 @@ func TestWebLogsHandler_MalformedTimestamp_FallsBackToNow(t *testing.T) {
 	var occurredAt time.Time
 	require.NoError(t, testApp.db.QueryRow(
 		context.Background(),
-		"SELECT occurred_at FROM global.log_entries WHERE source = 'web-client' AND message = $1",
+		`SELECT occurred_at FROM global.log_entries
+		WHERE source = 'web-client' AND message = $1`,
 		"bad clock",
 	).Scan(&occurredAt))
 	assert.WithinDuration(t, time.Now(), occurredAt, time.Minute)

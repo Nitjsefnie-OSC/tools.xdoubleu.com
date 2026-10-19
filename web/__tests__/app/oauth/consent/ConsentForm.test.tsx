@@ -1,20 +1,15 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ConsentForm from '@/app/oauth/consent/ConsentForm'
+import { leaveTo } from '@/lib/navigate'
 import { decideAuthorization } from '@/lib/oauth2as/consentClient'
 
 vi.mock('@/lib/oauth2as/consentClient', () => ({ decideAuthorization: vi.fn() }))
-
-const assign = vi.fn()
+vi.mock('@/lib/navigate', () => ({ leaveTo: vi.fn(), reloadPage: vi.fn() }))
 
 describe('ConsentForm', () => {
   beforeEach(() => {
     vi.mocked(decideAuthorization).mockReset().mockResolvedValue('https://cb?code=1')
-    assign.mockReset()
-    vi.stubGlobal('location', { ...window.location, assign })
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
+    vi.mocked(leaveTo).mockReset()
   })
 
   it('renders the client name and human-readable scopes', () => {
@@ -54,7 +49,7 @@ describe('ConsentForm', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Approve' }))
 
-    await waitFor(() => expect(assign).toHaveBeenCalledWith('https://cb?code=1'))
+    await waitFor(() => expect(leaveTo).toHaveBeenCalledWith('https://cb?code=1'))
     const [query, decision, token] = vi.mocked(decideAuthorization).mock.calls[0]
     expect(query.toString()).toBe('client_id=c1&scope=openid')
     expect([decision, token]).toEqual(['allow', 'tok'])
@@ -71,7 +66,7 @@ describe('ConsentForm', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Deny' }))
 
-    await waitFor(() => expect(assign).toHaveBeenCalled())
+    await waitFor(() => expect(leaveTo).toHaveBeenCalled())
     const [query, decision, token] = vi.mocked(decideAuthorization).mock.calls[0]
     expect(query.toString()).toBe('client_id=c1&scope=openid')
     expect([decision, token]).toEqual(['deny', undefined])
@@ -88,6 +83,6 @@ describe('ConsentForm', () => {
       expect(screen.getByText('Something went wrong. Please try again.')).toBeInTheDocument()
     )
     expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled()
-    expect(assign).not.toHaveBeenCalled()
+    expect(leaveTo).not.toHaveBeenCalled()
   })
 })

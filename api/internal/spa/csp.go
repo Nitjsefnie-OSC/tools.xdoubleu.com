@@ -12,13 +12,15 @@ const gatewayURL = "https://127.0.0.1:41132"
 
 // postHogHostRE maps PostHog's ingestion host to its -assets sibling, which
 // serves the config and extension scripts.
-var postHogHostRE = regexp.MustCompile(`^https://([a-z-]+)\.i\.`) //nolint:gochecknoglobals //compiled once
+var postHogHostRE = regexp.MustCompile(`^https://([a-z-]+)\.i\.`)
 
 // contentSecurityPolicy is the one policy for the HTML shell: the build has no
 // inline scripts, so nothing needs a per-request nonce.
 func contentSecurityPolicy(cfg Config) string {
 	// R2: direct presigned upload PUTs. gatewayURL: the loopback kobo-gateway.
-	connect := []string{"'self'", "*.sentry.io", "https://*.r2.cloudflarestorage.com", gatewayURL}
+	connect := []string{
+		"'self'", "*.sentry.io", "https://*.r2.cloudflarestorage.com", gatewayURL,
+	}
 	if origin := originOf(cfg.APIURL); origin != "" {
 		connect = append(connect, origin)
 	}

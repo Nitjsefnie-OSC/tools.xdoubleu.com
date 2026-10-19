@@ -18,7 +18,8 @@ import (
 	"tools.xdoubleu.com/internal/spa"
 )
 
-const indexHTML = `<!doctype html><html><head><title>tools.xdoubleu.com</title></head>` +
+const indexHTML = `<!doctype html><html><head>` +
+	`<title>tools.xdoubleu.com</title></head>` +
 	`<body><div id="root"></div></body></html>`
 
 const swJS = `(function(){})(self, __OFFLINE_ENABLED__, ["assets/app.js"]);`
@@ -59,7 +60,7 @@ func (l *logsRecorder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func newHandler(t *testing.T, mutate func(*spa.Config)) (http.Handler, *logsRecorder) {
 	t.Helper()
-	logs := &logsRecorder{}
+	logs := &logsRecorder{calls: 0, body: ""}
 	cfg := spa.Config{
 		Dir:                writeBuild(t),
 		APIURL:             "https://tools.example/api",
@@ -84,7 +85,12 @@ func newHandler(t *testing.T, mutate func(*spa.Config)) (http.Handler, *logsReco
 	return h.Wrap(api), logs
 }
 
-func get(t *testing.T, h http.Handler, target string, header ...string) *httptest.ResponseRecorder {
+func get(
+	t *testing.T,
+	h http.Handler,
+	target string,
+	header ...string,
+) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodGet, target, nil)
 	for i := 0; i+1 < len(header); i += 2 {
@@ -96,16 +102,25 @@ func get(t *testing.T, h http.Handler, target string, header ...string) *httptes
 }
 
 func TestNew_FailsWithoutABuild(t *testing.T) {
-	_, err := spa.New(spa.Config{Dir: t.TempDir()}, slog.New(slog.DiscardHandler))
+	_, err := spa.New(
+		spa.Config{Dir: t.TempDir()}, //nolint:exhaustruct // only Dir matters here
+		slog.New(slog.DiscardHandler),
+	)
 
 	require.Error(t, err)
 }
 
 func TestNew_FailsWithoutAServiceWorker(t *testing.T) {
 	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "index.html"), []byte(indexHTML), 0o600))
+	require.NoError(
+		t,
+		os.WriteFile(filepath.Join(dir, "index.html"), []byte(indexHTML), 0o600),
+	)
 
-	_, err := spa.New(spa.Config{Dir: dir}, slog.New(slog.DiscardHandler))
+	_, err := spa.New(
+		spa.Config{Dir: dir}, //nolint:exhaustruct // only Dir matters here
+		slog.New(slog.DiscardHandler),
+	)
 
 	require.Error(t, err)
 }
@@ -168,7 +183,7 @@ func TestIndex_SecurityHeadersAndStaticCSP(t *testing.T) {
 	assert.Contains(t, csp, "font-src 'self' blob:")
 	assert.Contains(t, csp, "frame-ancestors 'self'")
 	// connect-src: R2 uploads, Sentry, PostHog, the api and the kobo gateway.
-	connect := csp[strings.Index(csp, "connect-src"):]
+	_, connect, _ := strings.Cut(csp, "connect-src")
 	connect, _, _ = strings.Cut(connect, ";")
 	for _, want := range []string{
 		"'self'", "*.sentry.io", "https://*.r2.cloudflarestorage.com",
@@ -226,7 +241,11 @@ func TestStatic_HashedAssetsAreImmutable(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, "png-bytes", rec.Body.String())
-	assert.Equal(t, "public, max-age=31536000, immutable", rec.Header().Get("Cache-Control"))
+	assert.Equal(
+		t,
+		"public, max-age=31536000, immutable",
+		rec.Header().Get("Cache-Control"),
+	)
 }
 
 func TestStatic_OtherFilesRevalidate(t *testing.T) {
@@ -331,7 +350,11 @@ func TestEnvJS_CarriesRuntimeConfigUncached(t *testing.T) {
 	rec := get(t, h, "/env.js")
 
 	assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"))
-	assert.Equal(t, "application/javascript; charset=utf-8", rec.Header().Get("Content-Type"))
+	assert.Equal(
+		t,
+		"application/javascript; charset=utf-8",
+		rec.Header().Get("Content-Type"),
+	)
 	body := rec.Body.String()
 	assert.True(t, strings.HasPrefix(body, "window.__ENV__="))
 	for _, want := range []string{
@@ -368,7 +391,12 @@ func TestRelease_ReportsTheDeployedRelease(t *testing.T) {
 	assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
 }
 
-func post(t *testing.T, h http.Handler, target, body string, header ...string) *httptest.ResponseRecorder {
+func post(
+	t *testing.T,
+	h http.Handler,
+	target, body string,
+	header ...string,
+) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodPost, target, strings.NewReader(body))
 	req.RemoteAddr = "203.0.113.9:1234"
@@ -470,7 +498,9 @@ func TestWebVitals_AcceptsButDropsUnknownMetrics(t *testing.T) {
 func TestWebVitals_RejectsMalformedBodies(t *testing.T) {
 	h, _ := newHandler(t, nil)
 
-	for _, body := range []string{`nope`, `{"name":"TTFB"}`, `{"value":1}`, `{"name":1,"value":1}`} {
+	for _, body := range []string{
+		`nope`, `{"name":"TTFB"}`, `{"value":1}`, `{"name":1,"value":1}`,
+	} {
 		rec := post(t, h, "/web-vitals", body)
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code, body)
@@ -480,7 +510,14 @@ func TestWebVitals_RejectsMalformedBodies(t *testing.T) {
 func TestWebVitals_RejectsCrossSiteAndOversize(t *testing.T) {
 	h, _ := newHandler(t, nil)
 
-	cross := post(t, h, "/web-vitals", `{"name":"TTFB","value":1}`, "Sec-Fetch-Site", "cross-site")
+	cross := post(
+		t,
+		h,
+		"/web-vitals",
+		`{"name":"TTFB","value":1}`,
+		"Sec-Fetch-Site",
+		"cross-site",
+	)
 	big := post(t, h, "/web-vitals", strings.Repeat("x", 2048))
 
 	assert.Equal(t, http.StatusForbidden, cross.Code)

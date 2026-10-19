@@ -460,10 +460,10 @@ func TestOAuth2Authorize_ConsentTokenBoundToRequest(t *testing.T) {
 	assert.Empty(t, loc.Query().Get("code"))
 }
 
-// locationJSON posts a decision the way the consent page does and returns the
+// decideAsJSON posts a decision the way the consent page does and returns the
 // response.
 func (s *oauth2asTestServer) decideAsJSON(
-	t *testing.T, client *fosite.DefaultClient, q url.Values, token string,
+	t *testing.T, q url.Values, token string,
 ) *http.Response {
 	t.Helper()
 	req, err := http.NewRequestWithContext(
@@ -500,7 +500,7 @@ func TestOAuth2Authorize_AcceptJSONReturnsApprovalLocation(t *testing.T) {
 	q := decisionQuery(client, challenge, "allow")
 	token := srv.consentToken(t, q)
 
-	resp := srv.decideAsJSON(t, client, q, token)
+	resp := srv.decideAsJSON(t, q, token)
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
@@ -518,7 +518,7 @@ func TestOAuth2Authorize_AcceptJSONReturnsDenialLocation(t *testing.T) {
 	client := srv.registerClient(t)
 	_, challenge := pkcePair(t)
 
-	resp := srv.decideAsJSON(t, client, decisionQuery(client, challenge, "deny"), "")
+	resp := srv.decideAsJSON(t, decisionQuery(client, challenge, "deny"), "")
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	var body map[string]string
@@ -540,7 +540,7 @@ func TestOAuth2Authorize_AcceptJSONLeavesUnredirectableErrorsAlone(t *testing.T)
 		"consent":               {"allow"},
 	}
 
-	resp := srv.decideAsJSON(t, &fosite.DefaultClient{ID: "unknown-client"}, q, "")
+	resp := srv.decideAsJSON(t, q, "")
 
 	assert.GreaterOrEqual(t, resp.StatusCode, http.StatusBadRequest)
 	assert.Empty(t, resp.Header.Get("Location"))

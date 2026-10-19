@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { leaveTo } from '@/lib/navigate'
 import { decideAuthorization } from '@/lib/oauth2as/consentClient'
 
 interface ConsentFormProps {
@@ -38,7 +39,7 @@ export default function ConsentForm({
         decision === 'allow' ? consentToken : undefined
       )
       // Leaves the app for the client's redirect_uri; stay disabled meanwhile.
-      window.location.assign(location)
+      leaveTo(location)
     } catch {
       setError('Something went wrong. Please try again.')
       setPending(false)

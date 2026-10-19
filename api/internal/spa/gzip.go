@@ -17,8 +17,8 @@ import (
 //
 //nolint:gochecknoglobals //read-only allowlist
 var compressible = map[string]bool{
-	".js": true, ".mjs": true, ".css": true, ".svg": true, ".json": true,
-	".webmanifest": true, ".txt": true,
+	extJS: true, extMJS: true, ".css": true, ".svg": true, ".json": true,
+	extManifest: true, ".txt": true,
 }
 
 type gzipEntry struct {
@@ -67,21 +67,30 @@ func (c *gzipCache) load(full, name string, modTime time.Time) ([]byte, bool) {
 		return e.body, true
 	}
 
+	//nolint:gosec // full is path.Clean-ed under the build directory
 	raw, err := os.ReadFile(full)
 	if err != nil {
 		return nil, false
 	}
-	var buf bytes.Buffer
-	zw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	body, err := compress(raw)
 	if err != nil {
 		return nil, false
 	}
-	if _, err := io.Copy(zw, bytes.NewReader(raw)); err != nil {
-		return nil, false
+	c.entries[name] = gzipEntry{modTime: modTime, body: body}
+	return body, true
+}
+
+func compress(raw []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	zw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	if err != nil {
+		return nil, err
 	}
-	if err := zw.Close(); err != nil {
-		return nil, false
+	if _, err = io.Copy(zw, bytes.NewReader(raw)); err != nil {
+		return nil, err
 	}
-	c.entries[name] = gzipEntry{modTime: modTime, body: buf.Bytes()}
-	return buf.Bytes(), true
+	if err = zw.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }

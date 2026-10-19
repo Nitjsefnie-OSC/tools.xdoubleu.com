@@ -1,9 +1,10 @@
+import { readdirSync } from 'node:fs'
 import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
-import { serviceWorkerScript } from './lib/offline/serviceWorker'
+import { serviceWorkerScript } from './lib/offline/serviceWorker.ts'
 
 // The api serves /env.js in production (api/cmd/api/spa.go); the dev server
 // serves the same window.__ENV__ from the shell environment or .env files.
@@ -31,12 +32,20 @@ function devEnv(env: Record<string, string>): Plugin {
 // Emits sw.js with the build's hashed files as its precache list. The api
 // swaps the __OFFLINE_ENABLED__ token at request time (OFFLINE_DISABLED kill
 // switch), so one build serves every environment.
-function serviceWorkerPlugin(): Plugin {
+function serviceWorkerPlugin(publicDir: string): Plugin {
   return {
     name: 'service-worker',
     apply: 'build',
     generateBundle(_options, bundle) {
-      const precache = Object.keys(bundle).filter((name) => !name.endsWith('.map'))
+      // public/ files are copied after the bundle is generated, so list them
+      // here. downloads/ holds the large kobo-gateway artifacts.
+      const staticFiles = readdirSync(publicDir, { recursive: true, withFileTypes: true })
+        .filter((entry) => entry.isFile())
+        .map((entry) => path.relative(publicDir, path.join(entry.parentPath, entry.name)))
+        .map((name) => name.split(path.sep).join('/'))
+        .filter((name) => !name.startsWith('downloads/'))
+      const emitted = Object.keys(bundle).filter((name) => !name.endsWith('.map'))
+      const precache = [...new Set([...emitted, ...staticFiles])]
       this.emitFile({
         type: 'asset',
         fileName: 'sw.js',
@@ -54,7 +63,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       devEnv(env),
-      serviceWorkerPlugin(),
+      serviceWorkerPlugin(path.resolve(import.meta.dirname, 'public')),
       sentryVitePlugin({
         org: process.env.SENTRY_ORG,
         project: process.env.SENTRY_PROJECT,
@@ -76,6 +85,8 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: 'jsdom',
+      // Per-file isolation without booting a jsdom per file (4x faster here).
+      pool: 'vmThreads',
       setupFiles: ['./vitest.setup.tsx'],
       // Stale Stryker sandboxes hold outdated copies of the tests.
       exclude: ['node_modules', '.stryker-tmp', 'dist'],
@@ -92,7 +103,7 @@ export default defineConfig(({ mode }) => {
         exclude: ['lib/gen/**', '**/*.d.ts', 'src/main.tsx'],
         reporter: ['text', 'lcov'],
         // Ratchet: just below current coverage; raise as it improves.
-        thresholds: { statements: 77, branches: 69, functions: 70, lines: 77 }
+        thresholds: { statements: 94, branches: 89, functions: 93, lines: 95 }
       }
     }
   }
