@@ -14,7 +14,7 @@ sites ([`docs/convention-ui-standards.md`](../../../docs/convention-ui-standards
 
 ## Primitives
 
-### `CardLinkStatus.tsx` — client component
+### `CardLinkStatus.tsx`
 
 #### `CardLinkStatus`
 
@@ -119,7 +119,7 @@ Styled native checkbox; pass `label` to get the wrapping `<label>` (a bare one i
 
 Also accepts: `Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>`
 
-### `collapsible.tsx` — client component
+### `collapsible.tsx`
 
 #### `Collapsible`
 
@@ -133,7 +133,7 @@ Disclosure section with a chevron trigger and its own open state.
 | `className` | `string` |  |  |
 | `triggerClassName` | `string` |  | Applied to the trigger, e.g. to change its type scale. |
 
-### `combobox.tsx` — client component
+### `combobox.tsx`
 
 #### `Combobox`
 
@@ -165,7 +165,7 @@ One third-party integration with its connection status and controls.
 | `actions` | `ReactNode` |  | Connect/disconnect controls; they wrap under the name on narrow screens. |
 | `className` | `string` |  |  |
 
-### `date-input.tsx` — client component
+### `date-input.tsx`
 
 #### `DateInput`
 
@@ -180,7 +180,7 @@ Native date input on every viewport; its value is always 'YYYY-MM-DD' or ''.
 | `className` | `string` |  |  |
 | `'aria-label'` | `string` |  |  |
 
-### `date-range-fields.tsx` — client component
+### `date-range-fields.tsx`
 
 #### `DateRangeFields`
 
@@ -195,7 +195,7 @@ Labelled From/To date pair: stacked on phones, side by side from `sm`.
 | `onEndChange` | `(value: string) => void` | yes |  |
 | `className` | `string` |  |  |
 
-### `dialog.tsx` — client component
+### `dialog.tsx`
 
 #### `ConfirmDialog`
 
@@ -285,6 +285,16 @@ A card that navigates, with its controls kept out of the link area.
 | `className` | `string` |  |  |
 | `linkClassName` | `string` |  |  |
 
+### `link.tsx`
+
+#### `Link`
+
+In-app links navigate client-side; absolute URLs render a plain anchor.
+
+#### `useLinkPending`
+
+True inside a `<Link>` while the navigation it started is still loading.
+
 ### `menu-item.tsx`
 
 #### `MenuItem`
@@ -327,7 +337,7 @@ Navigation to another page in `PageHeader` `actions`, bordered like the `seconda
 
 `PageHeaderLink` to an app's settings page, with the gear icon.
 
-### `popover.tsx` — client component
+### `popover.tsx`
 
 #### `Popover`
 
@@ -376,7 +386,7 @@ Also accepts: `Omit<
   'type' | 'name' | 'checked' | 'onChange'
 >`
 
-### `rating-stars.tsx` — client component
+### `rating-stars.tsx`
 
 #### `RatingStars`
 
@@ -404,7 +414,7 @@ A `Card` with the standard title/description/action header; don't hand-assemble 
 | `className` | `string` |  |  |
 | `contentClassName` | `string` |  | Applied to the body wrapper, not the card. |
 
-### `segmented-tabs.tsx` — client component
+### `segmented-tabs.tsx`
 
 #### `SegmentedTabs`
 
@@ -488,7 +498,7 @@ Also accepts: `Omit<ThHTMLAttributes<HTMLTableCellElement>, 'dir'>`
 
 #### `Textarea`
 
-### `toggle-icon-button.tsx` — client component
+### `toggle-icon-button.tsx`
 
 #### `ToggleIconButton`
 
@@ -507,7 +517,7 @@ On/off glyph button; `aria-pressed` makes it announce as a toggle.
 
 Amber-when-on treatment shared by every glyph toggle.
 
-### `toggle-pill.tsx` — client component
+### `toggle-pill.tsx`
 
 #### `TogglePill`
 

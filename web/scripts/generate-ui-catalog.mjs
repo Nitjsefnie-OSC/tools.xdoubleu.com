@@ -138,7 +138,6 @@ for (const file of files) {
   const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
   const { values } = exportsOf(source)
   const byName = declarationsOf(source)
-  const isClient = /^\s*['"]use client['"]/m.test(text)
 
   const entries = []
   for (const name of [...values].sort()) {
@@ -148,7 +147,7 @@ for (const file of files) {
   }
   if (entries.length === 0) continue
 
-  const lines = [`### \`${file}\`${isClient ? ' — client component' : ''}`, '']
+  const lines = [`### \`${file}\``, '']
   for (const entry of entries) {
     lines.push(`#### \`${entry.name}\``, '')
     if (entry.doc) lines.push(entry.doc, '')
