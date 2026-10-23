@@ -6,7 +6,9 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -14,6 +16,42 @@ import (
 
 	"tools.xdoubleu.com/apps/books/internal/models"
 )
+
+// TestKoboLibrarySync_ConcurrentSyncsWarmOnce: a sync while the user's cover
+// warm is still running doesn't start another.
+func TestKoboLibrarySync_ConcurrentSyncsWarmOnce(t *testing.T) {
+	ctx := context.Background()
+	rawToken, bookID := setupKoboSyncBook(t, "kobo-warm-once-"+uuid.NewString())
+
+	var hits atomic.Int32
+	release := make(chan struct{})
+	cover := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			hits.Add(1)
+			select {
+			case <-release:
+			case <-r.Context().Done():
+			}
+			_, _ = w.Write([]byte(jpegCover))
+		},
+	))
+	t.Cleanup(cover.Close)
+	t.Cleanup(func() { close(release) })
+	_, err := testDB.Exec(ctx,
+		`UPDATE books.books SET cover_url = $1 WHERE id = $2`, cover.URL, bookID)
+	require.NoError(t, err)
+
+	ts := httptest.NewServer(getRoutes())
+	t.Cleanup(ts.Close)
+	koboSync(t, ts, rawToken)
+	require.Eventually(t, func() bool { return hits.Load() == 1 },
+		5*time.Second, 10*time.Millisecond)
+
+	koboSync(t, ts, rawToken)
+	assert.Never(t, func() bool { return hits.Load() > 1 },
+		300*time.Millisecond, 10*time.Millisecond,
+		"the second sync joins the running warm")
+}
 
 // TestEnsureUserCoverCached_SkipsFilesFoundCoverless: files already found
 // coverless aren't downloaded again; a changed file is.
