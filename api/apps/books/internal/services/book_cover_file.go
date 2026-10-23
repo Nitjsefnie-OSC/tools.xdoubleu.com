@@ -7,8 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"path"
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -57,13 +59,20 @@ func (s *BookService) EnsureUserCoverCached(
 	return false, errors.Join(urlErr, fileErr)
 }
 
+// maxCoverMissingBytes bounds the cover.missing marker read.
+const maxCoverMissingBytes = 64 << 10
+
 // cacheCoverFromFile stores the cover image of userID's first ready EPUB or
-// KEPUB of bookID; ErrCoverNotFound when none has one.
+// KEPUB of bookID; ErrCoverNotFound when none has one. The book's
+// cover.missing marker lists the storage keys found coverless, which are
+// never downloaded again; a new or changed file isn't listed, so it is.
 func (s *BookService) cacheCoverFromFile(
 	ctx context.Context,
 	userID string,
 	bookID uuid.UUID,
 ) error {
+	coverless := s.coverlessFiles(ctx, bookID)
+	known := len(coverless)
 	for _, format := range []string{models.FileFormatEPUB, models.FileFormatKEPUB} {
 		file, err := s.bookFiles.GetByBookAndFormat(ctx, userID, bookID, format)
 		if errors.Is(err, database.ErrResourceNotFound) {
@@ -72,16 +81,12 @@ func (s *BookService) cacheCoverFromFile(
 		if err != nil {
 			return err
 		}
-		if file.Status != models.FileStatusReady {
+		if file.Status != models.FileStatusReady || coverless[file.StorageKey] {
 			continue
 		}
-		z, err := s.openStoredZip(ctx, file.StorageKey)
-		if err != nil {
-			return err
-		}
-		data, err := epubCover(z.zr)
-		z.close()
+		data, err := s.storedCover(ctx, file.StorageKey)
 		if errors.Is(err, ErrCoverNotFound) {
+			coverless[file.StorageKey] = true
 			continue
 		}
 		if err != nil {
@@ -95,7 +100,55 @@ func (s *BookService) cacheCoverFromFile(
 			http.DetectContentType(data),
 		)
 	}
+	if len(coverless) > known {
+		s.markCoverless(ctx, bookID, coverless)
+	}
 	return ErrCoverNotFound
+}
+
+func (s *BookService) storedCover(ctx context.Context, key string) ([]byte, error) {
+	z, err := s.openStoredZip(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	defer z.close()
+	return epubCover(z.zr)
+}
+
+// coverlessFiles reads the storage keys bookID's cover.missing marker lists;
+// a missing or unreadable marker lists none.
+func (s *BookService) coverlessFiles(
+	ctx context.Context,
+	bookID uuid.UUID,
+) map[string]bool {
+	keys := map[string]bool{}
+	rc, err := s.objectStore.Get(ctx, bookCoverMissingKey(bookID))
+	if err != nil {
+		return keys
+	}
+	defer func() { _ = rc.Close() }()
+	data, err := io.ReadAll(io.LimitReader(rc, maxCoverMissingBytes))
+	if err != nil {
+		return keys
+	}
+	for _, key := range strings.Fields(string(data)) {
+		keys[key] = true
+	}
+	return keys
+}
+
+func (s *BookService) markCoverless(
+	ctx context.Context,
+	bookID uuid.UUID,
+	keys map[string]bool,
+) {
+	body := strings.Join(slices.Sorted(maps.Keys(keys)), "\n")
+	err := s.objectStore.Put(ctx, bookCoverMissingKey(bookID),
+		strings.NewReader(body), int64(len(body)), "text/plain")
+	if err != nil {
+		s.logger.Warn("failed to write cover missing marker",
+			"bookID", bookID, "err", err)
+	}
 }
 
 // openStoredZip opens a stored EPUB/KEPUB as a temp-file zip.

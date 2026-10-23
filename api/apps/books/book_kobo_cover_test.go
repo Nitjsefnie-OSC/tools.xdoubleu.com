@@ -11,7 +11,45 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"tools.xdoubleu.com/apps/books/internal/models"
 )
+
+// TestEnsureUserCoverCached_SkipsFilesFoundCoverless: files already found
+// coverless aren't downloaded again; a changed file is.
+func TestEnsureUserCoverCached_SkipsFilesFoundCoverless(t *testing.T) {
+	ctx := context.Background()
+	owner := "cover-none-" + uuid.NewString()
+	epub, bookID := uploadFileForOwner(t, owner, models.FileFormatEPUB)
+	_, err := testDB.Exec(ctx,
+		`UPDATE books.books SET cover_url = NULL WHERE id = $1`, bookID)
+	require.NoError(t, err)
+	kepub, err := testApp.Services.Conversion.EnsureKEPUB(ctx, owner, bookID)
+	require.NoError(t, err)
+
+	cached, err := testApp.Services.Books.EnsureUserCoverCached(ctx, owner, bookID)
+	require.NoError(t, err)
+	require.False(t, cached)
+
+	for _, key := range []string{epub.StorageKey, kepub.StorageKey} {
+		require.NoError(t, fakeStore.Delete(ctx, key))
+	}
+	cached, err = testApp.Services.Books.EnsureUserCoverCached(ctx, owner, bookID)
+	require.NoError(t, err, "coverless files are not downloaded again")
+	assert.False(t, cached)
+
+	coveredKey := "books/" + bookID.String() + "/covered.epub"
+	data := buildCoveredEPUBBytes("Covered")
+	require.NoError(t, fakeStore.Put(ctx, coveredKey,
+		bytes.NewReader(data), int64(len(data)), "application/epub+zip"))
+	_, err = testDB.Exec(ctx,
+		`UPDATE books.book_files SET storage_key = $1 WHERE id = $2`,
+		coveredKey, epub.ID)
+	require.NoError(t, err)
+	cached, err = testApp.Services.Books.EnsureUserCoverCached(ctx, owner, bookID)
+	require.NoError(t, err)
+	assert.True(t, cached, "a changed file is inspected again")
+}
 
 // jpegCover is a JPEG signature, enough for content sniffing.
 const jpegCover = "\xff\xd8\xff\xe0epub-cover"
