@@ -70,6 +70,17 @@ func TestWebPubRoutes_NotFound(t *testing.T) {
 		webPubGet(t, "/books/api/book/"+uuid.NewString()+"/webpub/manifest.json").Code)
 	assert.Equal(t, http.StatusNotFound,
 		webPubGet(t, "/books/api/book/"+uuid.NewString()+"/webpub/positions.json").Code)
+	assert.Equal(t, http.StatusNotFound,
+		webPubGet(t, "/books/api/book/"+uuid.NewString()+"/webpub/res/a.xhtml").Code)
 	assert.Equal(t, http.StatusBadRequest,
 		webPubGet(t, "/books/api/book/nope/webpub/manifest.json").Code)
+}
+
+func TestWebPubRoutes_MissingBlobIsAnError(t *testing.T) {
+	book := addUniqueBook(t)
+	file := seedEPUBFile(t, fakeStore, book.ID)
+	require.NoError(t, fakeStore.Delete(context.Background(), file.StorageKey))
+
+	assert.Equal(t, http.StatusInternalServerError, webPubGet(t,
+		"/books/api/book/"+book.ID.String()+"/webpub/manifest.json").Code)
 }

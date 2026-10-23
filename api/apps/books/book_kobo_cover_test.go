@@ -54,7 +54,7 @@ func TestKoboLibrarySync_ConcurrentSyncsWarmOnce(t *testing.T) {
 }
 
 // TestEnsureUserCoverCached_SkipsFilesFoundCoverless: files already found
-// coverless aren't downloaded again; a changed file is.
+// coverless aren't downloaded again; a reconverted one is.
 func TestEnsureUserCoverCached_SkipsFilesFoundCoverless(t *testing.T) {
 	ctx := context.Background()
 	owner := "cover-none-" + uuid.NewString()
@@ -76,17 +76,16 @@ func TestEnsureUserCoverCached_SkipsFilesFoundCoverless(t *testing.T) {
 	require.NoError(t, err, "coverless files are not downloaded again")
 	assert.False(t, cached)
 
-	coveredKey := "books/" + bookID.String() + "/covered.epub"
 	data := buildCoveredEPUBBytes("Covered")
-	require.NoError(t, fakeStore.Put(ctx, coveredKey,
+	require.NoError(t, fakeStore.Put(ctx, kepub.StorageKey,
 		bytes.NewReader(data), int64(len(data)), "application/epub+zip"))
 	_, err = testDB.Exec(ctx,
-		`UPDATE books.book_files SET storage_key = $1 WHERE id = $2`,
-		coveredKey, epub.ID)
+		`UPDATE books.book_files SET converter_version = converter_version + 1
+		 WHERE id = $1`, kepub.ID)
 	require.NoError(t, err)
 	cached, err = testApp.Services.Books.EnsureUserCoverCached(ctx, owner, bookID)
 	require.NoError(t, err)
-	assert.True(t, cached, "a changed file is inspected again")
+	assert.True(t, cached, "a reconverted KEPUB under the same key is reopened")
 }
 
 // jpegCover is a JPEG signature, enough for content sniffing.

@@ -64,8 +64,8 @@ const maxCoverMissingBytes = 64 << 10
 
 // cacheCoverFromFile stores the cover image of userID's first ready EPUB or
 // KEPUB of bookID; ErrCoverNotFound when none has one. The book's
-// cover.missing marker lists the storage keys found coverless, which are
-// never downloaded again; a new or changed file isn't listed, so it is.
+// cover.missing marker lists the files found coverless, which are never
+// downloaded again; a new or reconverted file isn't listed, so it is.
 func (s *BookService) cacheCoverFromFile(
 	ctx context.Context,
 	userID string,
@@ -73,6 +73,11 @@ func (s *BookService) cacheCoverFromFile(
 ) error {
 	coverless := s.coverlessFiles(ctx, bookID)
 	known := len(coverless)
+	defer func() {
+		if len(coverless) > known {
+			s.markCoverless(ctx, bookID, coverless)
+		}
+	}()
 	for _, format := range []string{models.FileFormatEPUB, models.FileFormatKEPUB} {
 		file, err := s.bookFiles.GetByBookAndFormat(ctx, userID, bookID, format)
 		if errors.Is(err, database.ErrResourceNotFound) {
@@ -81,12 +86,15 @@ func (s *BookService) cacheCoverFromFile(
 		if err != nil {
 			return err
 		}
-		if file.Status != models.FileStatusReady || coverless[file.StorageKey] {
+		// A KEPUB's key derives from its source, so its version tells
+		// reconversions apart.
+		id := fmt.Sprintf("%s@%d", file.StorageKey, file.ConverterVersion)
+		if file.Status != models.FileStatusReady || coverless[id] {
 			continue
 		}
 		data, err := s.storedCover(ctx, file.StorageKey)
 		if errors.Is(err, ErrCoverNotFound) {
-			coverless[file.StorageKey] = true
+			coverless[id] = true
 			continue
 		}
 		if err != nil {
@@ -100,9 +108,6 @@ func (s *BookService) cacheCoverFromFile(
 			http.DetectContentType(data),
 		)
 	}
-	if len(coverless) > known {
-		s.markCoverless(ctx, bookID, coverless)
-	}
 	return ErrCoverNotFound
 }
 
@@ -115,8 +120,8 @@ func (s *BookService) storedCover(ctx context.Context, key string) ([]byte, erro
 	return epubCover(z.zr)
 }
 
-// coverlessFiles reads the storage keys bookID's cover.missing marker lists;
-// a missing or unreadable marker lists none.
+// coverlessFiles reads the files bookID's cover.missing marker lists; a
+// missing or unreadable marker lists none.
 func (s *BookService) coverlessFiles(
 	ctx context.Context,
 	bookID uuid.UUID,

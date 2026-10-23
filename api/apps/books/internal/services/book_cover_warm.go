@@ -19,7 +19,7 @@ func (s *BookService) WarmUserCovers(
 ) {
 	_, _, _ = s.coverWarms.Do(userID, func() (any, error) {
 		s.warmUserCovers(ctx, userID, bookIDs)
-		return nil, nil
+		return struct{}{}, nil
 	})
 }
 
