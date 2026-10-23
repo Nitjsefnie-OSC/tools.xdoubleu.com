@@ -75,11 +75,12 @@ func (s *BookService) cacheCoverFromFile(
 		if file.Status != models.FileStatusReady {
 			continue
 		}
-		zr, err := s.openStoredZip(ctx, file.StorageKey)
+		z, err := s.openStoredZip(ctx, file.StorageKey)
 		if err != nil {
 			return err
 		}
-		data, err := epubCover(zr)
+		data, err := epubCover(z.zr)
+		z.close()
 		if errors.Is(err, ErrCoverNotFound) {
 			continue
 		}
@@ -97,21 +98,12 @@ func (s *BookService) cacheCoverFromFile(
 	return ErrCoverNotFound
 }
 
-// openStoredZip reads a stored EPUB/KEPUB into memory as a zip.
+// openStoredZip opens a stored EPUB/KEPUB as a temp-file zip.
 func (s *BookService) openStoredZip(
 	ctx context.Context,
 	key string,
-) (*zip.Reader, error) {
-	rc, err := s.objectStore.Get(ctx, key)
-	if err != nil {
-		return nil, fmt.Errorf("get epub: %w", err)
-	}
-	defer func() { _ = rc.Close() }()
-	data, err := io.ReadAll(rc)
-	if err != nil {
-		return nil, fmt.Errorf("read epub: %w", err)
-	}
-	return zip.NewReader(bytes.NewReader(data), int64(len(data)))
+) (*tempZip, error) {
+	return openTempZip(ctx, s.objectStore, key, maxConversionInputBytes)
 }
 
 // epubCover returns the bytes of the package's cover image: the EPUB 3

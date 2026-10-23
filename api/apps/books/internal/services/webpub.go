@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	xhtml "golang.org/x/net/html"
@@ -140,11 +141,12 @@ func (s *WebPubService) Manifest(
 	userID string,
 	bookID uuid.UUID,
 ) (*WebPubManifest, error) {
-	zr, err := s.openEPUB(ctx, userID, bookID)
+	z, err := s.openEPUB(ctx, userID, bookID)
 	if err != nil {
 		return nil, err
 	}
-	return buildWebPubManifest(zr)
+	defer z.close()
+	return buildWebPubManifest(z.zr)
 }
 
 // Positions builds the position list for the user's original EPUB of bookID.
@@ -153,15 +155,16 @@ func (s *WebPubService) Positions(
 	userID string,
 	bookID uuid.UUID,
 ) (*WebPubPositions, error) {
-	zr, err := s.openEPUB(ctx, userID, bookID)
+	z, err := s.openEPUB(ctx, userID, bookID)
 	if err != nil {
 		return nil, err
 	}
-	m, err := buildWebPubManifest(zr)
+	defer z.close()
+	m, err := buildWebPubManifest(z.zr)
 	if err != nil {
 		return nil, err
 	}
-	return buildWebPubPositions(zr, m), nil
+	return buildWebPubPositions(z.zr, m), nil
 }
 
 // Resource opens one zip entry of the user's original EPUB.
@@ -175,27 +178,30 @@ func (s *WebPubService) Resource(
 	if name == "." || strings.HasPrefix(name, "..") {
 		return nil, ErrWebPubResourceNotFound
 	}
-	zr, err := s.openEPUB(ctx, userID, bookID)
+	z, err := s.openEPUB(ctx, userID, bookID)
 	if err != nil {
 		return nil, err
 	}
-	for _, f := range zr.File {
+	for _, f := range z.zr.File {
 		if f.Name != name {
 			continue
 		}
 		if f.UncompressedSize64 > maxWebPubEntry {
+			z.close()
 			return nil, ErrWebPubResourceNotFound
 		}
 		rc, openErr := f.Open()
 		if openErr != nil {
+			z.close()
 			return nil, fmt.Errorf("open %s: %w", name, openErr)
 		}
 		return &WebPubResource{
-			Body:        rc,
+			Body:        &releasingBody{ReadCloser: rc, release: z.close},
 			ContentType: resourceType(name),
 			Size:        int64(f.UncompressedSize64),
 		}, nil
 	}
+	z.close()
 	return nil, ErrWebPubResourceNotFound
 }
 
@@ -203,7 +209,7 @@ func (s *WebPubService) openEPUB(
 	ctx context.Context,
 	userID string,
 	bookID uuid.UUID,
-) (*zip.Reader, error) {
+) (*tempZip, error) {
 	file, err := s.books.bookFiles.GetByBookAndFormat(
 		ctx, userID, bookID, models.FileFormatEPUB,
 	)
@@ -505,4 +511,17 @@ func ncxLinks(points []ncxPoint, dir string) []WebPubLink {
 		out = append(out, link)
 	}
 	return out
+}
+
+// releasingBody runs release once the body is closed.
+type releasingBody struct {
+	io.ReadCloser
+	release func()
+	once    sync.Once
+}
+
+func (b *releasingBody) Close() error {
+	err := b.ReadCloser.Close()
+	b.once.Do(b.release)
+	return err
 }
