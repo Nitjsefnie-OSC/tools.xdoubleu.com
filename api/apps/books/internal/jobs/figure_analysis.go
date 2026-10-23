@@ -34,7 +34,9 @@ func (j *FigureAnalysisJob) ID() string { return "books-figure-analysis" }
 
 func (j *FigureAnalysisJob) RunEvery() time.Duration { return figureAnalysisInterval }
 
-func (j *FigureAnalysisJob) RunDeadline() time.Duration { return figureAnalysisDeadline }
+func (j *FigureAnalysisJob) RunDeadline() time.Duration {
+	return figureAnalysisDeadline
+}
 
 func (j *FigureAnalysisJob) Run(ctx context.Context, logger *slog.Logger) error {
 	n, err := j.figures.AnalysePending(ctx, figureAnalysisBatch)
