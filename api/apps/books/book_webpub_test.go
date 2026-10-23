@@ -1,6 +1,7 @@
 package books_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -40,6 +41,22 @@ func TestWebPubRoutes_ManifestAndResource(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "rootfile")
 	assert.NotEmpty(t, w.Header().Get("Content-Length"))
+}
+
+// TestWebPubRoutes_ReusesOpenedEPUB: a reading session downloads the EPUB
+// once; later requests read the already-opened archive.
+func TestWebPubRoutes_ReusesOpenedEPUB(t *testing.T) {
+	book := addUniqueBook(t)
+	file := seedEPUBFile(t, fakeStore, book.ID)
+	base := "/books/api/book/" + book.ID.String() + "/webpub/"
+
+	require.Equal(t, http.StatusOK, webPubGet(t, base+"manifest.json").Code)
+	require.NoError(t, fakeStore.Delete(context.Background(), file.StorageKey))
+
+	assert.Equal(t, http.StatusOK, webPubGet(t, base+"positions.json").Code)
+	w := webPubGet(t, base+"res/META-INF/container.xml")
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "rootfile")
 }
 
 func TestWebPubRoutes_NotFound(t *testing.T) {

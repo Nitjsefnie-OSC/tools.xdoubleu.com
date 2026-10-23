@@ -96,11 +96,15 @@ type WebPubResource struct {
 // WebPubService derives Readium manifests from stored EPUBs and streams single
 // zip entries. It reads only stored bytes, never a user-supplied URL.
 type WebPubService struct {
-	books *BookService
+	books    *BookService
+	archives *archiveCache
 }
 
 func newWebPubService(books *BookService) *WebPubService {
-	return &WebPubService{books: books}
+	return &WebPubService{
+		books:    books,
+		archives: newArchiveCache(webPubArchiveSlots, books.openStoredZip),
+	}
 }
 
 type opfItem struct {
@@ -141,12 +145,12 @@ func (s *WebPubService) Manifest(
 	userID string,
 	bookID uuid.UUID,
 ) (*WebPubManifest, error) {
-	z, err := s.openEPUB(ctx, userID, bookID)
+	zr, release, err := s.openEPUB(ctx, userID, bookID)
 	if err != nil {
 		return nil, err
 	}
-	defer z.close()
-	return buildWebPubManifest(z.zr)
+	defer release()
+	return buildWebPubManifest(zr)
 }
 
 // Positions builds the position list for the user's original EPUB of bookID.
@@ -155,16 +159,16 @@ func (s *WebPubService) Positions(
 	userID string,
 	bookID uuid.UUID,
 ) (*WebPubPositions, error) {
-	z, err := s.openEPUB(ctx, userID, bookID)
+	zr, release, err := s.openEPUB(ctx, userID, bookID)
 	if err != nil {
 		return nil, err
 	}
-	defer z.close()
-	m, err := buildWebPubManifest(z.zr)
+	defer release()
+	m, err := buildWebPubManifest(zr)
 	if err != nil {
 		return nil, err
 	}
-	return buildWebPubPositions(z.zr, m), nil
+	return buildWebPubPositions(zr, m), nil
 }
 
 // Resource opens one zip entry of the user's original EPUB.
@@ -178,48 +182,61 @@ func (s *WebPubService) Resource(
 	if name == "." || strings.HasPrefix(name, "..") {
 		return nil, ErrWebPubResourceNotFound
 	}
-	z, err := s.openEPUB(ctx, userID, bookID)
+	zr, release, err := s.openEPUB(ctx, userID, bookID)
 	if err != nil {
 		return nil, err
 	}
-	for _, f := range z.zr.File {
+	res, err := openWebPubEntry(zr, name)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	res.Body = &releasingBody{ReadCloser: res.Body, release: release, once: sync.Once{}}
+	return res, nil
+}
+
+func openWebPubEntry(zr *zip.Reader, name string) (*WebPubResource, error) {
+	for _, f := range zr.File {
 		if f.Name != name {
 			continue
 		}
 		if f.UncompressedSize64 > maxWebPubEntry {
-			z.close()
 			return nil, ErrWebPubResourceNotFound
 		}
-		rc, openErr := f.Open()
-		if openErr != nil {
-			z.close()
-			return nil, fmt.Errorf("open %s: %w", name, openErr)
+		rc, err := f.Open()
+		if err != nil {
+			return nil, fmt.Errorf("open %s: %w", name, err)
 		}
 		return &WebPubResource{
-			Body:        &releasingBody{ReadCloser: rc, release: z.close},
+			Body:        rc,
 			ContentType: resourceType(name),
 			Size:        int64(f.UncompressedSize64),
 		}, nil
 	}
-	z.close()
 	return nil, ErrWebPubResourceNotFound
 }
 
+// openEPUB acquires the user's original EPUB of bookID from the archive cache
+// and returns the func that releases it.
 func (s *WebPubService) openEPUB(
 	ctx context.Context,
 	userID string,
 	bookID uuid.UUID,
-) (*tempZip, error) {
+) (*zip.Reader, func(), error) {
 	file, err := s.books.bookFiles.GetByBookAndFormat(
 		ctx, userID, bookID, models.FileFormatEPUB,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if file.Status != models.FileStatusReady {
-		return nil, database.ErrResourceNotFound
+		return nil, nil, database.ErrResourceNotFound
 	}
-	return s.books.openStoredZip(ctx, file.StorageKey)
+	a, err := s.archives.acquire(ctx, file.StorageKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	return a.zip.zr, func() { s.archives.release(a) }, nil
 }
 
 func buildWebPubManifest(zr *zip.Reader) (*WebPubManifest, error) {
@@ -511,17 +528,4 @@ func ncxLinks(points []ncxPoint, dir string) []WebPubLink {
 		out = append(out, link)
 	}
 	return out
-}
-
-// releasingBody runs release once the body is closed.
-type releasingBody struct {
-	io.ReadCloser
-	release func()
-	once    sync.Once
-}
-
-func (b *releasingBody) Close() error {
-	err := b.ReadCloser.Close()
-	b.once.Do(b.release)
-	return err
 }
