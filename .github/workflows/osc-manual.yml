@@ -15,6 +15,9 @@
 #     (`steps.image-repo.outputs.repo`): GHCR tags must be lowercase and this
 #     fork's owner name (Nitjsefnie-OSC) is not. Upstream's all-lowercase
 #     repository makes the verbatim `github.repository` safe there.
+#   - build-api and build-grafana BUILD ONLY: `push: false` and no registry
+#     login. Upstream's verbatim `push: ${{ github.event_name != 'pull_request' }}`
+#     publishes to GHCR on a dispatch run, which must not happen from a fork.
 # Everything else stays verbatim, including build stamps and image tags, which
 # name the dispatch ref (fork main head); the Provenance step is what pins the
 # tested target_ref SHA.
@@ -201,28 +204,22 @@ jobs:
           echo "value=$value" >> "$GITHUB_OUTPUT"
           rm web/public/downloads/RELEASE
 
-      # Fork deviation (see header): lowercase the image repository for GHCR.
+      # Fork deviation (see header): lowercase the image repository for GHCR
+      # tag validation (buildx validates tags even without pushing).
       - name: Lowercase the image repository
         id: image-repo
         run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
-      # Only needed to push; PRs build without pushing. (On the fork's dispatch
-      # runs this pushes to the fork's own GHCR — public, harmless, and it is
-      # the real build proof.)
-      - if: github.event_name != 'pull_request'
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # BUILD ONLY (see header): the fork gate proves the image builds and
+      # publishes nothing — push forced false, no registry login.
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           # Repo root: api/go.mod's `replace` needs ../sentrytools and the image
           # builds web/ into itself.
           context: .
           file: ./api/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: false
           tags: |
             ghcr.io/${{ steps.image-repo.outputs.repo }}/api:latest
             ghcr.io/${{ steps.image-repo.outputs.repo }}/api:${{ github.sha }}
@@ -266,25 +263,19 @@ jobs:
       - run: make lint/grafana
       - run: make grafana/verify
 
-      # Fork deviation (see header): lowercase the image repository for GHCR.
+      # Fork deviation (see header): lowercase the image repository for GHCR
+      # tag validation (buildx validates tags even without pushing).
       - name: Lowercase the image repository
         id: image-repo
         run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
-      # Only needed to push; PRs build without pushing. (Fork dispatch pushes to
-      # the fork's own GHCR.)
-      - if: github.event_name != 'pull_request'
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      # BUILD ONLY (see header): push forced false, no registry login.
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./infra/grafana.Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: false
           tags: |
             ghcr.io/${{ steps.image-repo.outputs.repo }}/grafana:latest
             ghcr.io/${{ steps.image-repo.outputs.repo }}/grafana:${{ github.sha }}
