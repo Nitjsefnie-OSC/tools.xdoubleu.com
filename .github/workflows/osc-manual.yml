@@ -1,0 +1,809 @@
+# OSC fork CI wrapper — dispatch with `target_ref` to test any branch.
+# Jobs are copied verbatim from the repository's own PR path (.github/workflows/
+# main.yml pull_request jobs plus the reusable workflow bodies they call), minus
+# the `changes` paths-filter gating so every dispatched ref runs them.
+# DEVIATIONS from verbatim (each replaces the PR/dispatch ref expression with the
+# dispatched ref, which is the wrapper's whole point):
+#   - every actions/checkout takes `ref: ${{ inputs.target_ref }}` and gets a
+#     Provenance step echoing the checked-out SHA (40-char guard);
+#   - docs-lint's BASE_REF is `origin/main` (the PR path used
+#     origin/github.base_ref, which does not exist on workflow_dispatch);
+#   - ci-pass's Codecov wait step is dropped: it needs the upstream
+#     CODECOV_TOKEN and polls the upstream project; the per-suite Codecov
+#     uploads stay (anonymous on the fork, fail_ci_if_error unset).
+# Everything else stays verbatim, including build stamps and image tags, which
+# name the dispatch ref (fork main head); the Provenance step is what pins the
+# tested target_ref SHA.
+# DELIBERATELY EXCLUDED (loud skip, add before a probe that needs them):
+#   - changes paths-filter job and its per-job gates: the wrapper runs every
+#     PR-path job on every dispatched ref.
+#   - migration-versions, deploy-kamal, infra-apply, notify-main-ci-red,
+#     rerun-main-ci-red: push-to-main-only jobs; deploy-kamal and infra-apply
+#     mutate the owner's live VPS and must never run from a fork.
+#   - the reusable workflows' workflow_call indirection: jobs are inlined, since
+#     a called workflow resolves `./.github/...` on the dispatch ref (fork
+#     main), not the target_ref.
+# This file is intentionally not sent upstream.
+name: OSC manual CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: 'Git branch, tag, or 40-character commit SHA to validate'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: osc-manual-${{ github.repository }}-${{ inputs.target_ref }}
+  cancel-in-progress: true
+
+jobs:
+  proto-check:
+    name: Proto Staleness Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version-file: './web/package.json'
+      - name: Install buf
+        env:
+          # renovate: datasource=github-releases depName=bufbuild/buf
+          version: v1.74.0
+        run: |
+          curl -sSL "https://github.com/bufbuild/buf/releases/download/${version}/buf-Linux-x86_64" \
+            -o /usr/local/bin/buf
+          chmod +x /usr/local/bin/buf
+      - name: Generate Go proto stubs
+        run: buf generate
+        working-directory: './api'
+      - name: Generate TypeScript ConnectRPC clients
+        run: buf generate
+        working-directory: './web'
+      - name: Fail if proto stubs are stale
+        run: |
+          git diff --exit-code api/gen/ web/lib/gen/ || \
+            (echo "Proto stubs are out of date. Run 'make proto/generate' in api/ and 'npm run generate' in web/ then commit the results." && exit 1)
+      - name: Check local plugin pins match buf.gen.yaml
+        run: ./api/scripts/check_proto_local_versions.sh
+      - name: Lint proto files
+        run: buf lint
+        working-directory: './proto'
+
+  build-kobo-gateway:
+    name: Build kobo-gateway (macOS)
+    runs-on: macos-26
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: './kobo-gateway/go.mod'
+          cache-dependency-path: './kobo-gateway/go.sum'
+      # Restore only: PR and dispatch runs control their build outputs, so writing
+      # the cache here is poisoning-prone (ADR 0002); save-kobo-gateway-cache.yml
+      # writes it. A hit reuses the last build's RELEASE stamp; a miss rebuilds.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        id: cache
+        with:
+          path: kobo-gateway/dist/kobo-gateway
+          # The public key is compiled in, so it's part of the key.
+          key: build-kobo-gateway-${{ hashFiles('kobo-gateway/**') }}-${{ vars.KOBO_GATEWAY_UPDATE_PUBKEY }}
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          make dist RELEASE=${{ github.sha }} SENTRY_DSN=${{ secrets.GATEWAY_SENTRY_DSN }} \
+            UPDATE_PUBLIC_KEY=${{ vars.KOBO_GATEWAY_UPDATE_PUBKEY }}
+          echo -n "${{ github.sha }}" > dist/kobo-gateway/RELEASE
+        working-directory: './kobo-gateway'
+      # Gateways only install self-updates signed by the release key. Signed
+      # only for main (what deploys), after any cache hit, never inside the
+      # cached build, so PR code never sees the key.
+      - name: Sign the self-update binary
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          KOBO_GATEWAY_SIGNING_KEY: ${{ secrets.KOBO_GATEWAY_SIGNING_KEY }}
+        working-directory: './kobo-gateway'
+        run: |
+          if [ -z "$KOBO_GATEWAY_SIGNING_KEY" ]; then
+            echo "::warning::KOBO_GATEWAY_SIGNING_KEY is unset; gateway self-update stays disabled."
+            exit 0
+          fi
+          go run ./cmd/kobo-sign sign dist/kobo-gateway/kobo-gateway-darwin-arm64
+      # build-api downloads this artifact rather than racing a cache save.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: kobo-gateway-dist
+          path: kobo-gateway/dist/kobo-gateway
+          retention-days: 1
+
+  build-api:
+    name: Build API
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    needs: [build-kobo-gateway]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      # Built on macOS by build-kobo-gateway in this run. Its RELEASE file may be
+      # older than this SHA when that build cache-hit.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: kobo-gateway-dist
+          path: kobo-gateway/dist/kobo-gateway
+
+      - name: Arrange kobo-gateway files for the Docker build context
+        run: |
+          mkdir -p web/public/downloads
+          cp -r kobo-gateway/dist/kobo-gateway/. web/public/downloads/
+
+      - name: Read kobo-gateway's bundled release
+        id: kobo-gateway-release
+        run: |
+          value=$(cat web/public/downloads/RELEASE)
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+          rm web/public/downloads/RELEASE
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      # Only needed to push; PRs build without pushing. (On the fork's dispatch
+      # runs this pushes to the fork's own GHCR — public, harmless, and it is
+      # the real build proof.)
+      - if: github.event_name != 'pull_request'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          # Repo root: api/go.mod's `replace` needs ../sentrytools and the image
+          # builds web/ into itself.
+          context: .
+          file: ./api/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/${{ github.repository }}/api:latest
+            ghcr.io/${{ github.repository }}/api:${{ github.sha }}
+          # Kamal's `validate_image` requires this label (we build with buildx and
+          # deploy with --skip-push). Must match `service:` in config/deploy.api.yml.
+          labels: service=tools-xdoubleu-com-api
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+          build-args: |
+            RELEASE=${{ github.sha }}
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ vars.SENTRY_PROJECT }}
+            KOBO_GATEWAY_RELEASE=${{ steps.kobo-gateway-release.outputs.value }}
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+
+  build-grafana:
+    name: Build Grafana
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      # Baked-in provisioning is validated nowhere else: static check, then boot.
+      - run: make lint/grafana
+      - run: make grafana/verify
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      # Only needed to push; PRs build without pushing. (Fork dispatch pushes to
+      # the fork's own GHCR.)
+      - if: github.event_name != 'pull_request'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          file: ./infra/grafana.Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ghcr.io/${{ github.repository }}/grafana:latest
+            ghcr.io/${{ github.repository }}/grafana:${{ github.sha }}
+          # Required by Kamal's `validate_image`; must match config/deploy.grafana.yml.
+          labels: service=tools-xdoubleu-com-grafana
+          cache-from: type=gha,scope=grafana
+          cache-to: type=gha,scope=grafana,mode=max
+
+  lint-go:
+    name: API Go Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: './api/go.mod'
+          cache-dependency-path: './api/go.sum'
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
+        with:
+          # renovate: datasource=go depName=github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+          version: v2.15.0
+          working-directory: ./api
+      - name: Check golines drift
+        run: make lint/golines
+        working-directory: './api'
+
+  lint-sql:
+    name: API SQL Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.15'
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/pip
+          key: sqlfluff-4.3.0
+      - name: Install sqlfluff
+        run: pip install sqlfluff==4.3.0
+      - name: Run sqlfluff
+        run: sqlfluff lint --dialect postgres .
+        working-directory: './api'
+
+  lint-migrations:
+    name: API Migration Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.15'
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/pip
+          key: sqlfluff-4.3.0
+      - name: Install sqlfluff
+        run: pip install sqlfluff==4.3.0
+      - name: Fetch main
+        run: git fetch origin main
+      - name: Check migration versions
+        run: make lint/migrations
+        working-directory: './api'
+
+  lint-kamal-secrets:
+    name: API Kamal Secrets Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - name: Check Kamal deploy-secret consistency
+        run: make lint/kamal-secrets
+        working-directory: './api'
+
+  web-lint:
+    name: Web Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          cache: 'npm'
+          node-version-file: './web/package.json'
+          cache-dependency-path: './web/package-lock.json'
+      - run: npm ci
+        working-directory: './web'
+      - run: npm run lint
+        working-directory: './web'
+
+  kobo-gateway-lint:
+    name: Kobo Gateway Go Lint
+    # menubar_darwin.go is darwin-only; Linux would lint only the stub.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: './kobo-gateway/go.mod'
+          cache-dependency-path: './kobo-gateway/go.sum'
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
+        with:
+          # renovate: datasource=go depName=github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+          version: v2.15.0
+          working-directory: ./kobo-gateway
+
+  sentrytools-lint:
+    name: Sentrytools Go Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: './sentrytools/go.mod'
+          cache-dependency-path: './sentrytools/go.sum'
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
+        with:
+          # renovate: datasource=go depName=github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+          version: v2.15.0
+          working-directory: ./sentrytools
+
+  infra-lint:
+    name: Infra Lint Workflow
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      # tofu_wrapper off so lint_infra.sh sees real exit codes.
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2
+        with:
+          tofu_wrapper: false
+      - name: make lint/infra
+        run: make lint/infra
+
+  api-test:
+    name: API Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: './api/go.mod'
+          cache-dependency-path: './api/go.sum'
+      # A transient proxy.golang.org error mid-test fails whole binaries at
+      # setup, so fetch modules up front and retry that.
+      - name: Download modules
+        working-directory: './api'
+        run: |
+          for attempt in 1 2 3; do
+            go mod download && exit 0
+            sleep $((attempt * 15))
+          done
+          exit 1
+      - run: make test/cov/report
+        working-directory: './api'
+      # Upload only the deduped coverage.out; the pre-dedup intermediates would
+      # make Codecov report covered lines as missed.
+      - name: Upload coverage reports to Codecov
+        if: always()
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: api
+          files: ./api/coverage.out
+          disable_search: true
+
+  web-test:
+    name: Web Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          cache: 'npm'
+          node-version-file: './web/package.json'
+          cache-dependency-path: './web/package-lock.json'
+      - run: npm ci
+        working-directory: './web'
+      - run: npm run test:cov
+        working-directory: './web'
+      - name: Upload coverage reports to Codecov
+        if: always()
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: web
+
+  sentrytools-test:
+    name: Sentrytools Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: './sentrytools/go.mod'
+          cache-dependency-path: './sentrytools/go.sum'
+      - run: make test/cov/report
+        working-directory: './sentrytools'
+      - name: Upload coverage reports to Codecov
+        if: always()
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: sentrytools
+
+  conflict-markers:
+    name: Conflict Marker Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - name: make lint/conflict-markers
+        run: make lint/conflict-markers
+
+  workflow-lint:
+    name: GitHub Actions Workflow Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - name: make lint/workflows
+        run: make lint/workflows
+      - name: make routines/test
+        run: make routines/test
+      - name: make lint/watchdog
+        run: make lint/watchdog
+      - name: make lint/preflight
+        run: make lint/preflight
+
+  skills-lint:
+    name: Agent Skill Frontmatter Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - name: make lint/skills
+        run: make lint/skills
+
+  docs-lint:
+    name: Docs and Comments Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.target_ref }}
+
+      - name: Provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "tested_target_ref=${{ inputs.target_ref }}"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ ! "$checked_out_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::git rev-parse HEAD did not produce a 40-character commit SHA: $checked_out_sha"
+            exit 1
+          fi
+          printf 'checked-out SHA: %s\n' "$checked_out_sha"
+
+      - name: make lint/docs
+        run: make lint/docs
+        env:
+          # Fork dispatch deviation: the PR path diffs against
+          # origin/github.base_ref, which does not exist on workflow_dispatch.
+          # Diff docs/comment word budgets against the fork's main (identical
+          # to upstream main at dispatch time).
+          BASE_REF: origin/main
+
+  ci-pass:
+    needs:
+      [
+        proto-check,
+        build-api,
+        build-grafana,
+        build-kobo-gateway,
+        lint-go,
+        lint-sql,
+        lint-migrations,
+        lint-kamal-secrets,
+        web-lint,
+        kobo-gateway-lint,
+        sentrytools-lint,
+        infra-lint,
+        api-test,
+        web-test,
+        sentrytools-test,
+        conflict-markers,
+        workflow-lint,
+        skills-lint,
+        docs-lint,
+      ]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check all jobs passed or were skipped
+        run: |
+          results="${{ join(needs.*.result, ' ') }}"
+          for result in $results; do
+            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
+              echo "Job failed with result: $result"
+              exit 1
+            fi
+          done
+      # Codecov wait step deliberately dropped (see header): the upstream step
+      # needs CODECOV_TOKEN and polls the upstream project's checks.
