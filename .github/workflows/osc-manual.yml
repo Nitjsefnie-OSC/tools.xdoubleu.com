@@ -11,6 +11,10 @@
 #   - ci-pass's Codecov wait step is dropped: it needs the upstream
 #     CODECOV_TOKEN and polls the upstream project; the per-suite Codecov
 #     uploads stay (anonymous on the fork, fail_ci_if_error unset).
+#   - build-api and build-grafana compute a lowercased image repository
+#     (`steps.image-repo.outputs.repo`): GHCR tags must be lowercase and this
+#     fork's owner name (Nitjsefnie-OSC) is not. Upstream's all-lowercase
+#     repository makes the verbatim `github.repository` safe there.
 # Everything else stays verbatim, including build stamps and image tags, which
 # name the dispatch ref (fork main head); the Provenance step is what pins the
 # tested target_ref SHA.
@@ -197,6 +201,11 @@ jobs:
           echo "value=$value" >> "$GITHUB_OUTPUT"
           rm web/public/downloads/RELEASE
 
+      # Fork deviation (see header): lowercase the image repository for GHCR.
+      - name: Lowercase the image repository
+        id: image-repo
+        run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
       # Only needed to push; PRs build without pushing. (On the fork's dispatch
       # runs this pushes to the fork's own GHCR — public, harmless, and it is
@@ -215,8 +224,8 @@ jobs:
           file: ./api/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ github.repository }}/api:latest
-            ghcr.io/${{ github.repository }}/api:${{ github.sha }}
+            ghcr.io/${{ steps.image-repo.outputs.repo }}/api:latest
+            ghcr.io/${{ steps.image-repo.outputs.repo }}/api:${{ github.sha }}
           # Kamal's `validate_image` requires this label (we build with buildx and
           # deploy with --skip-push). Must match `service:` in config/deploy.api.yml.
           labels: service=tools-xdoubleu-com-api
@@ -256,6 +265,12 @@ jobs:
       # Baked-in provisioning is validated nowhere else: static check, then boot.
       - run: make lint/grafana
       - run: make grafana/verify
+
+      # Fork deviation (see header): lowercase the image repository for GHCR.
+      - name: Lowercase the image repository
+        id: image-repo
+        run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
       # Only needed to push; PRs build without pushing. (Fork dispatch pushes to
       # the fork's own GHCR.)
@@ -271,8 +286,8 @@ jobs:
           file: ./infra/grafana.Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ github.repository }}/grafana:latest
-            ghcr.io/${{ github.repository }}/grafana:${{ github.sha }}
+            ghcr.io/${{ steps.image-repo.outputs.repo }}/grafana:latest
+            ghcr.io/${{ steps.image-repo.outputs.repo }}/grafana:${{ github.sha }}
           # Required by Kamal's `validate_image`; must match config/deploy.grafana.yml.
           labels: service=tools-xdoubleu-com-grafana
           cache-from: type=gha,scope=grafana
